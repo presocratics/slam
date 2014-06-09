@@ -1,5 +1,4 @@
 #include "main.h"
-#define PI 3.141592
 
 using std::cout; 
 using std::endl;
@@ -201,10 +200,10 @@ int main()
 		for (int i = 0; i < nf; i++)
 		{
 			quaternion2Euler(qbw, r);
-			r = r * 180 / PI;
+			r = r * 180 / M_PI;
 
-			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / PI + r;
-			d0 = -altHist.at<double>(0, k) / sin(pibr.at<double>(1, 0) / 180 * PI) * 2;
+			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + r;
+			d0 = -altHist.at<double>(0, k) / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
 
 			d0 = (d0 > d_init) ? d_init : d0;
 
@@ -654,7 +653,7 @@ void loadData(vector<double>& pibHist, vector<double>& ppbHist, vector<double>& 
 	double value;
 
 	// fill pibHist
-	std::ifstream file("C:/data/pibHist.txt");
+	std::ifstream file("../data/pibHist.txt");
 	if (!file.is_open())
 	{
 		std::cout << "error! could not open file" << std::endl;
@@ -669,7 +668,7 @@ void loadData(vector<double>& pibHist, vector<double>& ppbHist, vector<double>& 
 
 
 	// fill ppbHist
-	std::ifstream file2("C:/data/ppbHist.txt");
+	std::ifstream file2("../data/ppbHist.txt");
 	if (!file2.is_open())
 	{
 		std::cout << "error! could not open file" << std::endl;
@@ -684,7 +683,7 @@ void loadData(vector<double>& pibHist, vector<double>& ppbHist, vector<double>& 
 
 
 	// fill refFlag
-	std::ifstream file3("C:/data/refFlag.txt");
+	std::ifstream file3("../data/refFlag.txt");
 	if (!file3.is_open())
 	{
 		std::cout << "error! could not open file" << std::endl;
@@ -698,7 +697,7 @@ void loadData(vector<double>& pibHist, vector<double>& ppbHist, vector<double>& 
 	}
 
 	// fill renewHist
-	std::ifstream file4("C:/data/renewHist.txt");
+	std::ifstream file4("../data/renewHist.txt");
 	if (!file4.is_open())
 	{
 		std::cout << "error! could not open file" << std::endl;
@@ -717,7 +716,7 @@ void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dt
 	double value;
 
 	// fill aHist
-	std::ifstream file("C:/data/aHist.txt");
+	std::ifstream file("../data/aHist.txt");
 	if (!file.is_open())
 	{
 		std::cout << "error! could not open file" << std::endl;
@@ -731,7 +730,7 @@ void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dt
 	}
 
 	//fill altHist
-	std::ifstream file2("C:/data/altHist.txt");
+	std::ifstream file2("../data/altHist.txt");
 
 	if (!file2.is_open())
 	{
@@ -746,7 +745,7 @@ void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dt
 	}
 
 	//fill dtHist
-	std::ifstream file3("C:/data/dtHist.txt");
+	std::ifstream file3("../data/dtHist.txt");
 
 	if (!file3.is_open())
 	{
@@ -761,7 +760,7 @@ void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dt
 	}
 
 	//fill qbwHist
-	std::ifstream file4("C:/data/qbwHist.txt");
+	std::ifstream file4("../data/qbwHist.txt");
 
 	if (!file4.is_open())
 	{
@@ -776,7 +775,7 @@ void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dt
 	}
 
 	//fill rHist
-	std::ifstream file5("C:/data/rHist.txt");
+	std::ifstream file5("../data/rHist.txt");
 
 	if (!file5.is_open())
 	{
@@ -791,7 +790,7 @@ void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dt
 	}
 
 	//fill wHist
-	std::ifstream file6("C:/data/wHist.txt");
+	std::ifstream file6("../data/wHist.txt");
 
 	if (!file6.is_open())
 	{
