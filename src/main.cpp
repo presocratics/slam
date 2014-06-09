@@ -1,5 +1,5 @@
 #include "main.h"
-
+#include "ourerr.hpp"
 using std::cout; 
 using std::endl;
 
@@ -644,165 +644,63 @@ int main()
 
 /*************************** FUNCTIONS ********************************************/
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  hexToVec
+ *  Description:  Reads hex values from an ifstream and writes to a vector.
+ * =====================================================================================
+ */
+    void
+hexToVec ( const char *fn, vector<double>& vec )
+{
+    union u_tag {
+        uint64_t ival;
+        double dval;
+    } uval;
+
+    FILE *fp;
+    char *line;
+    size_t sz=32;
+
+    line = (char *) calloc(sz, sizeof(char) );
+    if( line==NULL ) {
+        fprintf( stderr, "\ndynamic memory allocation failed\n" );
+        exit( EXIT_FAILURE );
+    }
+
+    if( (fp=fopen(fn, "r"))==NULL )
+        err_sys("fopen");
+
+    while( fgets( line, sz, fp )!=NULL )
+    {
+        sscanf(line, "%lx", &uval.ival );
+        vec.push_back(uval.dval);
+    }
+    return;
+}		/* -----  end of function hexToVec  ----- */
+
 /************************************************************************************************
 * Reads txt file and outputs vector
 *
 **************************************************************************************************/
 void loadData(vector<double>& pibHist, vector<double>& ppbHist, vector<double>& refFlag, vector<double>& renewHist)
 {
-	double value;
 
 	// fill pibHist
-	std::ifstream file("../data/pibHist.txt");
-	if (!file.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file >> value)
-		{
-			pibHist.push_back(value);
-		};
-	}
-
-
-	// fill ppbHist
-	std::ifstream file2("../data/ppbHist.txt");
-	if (!file2.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file2 >> value)
-		{
-			ppbHist.push_back(value);
-		};
-	}
-
-
-	// fill refFlag
-	std::ifstream file3("../data/refFlag.txt");
-	if (!file3.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file3 >> value)
-		{
-			refFlag.push_back(value);
-		};
-	}
-
-	// fill renewHist
-	std::ifstream file4("../data/renewHist.txt");
-	if (!file4.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file4 >> value)
-		{
-			renewHist.push_back(value);
-		};
-	}
+    hexToVec( "../data/pibHist.hex", pibHist );
+    hexToVec( "../data/ppbHist.hex", ppbHist );
+    hexToVec( "../data/refFlag.hex", refFlag );
+    hexToVec( "../data/renewHist.hex", renewHist );
 }
 
 void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dtHist, vector<double>& qbwHist, vector<double>& rHist, vector<double>& wHist)
 {
-	double value;
-
-	// fill aHist
-	std::ifstream file("../data/aHist.txt");
-	if (!file.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file >> value)
-		{
-			aHist.push_back(value);
-		};
-	}
-
-	//fill altHist
-	std::ifstream file2("../data/altHist.txt");
-
-	if (!file2.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file2 >> value)
-		{
-			altHist.push_back(value);
-		};
-	}
-
-	//fill dtHist
-	std::ifstream file3("../data/dtHist.txt");
-
-	if (!file3.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file3 >> value)
-		{
-			dtHist.push_back(value);
-		};
-	}
-
-	//fill qbwHist
-	std::ifstream file4("../data/qbwHist.txt");
-
-	if (!file4.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file4 >> value)
-		{
-			qbwHist.push_back(value);
-		};
-	}
-
-	//fill rHist
-	std::ifstream file5("../data/rHist.txt");
-
-	if (!file5.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file5 >> value)
-		{
-			rHist.push_back(value);
-		};
-	}
-
-	//fill wHist
-	std::ifstream file6("../data/wHist.txt");
-
-	if (!file6.is_open())
-	{
-		std::cout << "error! could not open file" << std::endl;
-	}
-	else
-	{
-		while (file6 >> value)
-		{
-			wHist.push_back(value);
-		};
-	}
+    hexToVec( "../data/aHist.hex", aHist );
+    hexToVec( "../data/altHist.hex", altHist );
+    hexToVec( "../data/dtHist.hex", dtHist );
+    hexToVec( "../data/qbwHist.hex", qbwHist );
+    hexToVec( "../data/rHist.hex", rHist );
+    hexToVec( "../data/wHist.hex", wHist );
 }
 
 /************************************************************************************************
