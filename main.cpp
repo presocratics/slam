@@ -444,17 +444,17 @@ int main()
 	cout << double(clock() - startTime) / (double)CLOCKS_PER_SEC << " seconds." << endl;
 
 
-	//FILE *file;
-	//file = fopen("muHist.txt", "w");
-	//for (int i = 0; i<muHist.rows; i++)
-	//{
-	//	for (int j = 0; j<muHist.cols; j++)
-	//	{
-	//		fprintf(file, "%f ", muHist.at<double>(i, j));
-	//	}
-	//	fprintf(file, "\n");
-	//}
-	//fclose(file);
+	FILE *file;
+	file = fopen("xiwHist.txt", "w");
+	for (int i = 0; i< xiwHatHist.rows; i++)
+	{
+		for (int j = 0; j<xiwHatHist.cols; j++)
+		{
+			fprintf(file, "%f ", xiwHatHist.at<double>(i, j));
+		}
+		fprintf(file, "\n");
+	}
+	fclose(file);
 
 
 	int plotFlag = 1;
@@ -463,15 +463,28 @@ int main()
 	{
 		int w = 400;
 		int h = 600;
-		double scaleW = 20;
-		double scaleH = 200;
+		double scaleW = 10;
+		double scaleH = 10;
 		Mat plot = Mat::zeros(w, h, CV_8UC3);
 		for (int i = stepStart - 1; i < stepEnd; i++)
 		{
-			circle(plot, Point(muHist.at<double>(1, i)*scaleW+300, muHist.at<double>(2, i)*scaleH + 300), 3, Scalar(220, 120, 0));
+			circle(plot, Point(muHist.at<double>(1, i)*scaleW+300, 480-(muHist.at<double>(0, i)*scaleH + 400)), 3, Scalar(0, 10, 220));
 		}
-		
-		line(plot, Point(15, 20), Point(70, 50), Scalar(110, 220, 0), 2, 8);
+		for (int i = 0; i < stepEnd; i++)
+		{
+
+			for (int j = 0; j < 5; j++)
+			{
+				//
+				//Point(xiwHatHist.at<Vec3d>(i, j)[0], xiwHatHist.at<Vec3d>(i, j)[0])
+				if (xiwHatHist.at<Vec3d>(i, j)[0] + xiwHatHist.at<Vec3d>(i, j)[1] != 0.)
+				{
+
+					circle(plot, Point(xiwHatHist.at<Vec3d>(i, j)[1] * scaleW + 300, 480 - (xiwHatHist.at<Vec3d>(i , j)[0] * scaleH + 400)), 2, Scalar(220, 120, 0));
+				}
+			}
+		}
+		//line(plot, Point(15, 20), Point(70, 50), Scalar(110, 220, 0), 2, 8);
 		imshow("drawing", plot);
 		waitKey(0);
 	}
