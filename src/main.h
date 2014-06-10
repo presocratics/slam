@@ -6,8 +6,12 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <time.h>
+#include <stdint.h>
+#include <cstdio>
+
 using namespace cv;
 
 void hexToVec ( const char *fn, vector<double>& vec );

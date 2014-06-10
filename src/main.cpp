@@ -1,5 +1,6 @@
 #include "main.h"
-#include "ourerr.hpp"
+//#include "ourerr.hpp"
+
 using std::cout; 
 using std::endl;
 
@@ -56,6 +57,19 @@ int main()
 	reshapeMat(refFlag_v, refFlag);
 	reshapeMat(renewHist_v, renewHist);
 
+
+
+	FILE *file;
+	file = fopen("qbwHistOut.txt", "w");
+	for (int i = 0; i<qbwHist.rows; i++)
+	{
+		for (int j = 0; j<qbwHist.cols; j++)
+		{
+			fprintf(file, "%f ", qbwHist.at<double>(i, j));
+		}
+		fprintf(file, "\n");
+	}
+	fclose(file);
 
 	clock_t startTime = clock();
 
@@ -200,7 +214,7 @@ int main()
 		for (int i = 0; i < nf; i++)
 		{
 			quaternion2Euler(qbw, r);
-			r = r * 180 / M_PI;
+			r = r * 180 / M_PI; 
 
 			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + r;
 			d0 = -altHist.at<double>(0, k) / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
@@ -443,17 +457,17 @@ int main()
 	cout << double(clock() - startTime) / (double)CLOCKS_PER_SEC << " seconds." << endl;
 
 
-	FILE *file;
-	file = fopen("xiwHist.txt", "w");
+	FILE *file1;
+	file1 = fopen("xiwHist.txt", "w");
 	for (int i = 0; i< xiwHatHist.rows; i++)
 	{
 		for (int j = 0; j<xiwHatHist.cols; j++)
 		{
-			fprintf(file, "%f ", xiwHatHist.at<double>(i, j));
+			fprintf(file1, "%f ", xiwHatHist.at<double>(i, j));
 		}
-		fprintf(file, "\n");
+		fprintf(file1, "\n");
 	}
-	fclose(file);
+	fclose(file1);
 
 
 	int plotFlag = 1;
@@ -650,13 +664,11 @@ int main()
  *  Description:  Reads hex values from an ifstream and writes to a vector.
  * =====================================================================================
  */
-    void
-hexToVec ( const char *fn, vector<double>& vec )
+void hexToVec ( const char *fn, vector<double>& vec )
 {
-    union u_tag {
-        uint64_t ival;
-        double dval;
-    } uval;
+
+	long long * iv = new long long;
+	double * dv = (double*)iv;
 
     FILE *fp;
     char *line;
@@ -668,13 +680,12 @@ hexToVec ( const char *fn, vector<double>& vec )
         exit( EXIT_FAILURE );
     }
 
-    if( (fp=fopen(fn, "r"))==NULL )
-        err_sys("fopen");
+	if ((fp = fopen(fn, "r")) == NULL);
 
     while( fgets( line, sz, fp )!=NULL )
     {
-        sscanf(line, "%lx", &uval.ival );
-        vec.push_back(uval.dval);
+		*iv = std::strtoull(line, nullptr, 16);
+		vec.push_back(*dv);
     }
     return;
 }		/* -----  end of function hexToVec  ----- */
