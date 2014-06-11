@@ -2,6 +2,7 @@
 //#include "ourerr.hpp"
 
 using std::cout; 
+using std::cerr; 
 using std::endl;
 
 int main()
@@ -56,6 +57,7 @@ int main()
 	reshapeMat3D(ppbHist_v, ppbHist);
 	reshapeMat(refFlag_v, refFlag);
 	reshapeMat(renewHist_v, renewHist);
+
 
 
 
@@ -201,6 +203,11 @@ int main()
 
 		quaternion2Rotation(qbw, Rb2w);
 		Rw2b = Rb2w.t();
+
+        char fn[1024];
+        sprintf(fn, "../data/varout/var%d.hex",k+1);
+        cout << fn << endl;
+        ARC_compare( Rw2b, fn, 0.01 );
 
 		for (int i = 0; i < 3; i++)
 		{
@@ -450,7 +457,7 @@ int main()
 		Rb2b0.clear();
 
 		if (k%300 == 0)
-		cout << k << endl;
+            cout << k << endl;
 
 	} //  k loop
 
@@ -509,6 +516,32 @@ int main()
 
 /* 
  * ===  FUNCTION  ======================================================================
+ *         Name:  ARC_compare
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+ARC_compare ( cv::Mat cmat, char *fn, double thresh )
+{
+    cv::Mat diff;
+    cv::Mat mlabmat(cmat.size(), CV_64F );
+    vector<double> v;
+    double minVal, maxVal;
+    hexToVec( fn, v ); 
+    reshapeMat( v, mlabmat );
+    absdiff( cmat, mlabmat, diff );
+    minMaxLoc( diff, &minVal, &maxVal );
+    cout << "Min err: " << minVal << " " << "Max err: " << maxVal << endl;
+    if( maxVal>thresh ) 
+    {
+        cerr << "Error too large." << endl;
+        cerr << diff << endl;
+        exit(EXIT_FAILURE);
+    }
+    return ;
+}		/* -----  end of function ARC_compare  ----- */
+/* 
+ * ===  FUNCTION  ======================================================================
  *         Name:  hexToVec
  *  Description:  Reads hex values from an ifstream and writes to a vector.
  * =====================================================================================
@@ -536,6 +569,9 @@ void hexToVec ( const char *fn, vector<double>& vec )
 		*iv = std::strtoull(line, NULL, 16);
 		vec.push_back(*dv);
     }
+    fclose(fp);
+    free(line);
+    line = NULL;
     return;
 }		/* -----  end of function hexToVec  ----- */
 

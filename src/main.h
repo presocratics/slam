@@ -14,6 +14,7 @@
 
 using namespace cv;
 
+void ARC_compare ( cv::Mat cmat, char *fn, double thresh=0 );
 void hexToVec ( const char *fn, vector<double>& vec );
 void loadData(vector<double>& pibHist, vector<double>& ppbHist, vector<double>& refFlag, vector<double>& renewHist);
 void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dtHist, vector<double>& qbwHist, vector<double>& rHist, vector<double>& wHist);
