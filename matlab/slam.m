@@ -1,15 +1,16 @@
 clear all;
 close all;
 clc;
-plotFlag = 1;
+plotFlag = 0;
 flagBias = 1;
 
 %! load experimental data (IMU, altimeter)
-load('data_experiment/2ndStreet/data.mat');
-altHist = altHist + 0.05*ones(1,length(altHist));
+load('hb/backup71_C/data_experiment/2ndStreet/data.mat');
+
+altHist = altHist + 0.05*ones(size(altHist));
 
 %! load experimental data (vision: 1700~4340 automatic reflection and shore feautres)
-load('data_experiment/2ndStreet/vision_feat5_ref5.mat');
+load('hb/backup71_C/data_experiment/2ndStreet/vision_feat5_ref5.mat');
 noise = zeros(1+6*50,stepEnd);
 
 tic
@@ -49,8 +50,12 @@ for k = stepStart:stepEnd
     time = time+dt;     tHist(k,1) = time;
     
     %! reading sensor measurements
-    qbw = qbwHist(:,k);    qbw = qbw/norm(qbw);
+    qbw = qbwHist(:,k);    
+
+    %qbw = qbw/norm(qbw); %% Remove norm?
+     
     Rb2w = func_quaternion2Rotation(qbw);       Rw2b = Rb2w';
+
     w = wHist(:,k);
     a = aHist(:,k);
     
@@ -127,6 +132,7 @@ for k = stepStart:stepEnd
     end
     
     %! saving the history of the estimates
+    
     muHist(:,k) = mu;
     for i = 1:size(mu)
         PHist(i,k) = sqrt(P(i,i));
@@ -202,6 +208,7 @@ for k = stepStart:stepEnd
     if rem(k,300) == 0
         k
     end
+    
 end
 
 toc

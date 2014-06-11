@@ -61,6 +61,7 @@ int main()
 
 
 
+
 	FILE *file;
 	file = fopen("qbwHistOut.txt", "w");
 	for (int i = 0; i<qbwHist.rows; i++)
@@ -79,6 +80,12 @@ int main()
 	// State initialization
 	Mat mu = Mat::zeros(21, 1, CV_64F);
 	mu.at<double>(2, 0) = -1 * altHist.at<double>(0, stepStart - 1);
+    cout << -1 * altHist.at<double>(0, stepStart - 1) << endl;
+        char fn[1024];
+        sprintf(fn, "../data/altHist.hex");
+        cout << fn << endl;
+        ARC_compare( altHist, fn,3e-16 );
+    exit(EXIT_FAILURE);
 	
 	double d0 = 1;
 	for (int i = 0; i < nf; i++)
@@ -192,6 +199,10 @@ int main()
 			sums += pow(qbwHist.at<double>(i, k ), 2);
 			qbw.at<double>(i, 0) = qbwHist.at<double>(i, k);
 		}
+        //double qbw_norm;
+        //qbw_norm = norm(qbw);
+        //qbw*=(1/qbw_norm);
+
 
 		//normalize qbw  -(!) NEED FIX =======================================================
 		//for (int i = 0; i < 4; i++)
@@ -204,10 +215,6 @@ int main()
 		quaternion2Rotation(qbw, Rb2w);
 		Rw2b = Rb2w.t();
 
-        char fn[1024];
-        sprintf(fn, "../data/varout/var%d.hex",k+1);
-        cout << fn << endl;
-        ARC_compare( Rw2b, fn, 0.01 );
 
 		for (int i = 0; i < 3; i++)
 		{
