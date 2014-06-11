@@ -57,7 +57,7 @@ int main()
 	reshapeMat(refFlag_v, refFlag);
 	reshapeMat(renewHist_v, renewHist);
 
-
+ //a
 
 	FILE *file;
 	file = fopen("qbwHistOut.txt", "w");
