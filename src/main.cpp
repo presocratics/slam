@@ -684,7 +684,7 @@ void hexToVec ( const char *fn, vector<double>& vec )
 
     while( fgets( line, sz, fp )!=NULL )
     {
-		*iv = std::strtoull(line, nullptr, 16);
+		*iv = std::strtoull(line, NULL, 16);
 		vec.push_back(*dv);
     }
     return;
