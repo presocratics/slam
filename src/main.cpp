@@ -80,12 +80,6 @@ int main()
 	// State initialization
 	Mat mu = Mat::zeros(21, 1, CV_64F);
 	mu.at<double>(2, 0) = -1 * altHist.at<double>(0, stepStart - 1);
-    cout << -1 * altHist.at<double>(0, stepStart - 1) << endl;
-        char fn[1024];
-        sprintf(fn, "../data/altHist.hex");
-        cout << fn << endl;
-        ARC_compare( altHist, fn,3e-16 );
-    exit(EXIT_FAILURE);
 	
 	double d0 = 1;
 	for (int i = 0; i < nf; i++)
@@ -345,6 +339,7 @@ int main()
 		tempRect = Rect(k, 0, 1, mu.rows);
 		tempMat1 = muHist(tempRect);
 		mu.copyTo(tempMat1);
+
 		
 		for (int i = 0; i < mu.rows; i++)
 		{
@@ -380,6 +375,7 @@ int main()
 			f.at<double>(8 + 3 * nf, 0) = 0;
 		}
 		mu = mu + f*dt;
+
 
 
 		// Measurement model
@@ -891,8 +887,12 @@ void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, M
 * measurementModel
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
-void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0, Mat ppbHist, Mat mu, Mat qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w, vector<Mat> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, Mat& xiwHat)
+void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
+        Mat ppbHist, Mat mu, Mat qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w,
+        vector<Mat> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu,
+        Mat& H, Mat& pibHat, Mat& xiwHat)
 {
+    H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
 	Mat S = Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
 	Mat xibHat = Mat::zeros(3, 6, CV_64F);
@@ -1010,6 +1010,8 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0, Mat ppbH
 			hmu.at<double>(6*i + 6, 0) = ppbHat.at<double>(1, i);
 
 			H.row(0).col(2).setTo(-1);
+
+
 			H.row(6 * i + 1).col(6 + 3 * i).setTo(1);
 			H.row(6 * i + 2).col(6 + 3 * i + 1).setTo(1);
 
@@ -1063,6 +1065,10 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0, Mat ppbH
 			temp = Hi.row(3);
 			temp.copyTo(H6_A);
 
+            char fn[1024];
+            sprintf(fn, "../data/varout/var%d%d.hex", k+1,i+1);
+            cout << fn << endl;
+            ARC_compare( H, fn,2e-10 );
 			// features without reflection
 			if (refFlag.at<double>(0, i) == 0)
 			{

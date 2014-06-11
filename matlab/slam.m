@@ -7,7 +7,7 @@ flagBias = 1;
 %! load experimental data (IMU, altimeter)
 load('hb/backup71_C/data_experiment/2ndStreet/data.mat');
 
-altHist = altHist + 0.05*ones(size(altHist));
+
 
 %! load experimental data (vision: 1700~4340 automatic reflection and shore feautres)
 load('hb/backup71_C/data_experiment/2ndStreet/vision_feat5_ref5.mat');
@@ -16,6 +16,7 @@ noise = zeros(1+6*50,stepEnd);
 tic
 
 %% state initialization
+altHist = altHist + 0.05*ones(size(altHist));
 mu = zeros(6,1);
 mu(3) = -altHist(:,stepStart);
 
@@ -132,8 +133,10 @@ for k = stepStart:stepEnd
     end
     
     %! saving the history of the estimates
-    
+   
     muHist(:,k) = mu;
+    
+    
     for i = 1:size(mu)
         PHist(i,k) = sqrt(P(i,i));
     end
@@ -155,10 +158,12 @@ for k = stepStart:stepEnd
         f(4:6,1) = f(4:6,1) - abiasHat;
         f(6+3*nf+1:6+3*nf+3,1) = zeros(3,1);
     end
+   
     mu = mu + f*dt;
-
+ 
     %! measurement model
     [meas hmu H pibHat xiwHat] = func_measurementModel( k, nf, altHist(k), pibHist, pib0, ppbHist, mu(1:6+3*nf,1), qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag(k,:), 0 );
+    
     if flagBias == 1
         H(1:size(H,1),6+3*nf+1:6+3*nf+3) = zeros(size(H,1),3);
     end
@@ -203,7 +208,7 @@ for k = stepStart:stepEnd
     mu = mu + K*(meas-hmu);
     P = (eye(size(K*H))-K*H)*P;	P = (P'+P)/2;
     
-
+    
     %! displaying time-step
     if rem(k,300) == 0
         k

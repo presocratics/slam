@@ -41,7 +41,11 @@ for i = 1:nf
         H(1+6*i-2,:) = [Hb(2,:) zeros(1,3*(i-1)) Hi(2,:) zeros(1,3*(nf-i))];
         H(1+6*i-1,:) = [Hb(3,:) zeros(1,3*(i-1)) Hi(3,:) zeros(1,3*(nf-i))];
         H(1+6*i-0,:) = [Hb(4,:) zeros(1,3*(i-1)) Hi(4,:) zeros(1,3*(nf-i))];
-
+        size(H)
+        H
+        pause
+        str=sprintf('data/varout/var%d%d.hex',k,i);
+        matlab2txt(H,str,'w');
         %! features that don't have reflections
         if refFlag(1,i) == 0	
             meas(1+6*i-1,1) = 0;
