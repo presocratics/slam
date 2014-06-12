@@ -1,5 +1,5 @@
 function [meas hmu H pibHat xiwHat] = func_measurementModel( k, nf, alt, pibHist, pib0, ppbHist, mu, qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag, flagMeas )
-    
+%H=zeros(31,24);    
 n = [0;0;1];	S = eye(3)-2*n*n';
 Rb2w = func_quaternion2Rotation(qbw);	Rw2b = Rb2w';
 
@@ -16,7 +16,8 @@ for i = 1:nf
     ppbHat(:,i) = [xpbHat(2,i)/xpbHat(1,i); xpbHat(3,i)/xpbHat(1,i)];
 
     xiwHat(:,i) = mu(1:3) + Rb2w*xibHat(:,i);  
-    [Hb Hi] = func_JacobianH( mu, qbw, xb0wHat(:,i), qb0w(:,i), i);
+   
+    [Hb Hi] = func_JacobianH( mu, qbw, xb0wHat(:,i), qb0w(:,i), i, k);
     
     %! 0: all;  
     if flagMeas == 0
@@ -41,11 +42,8 @@ for i = 1:nf
         H(1+6*i-2,:) = [Hb(2,:) zeros(1,3*(i-1)) Hi(2,:) zeros(1,3*(nf-i))];
         H(1+6*i-1,:) = [Hb(3,:) zeros(1,3*(i-1)) Hi(3,:) zeros(1,3*(nf-i))];
         H(1+6*i-0,:) = [Hb(4,:) zeros(1,3*(i-1)) Hi(4,:) zeros(1,3*(nf-i))];
-        size(H)
-        H
-        pause
-        str=sprintf('data/varout/var%d%d.hex',k,i);
-        matlab2txt(H,str,'w');
+
+
         %! features that don't have reflections
         if refFlag(1,i) == 0	
             meas(1+6*i-1,1) = 0;
@@ -137,6 +135,7 @@ for i = 1:nf
             meas(1+4*i-0,1) = 0;
         end
     end
+
 end
 
 %! remove the reflection measruements if they are not available
