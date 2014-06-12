@@ -5,12 +5,12 @@ plotFlag = 0;
 flagBias = 1;
 
 %! load experimental data (IMU, altimeter)
-load('hb/backup71_C/data_experiment/2ndStreet/data.mat');
+load('../data/2ndStreet/data.mat');
 
 
 
 %! load experimental data (vision: 1700~4340 automatic reflection and shore feautres)
-load('hb/backup71_C/data_experiment/2ndStreet/vision_feat5_ref5.mat');
+load('../data/2ndStreet/vision_feat5_ref5.mat');
 noise = zeros(1+6*50,stepEnd);
 
 tic
@@ -163,16 +163,20 @@ for k = stepStart:stepEnd
  
     %! measurement model
     [meas hmu H pibHat xiwHat] = func_measurementModel( k, nf, altHist(k), pibHist, pib0, ppbHist, mu(1:6+3*nf,1), qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag(k,:), 0 );
-    
+   
     if flagBias == 1
         H(1:size(H,1),6+3*nf+1:6+3*nf+3) = zeros(size(H,1),3);
     end
+     
+        
     measHist(1:length(meas),k) = meas;
     altHist(k) = meas(1);
     
     
     %! noise covariance
-    G = eye(6+3*nf)*dt;     G(1:3,1:3) = eye(3)*1/2*dt^2;
+    G = eye(6+3*nf)*dt;    
+    G(1:3,1:3) = eye(3)*1/2*dt^2;
+     
     if flagBias == 1
         G(6+3*nf+1:6+3*nf+3,6+3*nf+1:6+3*nf+3) = eye(3)*1/2*dt^2;
     end
@@ -183,11 +187,12 @@ for k = stepStart:stepEnd
     end
     
     Q = Q0*eye(length(mu));
+
     if flagBias == 1
         Q(6+3*nf+1:6+3*nf+3,6+3*nf+1:6+3*nf+3) = 0.002*eye(3);
     end
     R = 0.1/770*R0*eye(length(meas));
-    
+   
     %! altimeter noise covariance
     R(1) = 0.0001*R0;
     for i = 1:nf
@@ -203,6 +208,9 @@ for k = stepStart:stepEnd
     
     %! EKF measurement update
     P = F*P*F'+G*Q*G';
+    pause
+     str=sprintf('../data/varout/var%d.hex',k);
+        matlab2txt(F,str,'w');
     K = P*H'*inv(H*P*H'+R);
   
     mu = mu + K*(meas-hmu);
