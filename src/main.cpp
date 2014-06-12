@@ -2,6 +2,7 @@
 //#include "ourerr.hpp"
 
 using std::cout; 
+using std::cerr; 
 using std::endl;
 
 int main()
@@ -58,6 +59,8 @@ int main()
 	reshapeMat(renewHist_v, renewHist);
 
  //a
+
+
 
 	FILE *file;
 	file = fopen("qbwHistOut.txt", "w");
@@ -190,6 +193,10 @@ int main()
 			sums += pow(qbwHist.at<double>(i, k ), 2);
 			qbw.at<double>(i, 0) = qbwHist.at<double>(i, k);
 		}
+        //double qbw_norm;
+        //qbw_norm = norm(qbw);
+        //qbw*=(1/qbw_norm);
+
 
 		//normalize qbw  -(!) NEED FIX =======================================================
 		//for (int i = 0; i < 4; i++)
@@ -201,6 +208,7 @@ int main()
 
 		quaternion2Rotation(qbw, Rb2w);
 		Rw2b = Rb2w.t();
+
 
 		for (int i = 0; i < 3; i++)
 		{
@@ -331,6 +339,7 @@ int main()
 		tempRect = Rect(k, 0, 1, mu.rows);
 		tempMat1 = muHist(tempRect);
 		mu.copyTo(tempMat1);
+
 		
 		for (int i = 0; i < mu.rows; i++)
 		{
@@ -366,6 +375,7 @@ int main()
 			f.at<double>(8 + 3 * nf, 0) = 0;
 		}
 		mu = mu + f*dt;
+
 
 
 		// Measurement model
@@ -450,7 +460,7 @@ int main()
 		Rb2b0.clear();
 
 		if (k%300 == 0)
-		cout << k << endl;
+            cout << k << endl;
 
 	} //  k loop
 
@@ -501,163 +511,38 @@ int main()
 		imshow("drawing", plot);
 		waitKey(0);
 	}
-
-
-	/*******************************************************************************
-	*    TESTS
-	*******************************************************************************/
-
-/*/**********************TEST motionModel**********************************************
-// TEST motionModel
-	Mat f = Mat::zeros(mu.rows, 1, CV_64F);
-	Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
-	Mat pibHat = Mat::ones(3, 6, CV_64F);
-
-	motionModel(mu, qbw, a, w, pibHat, nf, dt, f, F);
-	//std::cout << "f: " << f << std::endl;
-	//std::cout << "F: " << F << std::endl;
-	
-
-	FILE *file;
-	file=fopen("f.txt","w");
-	for (int i=0; i<f.rows;i++)
-	{
-		for (int j=0;j<f.cols;j++)
-		{
-			fprintf (file, "%f ",f.at<double>(i,j));
-		}
-		fprintf (file,"\n");
-	}
-	fclose (file);
-
-	file = fopen("bigF.txt", "w");
-	for (int i = 0; i<F.rows; i++)
-	{
-		for (int j = 0; j<F.cols; j++)
-		{
-			fprintf(file, "%f ", F.at<double>(i, j));
-		}
-		fprintf(file, "\n");
-	}
-	fclose(file);
-//**********************************************************************************/
-/***************************Test JacobianH ******************************************
-	Mat mut = 0.5*Mat::ones(21, 1, CV_64F);
-	Mat qbwt = 0.7*Mat::ones(4, 1, CV_64F);
-	Mat xb0wt = Mat::ones(3, 1, CV_64F);
-	Mat qb0wt = 1.2*Mat::ones(4, 1, CV_64F);
-	Mat Hb;
-	Mat Hi;
-
-	jacobianH(mut, qbwt, xb0wt, qb0wt, 4, Hb, Hi);
-
-	std::cout << "Hb: " <<Hb << std::endl;
-	std::cout << "Hi: " << Hi << std::endl;
-//*****************************************************************************************/
-/********************************Test measModel********************************************
-	int kt = 1;
-	int nft = 5;
-	double altt = 0.1;
-	//Mat pibHistt = Mat::ones(3, 5, CV_64FC3);
-	Mat pibHistt(3, 5, CV_64FC3, CV_RGB(1, 1, 1));
-
-	Mat pib0t = 0.1*Mat::ones(2, 5, CV_64F);
-	Mat ppbHistt(3, 5, CV_64FC3, CV_RGB(1, 1, 1));
-	Mat mut = 0.3*Mat::ones(21, 1, CV_64F);
-	Mat qbwt = 0.4*Mat::ones(4, 1, CV_64F);
-	Mat xb0wHatt = 0.5*Mat::ones(3, 5, CV_64F);
-	Mat xbb0Hatt = 0.6*Mat::ones(3, 5, CV_64F);
-	Mat qb0wt = 0.7*Mat::ones(4, 5, CV_64F);
-	vector<Mat> Rb2b0t;
-	Rb2b0t.push_back(Mat::ones(3, 3, CV_64F));
-	Rb2b0t.push_back(Mat::ones(3, 3, CV_64F));
-	Rb2b0t.push_back(Mat::ones(3, 3, CV_64F));
-	Rb2b0t.push_back(Mat::ones(3, 3, CV_64F));
-	Rb2b0t.push_back(Mat::ones(3, 3, CV_64F));
-
-	Mat refFlagt = Mat::ones(3, 5, CV_64F);
-	Mat H = Mat::zeros(31, 21, CV_64F);
-	Mat meas = Mat::zeros(31, 1, CV_64F);
-	Mat hmu = Mat::zeros(31, 1, CV_64F);
-	Mat pibHat = Mat::ones(3, 5, CV_64F);
-	Mat xiwHat = Mat::ones(3, 5, CV_64F);
-
-	int flagMeast = 0;
-	Mat Hb;
-	Mat Hi;
-	measurementModel(kt, nft, altt, pibHistt, pib0t, ppbHistt, mut, qbwt, xb0wHatt, xbb0Hatt, qb0wt, Rb2b0t, refFlagt, flagMeast, meas, hmu, H, pibHat, xiwHat);
-
-	std::cout << meas << std::endl;
-	std::cout << hmu << std::endl;
-	std::cout << pibHat << std::endl;
-	std::cout << xiwHat << std::endl;
-	std::cout << H << std::endl;
-
-
-	FILE *file;
-	file=fopen("meas.txt","w");
-	for (int i=0; i<meas.rows;i++)
-	{
-	for (int j=0;j<meas.cols;j++)
-	{
-	fprintf (file, "%f ",meas.at<double>(i,j));
-	}
-	fprintf (file,"\n");
-	}
-	fclose (file);
-
-	file = fopen("hmu.txt", "w");
-	for (int i = 0; i<hmu.rows; i++)
-	{
-	for (int j = 0; j<hmu.cols; j++)
-	{
-	fprintf(file, "%f ", hmu.at<double>(i, j));
-	}
-	fprintf(file, "\n");
-	}
-	fclose(file);
-
-	file = fopen("pibHat.txt", "w");
-	for (int i = 0; i<pibHat.rows; i++)
-	{
-		for (int j = 0; j<pibHat.cols; j++)
-		{
-			fprintf(file, "%f ", pibHat.at<double>(i, j));
-		}
-		fprintf(file, "\n");
-	}
-	fclose(file);
-
-	file = fopen("xiwHat.txt", "w");
-	for (int i = 0; i<xiwHat.rows; i++)
-	{
-		for (int j = 0; j<xiwHat.cols; j++)
-		{
-			fprintf(file, "%f ", xiwHat.at<double>(i, j));
-		}
-		fprintf(file, "\n");
-	}
-	fclose(file);
-
-	file = fopen("H.txt", "w");
-	for (int i = 0; i<H.rows; i++)
-	{
-		for (int j = 0; j<H.cols; j++)
-		{
-			fprintf(file, "%f ", H.at<double>(i, j));
-		}
-		fprintf(file, "\n");
-	}
-	fclose(file);
-
-	//***************************************************************************************/
-	std::cin.get();
 	return 0;
 }
 
 
 /*************************** FUNCTIONS ********************************************/
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  ARC_compare
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+ARC_compare ( cv::Mat cmat, char *fn, double thresh )
+{
+    cv::Mat diff;
+    cv::Mat mlabmat(cmat.size(), CV_64F );
+    vector<double> v;
+    double minVal, maxVal;
+    hexToVec( fn, v ); 
+    reshapeMat( v, mlabmat );
+    absdiff( cmat, mlabmat, diff );
+    minMaxLoc( diff, &minVal, &maxVal );
+    cout << "Min err: " << minVal << " " << "Max err: " << maxVal << endl;
+    if( maxVal>thresh ) 
+    {
+        cerr << "Error too large." << endl;
+        cerr << diff << endl;
+        exit(EXIT_FAILURE);
+    }
+    return ;
+}		/* -----  end of function ARC_compare  ----- */
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  hexToVec
@@ -687,6 +572,9 @@ void hexToVec ( const char *fn, vector<double>& vec )
 		*iv = std::strtoull(line, NULL, 16);
 		vec.push_back(*dv);
     }
+    fclose(fp);
+    free(line);
+    line = NULL;
     return;
 }		/* -----  end of function hexToVec  ----- */
 
@@ -999,8 +887,12 @@ void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, M
 * measurementModel
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
-void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0, Mat ppbHist, Mat mu, Mat qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w, vector<Mat> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, Mat& xiwHat)
+void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
+        Mat ppbHist, Mat mu, Mat qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w,
+        vector<Mat> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu,
+        Mat& H, Mat& pibHat, Mat& xiwHat)
 {
+    H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
 	Mat S = Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
 	Mat xibHat = Mat::zeros(3, 6, CV_64F);
@@ -1118,6 +1010,8 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0, Mat ppbH
 			hmu.at<double>(6*i + 6, 0) = ppbHat.at<double>(1, i);
 
 			H.row(0).col(2).setTo(-1);
+
+
 			H.row(6 * i + 1).col(6 + 3 * i).setTo(1);
 			H.row(6 * i + 2).col(6 + 3 * i + 1).setTo(1);
 
@@ -1171,6 +1065,10 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0, Mat ppbH
 			temp = Hi.row(3);
 			temp.copyTo(H6_A);
 
+            char fn[1024];
+            sprintf(fn, "../data/varout/var%d%d.hex", k+1,i+1);
+            cout << fn << endl;
+            ARC_compare( H, fn,2e-10 );
 			// features without reflection
 			if (refFlag.at<double>(0, i) == 0)
 			{
