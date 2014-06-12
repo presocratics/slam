@@ -7,8 +7,6 @@ using std::endl;
 
 int main()
 {
-
-
 	// number of timesteps
 	int n = 4391;
 	int flagBias = 1;
@@ -57,6 +55,7 @@ int main()
 	reshapeMat3D(ppbHist_v, ppbHist);
 	reshapeMat(refFlag_v, refFlag);
 	reshapeMat(renewHist_v, renewHist);
+
 
 
 
@@ -517,6 +516,23 @@ int main()
 
 /*************************** FUNCTIONS ********************************************/
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  blockAssign
+ *  Description:  Writes a submatrix to dst at the starting point tl
+ * =====================================================================================
+ */
+    void
+blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl )
+{
+    cv::Rect roi;
+    cv::Mat sub_dst;
+
+    roi = cv::Rect(tl, block.size());
+    sub_dst = dst(roi);
+    block.copyTo(sub_dst);
+    return;
+}		/* -----  end of function blockAssign  ----- */
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  ARC_compare
@@ -1010,65 +1026,18 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 			hmu.at<double>(6*i + 6, 0) = ppbHat.at<double>(1, i);
 
 			H.row(0).col(2).setTo(-1);
-
-
-			H.row(6 * i + 1).col(6 + 3 * i).setTo(1);
-			H.row(6 * i + 2).col(6 + 3 * i + 1).setTo(1);
-
-			//H.row(6 * i + 4).colRange(0, Hb.cols) = Hb.row(0);
-			H3_R = Rect(0, 6 * i + 3, Hb.cols, 1);
-			H3_A = H(H3_R);
-			temp = Hb.row(0);
-			temp.copyTo(H3_A);
-
-			
-			//H.row(6 * i + 4).colRange(0, Hb.cols) = Hb.row(1);
-			H4_R = Rect(0, 6 * i + 4, Hb.cols, 1);
-			H4_A = H(H4_R);
-			temp = Hb.row(1);
-			temp.copyTo(H4_A);
-
-			//H.row(6 * i + 5).colRange(0, Hb.cols) = Hb.row(2);
-			H5_R = Rect(0, 6 * i + 5, Hb.cols, 1);
-			H5_A = H(H5_R);
-			temp = Hb.row(2);
-			temp.copyTo(H5_A);
-
-			//H.row(6 * i + 6).colRange(0, Hb.cols) = Hb.row(3);
-			H6_R = Rect(0, 6 * i + 6, Hb.cols, 1);
-			H6_A = H(H6_R);
-			temp = Hb.row(3);
-			temp.copyTo(H6_A);
-		
-
-			//H.row(6 * i + 3).col(i + 3 * i) = Hi.row(0);
-			H3_R = Rect(Hb.cols + 3 * i, 6 * i + 3, Hi.cols, 1);
-			H3_A = H(H3_R);
-			temp = Hi.row(0);
-			temp.copyTo(H3_A);
-
-			//H.row(6 * i + 4).col(i + 3 * i) = Hi.row(1);
-			H4_R = Rect(Hb.cols + 3 * i, 6 * i + 4, Hi.cols, 1);
-			H4_A = H(H4_R);
-			temp = Hi.row(1);
-			temp.copyTo(H4_A);
-
-			//H.row(6 * i + 5).col(i + 3 * i) = Hi.row(2);
-			H5_R = Rect(Hb.cols + 3 * i, 6 * i + 5, Hi.cols, 1);
-			H5_A = H(H5_R);
-			temp = Hi.row(2);
-			temp.copyTo(H5_A);
-
-			//H.row(6 * i + 6).col(i + 3 * i) = Hi.row(3);
-			H6_R = Rect(Hb.cols + 3 * i, 6 * i + 6, Hi.cols, 1);
-			H6_A = H(H6_R);
-			temp = Hi.row(3);
-			temp.copyTo(H6_A);
-
+            // For each feature
+            cv::Mat Hfeat = cv::Mat::zeros(6,24,CV_64F);
+            blockAssign( Hfeat, cv::Mat::eye(2,2,CV_64F), cv::Point(6+3*i,0) );
+            blockAssign( Hfeat, Hb, cv::Point(0,2) );
+            blockAssign( Hfeat, Hi, cv::Point(6+3*i,2) );
+            
+            blockAssign( H, Hfeat, cv::Point(0,1+6*i) );
             char fn[1024];
             sprintf(fn, "../data/varout/var%d%d.hex", k+1,i+1);
             cout << fn << endl;
             ARC_compare( H, fn,2e-10 );
+
 			// features without reflection
 			if (refFlag.at<double>(0, i) == 0)
 			{
