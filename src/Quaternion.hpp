@@ -1,5 +1,6 @@
 #ifndef  quaternion_INC
 #define  Quaternion_INC
+#include <cv.h>
 
 /*
  * =====================================================================================
@@ -11,7 +12,8 @@ class Quaternion
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        Quaternion ( cv::Vec3d q )
+        Quaternion () {;}
+        Quaternion ( cv::Vec4d q )
         {
             coord = q;
         }/* constructor */

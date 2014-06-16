@@ -129,14 +129,13 @@ int main()
 	double d_init = 5;
 	double time = 0;
 	double dt;
-	Mat qbw = Mat::zeros(4,1,CV_64F);
-	Mat Rb2w = Mat::zeros(3, 3, CV_64F);
-	Mat Rw2b = Mat::zeros(3, 3, CV_64F);
+    Quaternion qbw;
+    Matx33d Rb2w, Rw2b;
 	Mat w = Mat::zeros(3, 1, CV_64F);
 	Mat a = Mat::zeros(3, 1, CV_64F);
 
 	// inside nf loop
-	Mat r;
+    cv::Vec3d r;
 	Mat pibr;
 	Mat d0Hist(stepEnd, 5, CV_64F, Scalar(0));
 	Mat xb0wHat(3, 5, CV_64F, Scalar(0));
@@ -149,9 +148,9 @@ int main()
 	int renewi = -1;
 	int renewk = -1;
 
-	vector<Mat> Rw2b0;
-	vector<Mat> Rb2b0;
-	Mat tempR(3, 3, CV_64F, Scalar(0));
+	vector<Matx33d> Rw2b0;
+	vector<Matx33d> Rb2b0;
+    Matx33d tempR;
 	Mat pib0(2, 5, CV_64F, Scalar(0));
 
 	Mat xbb0Hat(3, 5, CV_64F, Scalar(0));
@@ -190,7 +189,7 @@ int main()
 		for (int i = 0; i < 4; i++)
 		{
 			sums += pow(qbwHist.at<double>(i, k ), 2);
-			qbw.at<double>(i, 0) = qbwHist.at<double>(i, k);
+			qbw.coord[i] = qbwHist.at<double>(i, k);
 		}
         //double qbw_norm;
         //qbw_norm = norm(qbw);
@@ -205,7 +204,7 @@ int main()
 		//}
 		//std::cout << "sums " << sums << std::endl;
 
-		quaternion2Rotation(qbw, Rb2w);
+        Rb2w = qbw.rotation();
 		Rw2b = Rb2w.t();
 
 		for (int i = 0; i < 3; i++)
@@ -218,10 +217,10 @@ int main()
 		// line 59
 		for (int i = 0; i < nf; i++)
 		{
-			quaternion2Euler(qbw, r);
-			r = r * 180 / M_PI; 
+            r = qbw.euler();
+			r *= 180 / M_PI; 
 
-			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + r;
+			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + (cv::Mat)r;
 			d0 = -altHist.at<double>(0, k) / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
 
 			d0 = (d0 > d_init) ? d_init : d0;
@@ -262,11 +261,11 @@ int main()
 				xb0wHat.at<double>(1, i) = mu.at<double>(1, 0);
 				xb0wHat.at<double>(2, i) = mu.at<double>(2, 0);
 
-				qb0w.at<double>(0, i) = qbw.at<double>(0, 0);
-				qb0w.at<double>(1, i) = qbw.at<double>(1, 0);
-				qb0w.at<double>(2, i) = qbw.at<double>(2, 0);
-				qb0w.at<double>(3, i) = qbw.at<double>(3, 0);
-				quaternion2Rotation(qbw, tempR);
+				qb0w.at<double>(0, i) = qbw.coord[0];
+				qb0w.at<double>(1, i) = qbw.coord[1];
+				qb0w.at<double>(2, i) = qbw.coord[2];
+				qb0w.at<double>(3, i) = qbw.coord[3];
+                tempR = qbw.rotation();
 
 
 				Rw2b0.push_back(tempR.t());
@@ -298,7 +297,7 @@ int main()
 			// Position of the feature w.r.t. the anchor
 			tempRect = Rect(i, 0, 1, xbb0Hat.rows);
 			tempMat1 = xbb0Hat(tempRect);
-			tempMat2 = Rw2b0[i]*(mu.rowRange(0,3) - xb0wHat.col(i));
+			tempMat2 = (cv::Mat)Rw2b0[i]*(mu.rowRange(0,3) - xb0wHat.col(i));
 			tempMat2.copyTo(tempMat1);
 			
 			Rb2b0.push_back(Rw2b0[i] * Rb2w);
@@ -685,15 +684,15 @@ void reshapeMat3D(vector<double> src, Mat& dst)
 /************************************************************************************************
 * JacobianH. Note: 'i' here should be 1 less 'i' in matlab
 **************************************************************************************************/
-void jacobianH(Mat mu, Mat qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k)
+void jacobianH(Mat mu, Quaternion qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k)
 {
 	double xbw1 = mu.at<double>(0, 0);
 	double xbw2 = mu.at<double>(1, 0);
 	double xbw3 = mu.at<double>(2, 0);
-	double qbw1 = qbw.at<double>(0, 0);
-	double qbw2 = qbw.at<double>(1, 0);
-	double qbw3 = qbw.at<double>(2, 0);
-	double qbw4 = qbw.at<double>(3, 0);
+	double qbw1 = qbw.coord[0];
+	double qbw2 = qbw.coord[1];
+	double qbw3 = qbw.coord[2];
+	double qbw4 = qbw.coord[3];
 
 	double pib1 = mu.at<double>(6 + 3 * i, 0);
 	double pib2 = mu.at<double>(7 + 3 * i, 0);
@@ -783,7 +782,8 @@ void quaternion2Rotation(Mat src, Mat& dst)
 	dst.at<double>(2, 2) = pow(q4, 2) - pow(q1, 2) - pow(q2, 2) + pow(q3, 2);
 }
 
-void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, Mat& f, Mat& F_out)
+void motionModel(Mat mu, Quaternion qbw, Mat a, Mat w, Mat pibHat, int nf, 
+        double dt, Mat& f, Mat& F_out)
 {
     double v1 = mu.at<double>(3, 0);
     double v2 = mu.at<double>(4, 0);
@@ -791,20 +791,15 @@ void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, M
     double w1 = w.at<double>(0, 0);
     double w2 = w.at<double>(1, 0);
     double w3 = w.at<double>(2, 0);
-    double qbw1 = qbw.at<double>(0, 0);
-    double qbw2 = qbw.at<double>(1, 0);
-    double qbw3 = qbw.at<double>(2, 0);
-    double qbw4 = qbw.at<double>(3, 0);
 
-    Mat Rb2w = Mat::zeros(3, 3, CV_64F);
-    Mat Rw2b = Mat::zeros(3, 3, CV_64F);
-    quaternion2Rotation(qbw, Rb2w);
+    Matx33d Rb2w, Rw2b; 
+    Rb2w = qbw.rotation();
     Rw2b = Rb2w.t();
 
     Mat gw = (Mat_<double>(3, 1) << 0, 0, -9.80665);
     Mat A = (Mat_<double>(3, 3) << 0, -w3, w2, w3, 0, -w1, -w2, w1, 0);
-    Mat f1 = Rb2w*mu.rowRange(3, 6);            // UAS location
-    Mat f2 = -A*mu.rowRange(3, 6) + a - Rw2b*gw; // Linear Velocity
+    Mat f1 = (cv::Mat)Rb2w*mu.rowRange(3, 6);            // UAS location
+    Mat f2 = -A*mu.rowRange(3, 6) + a - (cv::Mat)Rw2b*gw; // Linear Velocity
 
 
 
@@ -812,17 +807,21 @@ void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, M
     blockAssign(f, f1, Point(0,0));
     blockAssign(f, f2, Point(0, f1.rows));
 
-    Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, pow(qbw1, 2) - pow(qbw2, 2) -
-pow(qbw3 , 2) + pow(qbw4 , 2), 2 * qbw1*qbw2 - 2 * qbw3*qbw4, 2 * qbw1*qbw3
-+ 2 * qbw2*qbw4,
-                0, 0, 0, 2 * qbw1*qbw2 + 2 * qbw3*qbw4, - pow(qbw1 , 2) +
-pow(qbw2 , 2) - pow(qbw3 , 2) + pow(qbw4 , 2), 2 * qbw2*qbw3 - 2 *
-qbw1*qbw4,
-                 0, 0, 0, 2 * qbw1*qbw3 - 2 * qbw2*qbw4, 2 * qbw1*qbw4 + 2
-* qbw2*qbw3, -pow(qbw1 , 2) - pow(qbw2 , 2) + pow(qbw3 , 2) + pow(qbw4 , 2),
-                 0, 0, 0, 0, w3, -w2,
-                 0, 0, 0, -w3, 0, w1,
-                 0, 0, 0, w2, -w1, 0);
+    Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, 
+            pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
+            2 * qbw.coord[0]*qbw.coord[1] - 2 * qbw.coord[2]*qbw.coord[3],
+            2 * qbw.coord[0]*qbw.coord[2] + 2 * qbw.coord[1]*qbw.coord[3],
+            0, 0, 0,
+            2 * qbw.coord[0]*qbw.coord[1] + 2 * qbw.coord[2]*qbw.coord[3],
+            - pow(qbw.coord[0] , 2) + pow(qbw.coord[1] , 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
+            2 * qbw.coord[1]*qbw.coord[2] - 2 * qbw.coord[0]*qbw.coord[3],
+            0, 0, 0,
+            2 * qbw.coord[0]*qbw.coord[2] - 2 * qbw.coord[1]*qbw.coord[3],
+            2 * qbw.coord[0]*qbw.coord[3] + 2 * qbw.coord[1]*qbw.coord[2],
+            -pow(qbw.coord[0] , 2) - pow(qbw.coord[1] , 2) + pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
+            0, 0, 0, 0, w3, -w2,
+            0, 0, 0, -w3, 0, w1,
+            0, 0, 0, w2, -w1, 0);
 
 
     Mat Fi = Mat::zeros(15, 15, CV_64F);
@@ -892,8 +891,8 @@ Point(Fi_ith_1.cols+FiTemp.cols,0));
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
-        Mat ppbHist, Mat mu, Mat qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w,
-        vector<Mat> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu,
+        Mat ppbHist, Mat mu, Quaternion qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w,
+        vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu,
         Mat& H, Mat& pibHat, Mat& xiwHat)
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
@@ -905,9 +904,9 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 	Mat xpbHat = Mat::zeros(3, 6, CV_64F);
 	Mat ppbHat = Mat::zeros(2, 6, CV_64F);
 
-	Mat Rb2w = Mat::zeros(3, 3, CV_64F);
-	quaternion2Rotation(qbw, Rb2w);
-	Mat Rw2b = Rb2w.t();
+    cv::Matx33d Rb2w, Rw2b;
+    Rb2w = qbw.rotation();
+	Rw2b = Rb2w.t();
 
 	Mat Hb;
 	Mat Hi;
@@ -955,7 +954,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		//xib0Hat.col(i) = xbb0Hat.col(i) + Rb2b0[i]*xibHat.col(i);
 		H2_R = Rect(i, 0, 1, xib0Hat.rows);
 		H2_A = xib0Hat(H2_R);
-		temp = xbb0Hat.col(i) + Rb2b0[i] * xibHat.col(i);
+		temp = xbb0Hat.col(i) + (cv::Mat)Rb2b0[i] * xibHat.col(i);
 		temp.copyTo(H2_A);
 
 		//pib0Hat.col(i) = (Mat_<double>(2, 1) <<
@@ -971,7 +970,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		//xpbHat.col(i) = Rw2b*(S*Rb2w*xibHat.col(i) * n.t()*mu.rowRange(0, 3));
 		H2_R = Rect(i, 0, 1, xpbHat.rows);
 		H2_A = xpbHat(H2_R);
-		temp = Rw2b*(S*Rb2w*xibHat.col(i) -2*n* n.t()*mu.rowRange(0, 3));
+		temp = (cv::Mat)Rw2b*(S*(cv::Mat)Rb2w*xibHat.col(i) -2*n* n.t()*mu.rowRange(0, 3));
 		temp.copyTo(H2_A);
 
 		//ppbHat.col(i) = (Mat_<double>(2, 1) <<
@@ -988,7 +987,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		//xiwHat.col(i) = mu.rowRange(0, 3) + Rb2w*xibHat.col(i);
 		H2_R = Rect(i, 0, 1, xiwHat.rows);
 		H2_A = xiwHat(H2_R);
-		temp = mu.rowRange(0, 3) + Rb2w*xibHat.col(i);
+		temp = mu.rowRange(0, 3) + (cv::Mat)Rb2w*xibHat.col(i);
 		temp.copyTo(H2_A);
 
 		jacobianH(mu, qbw, xb0wHat.col(i), qb0w.col(i), i, Hb, Hi,k);

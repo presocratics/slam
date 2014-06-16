@@ -11,13 +11,12 @@
     cv::Vec3d
 Quaternion::euler ( )
 {
-void quaternion2Euler(Mat src, Mat& dst)
     cv::Vec3d r;
-    r[0] = atan2( 2*q[1]*q[2]+2*q[3]*q[0],pow(q[2],2) 
-            - pow(q[1],2)-pow(q[0],2)+ pow(q[3],2) );
-    r[1] = -1*asin( 2*q[0]*q[2]-2*q[3]*q[1] );
-    r[2] = atan2( 2*q[0]*q[1]+2*q[3]*q[2],pow(q[0],2) 
-            + pow(q[3],2)-pow(q[2],2)-pow(q[1],2) );
+    r[0] = atan2( 2*coord[1]*coord[2]+2*coord[3]*coord[0],pow(coord[2],2) 
+            - pow(coord[1],2)-pow(coord[0],2)+ pow(coord[3],2) );
+    r[1] = -1*asin( 2*coord[0]*coord[2]-2*coord[3]*coord[1] );
+    r[2] = atan2( 2*coord[0]*coord[1]+2*coord[3]*coord[2],pow(coord[0],2) 
+            + pow(coord[3],2)-pow(coord[2],2)-pow(coord[1],2) );
 
     return r ;
 }		/* -----  end of method Quaternion::euler  ----- */
@@ -35,15 +34,15 @@ Quaternion::rotation ( )
 {
     cv::Matx33d m;
 	// -(!) Different From Wikipedia ... ??
-	m(0, 0) = pow(q[3], 2) + pow(q[0], 2) - pow(q[1], 2) - pow(q[2], 2);
-	m(1, 0) = 2 * (q[0]*q[1] + q[3]*q[2]);
-	m(2, 0) = 2 * (q[0]*q[2] - q[3]*q[1]);
-	m(0, 1) = 2 * (q[0]*q[1] - q[3]*q[2]);
-	m(1, 1) = pow(q[3], 2) - pow(q[0], 2) + pow(q[1], 2) - pow(q[2], 2);
-	m(2, 1) = 2 * (q[3]*q[0] + q[1]*q[2]);
-	m(0, 2) = 2 * (q[3]*q[1] + q[0]*q[2]);
-	m(1, 2) = 2 * (q[1]*q[2] - q[3]*q[0]);
-	m(2, 2) = pow(q[3], 2) - pow(q[0], 2) - pow(q[1], 2) + pow(q[2], 2);
-    return ;
+	m(0, 0) = pow(coord[3], 2) + pow(coord[0], 2) - pow(coord[1], 2) - pow(coord[2], 2);
+	m(1, 0) = 2 * (coord[0]*coord[1] + coord[3]*coord[2]);
+	m(2, 0) = 2 * (coord[0]*coord[2] - coord[3]*coord[1]);
+	m(0, 1) = 2 * (coord[0]*coord[1] - coord[3]*coord[2]);
+	m(1, 1) = pow(coord[3], 2) - pow(coord[0], 2) + pow(coord[1], 2) - pow(coord[2], 2);
+	m(2, 1) = 2 * (coord[3]*coord[0] + coord[1]*coord[2]);
+	m(0, 2) = 2 * (coord[3]*coord[1] + coord[0]*coord[2]);
+	m(1, 2) = 2 * (coord[1]*coord[2] - coord[3]*coord[0]);
+	m(2, 2) = pow(coord[3], 2) - pow(coord[0], 2) - pow(coord[1], 2) + pow(coord[2], 2);
+    return m ;
 }		/* -----  end of method Quaternion::rotation  ----- */
 

@@ -11,7 +11,7 @@
 #include <time.h>
 #include <stdint.h>
 #include <cstdio>
-
+#include "Quaternion.hpp"
 using namespace cv;
 
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );
@@ -25,9 +25,12 @@ void reshapeMat3D(vector<double> src, Mat& dst);
 void quaternion2Rotation(Mat src, Mat& dst);
 void quaternion2Euler(Mat src, Mat& dst);
 void euler2Quaternion(Mat src, Mat& dst);
-void jacobianH(Mat mu, Mat qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k);
-void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, Mat& f, Mat& F);
-void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0, Mat ppbHist, Mat mu, Mat qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w, vector<Mat> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, Mat& xiwHat);
+void jacobianH(Mat mu, Quaternion qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k);
+void motionModel(Mat mu, Quaternion qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, Mat& f, Mat& F);
+void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0, 
+        Mat ppbHist, Mat mu, Quaternion qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w,
+        vector<Matx33d> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu,
+        Mat& H, Mat& pibHat, Mat& xiwHat);
 vector<int> findIndex(const Mat& src, double val);
 
 #endif
