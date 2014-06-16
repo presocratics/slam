@@ -355,7 +355,7 @@ int main()
 		}
 
 		// Motion model
-		motionModel(mu, sense.quaternion, a, w, pibHat, nf, sense.dt, f, F);
+		motionModel(mu, sense.quaternion, a, sense.angular_velocity, pibHat, nf, sense.dt, f, F);
 
 
 		if (flagBias == 1)
