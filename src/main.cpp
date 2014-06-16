@@ -132,7 +132,7 @@ int main()
     double alt, alt_old;
     Quaternion qbw;
     Matx33d Rb2w, Rw2b;
-	Mat w = Mat::zeros(3, 1, CV_64F);
+    cv::Vec3d w;
     cv::Vec3d a;
 
 	// inside nf loop
@@ -210,7 +210,7 @@ int main()
 
 		for (int i = 0; i < 3; i++)
 		{
-			w.at<double>(i, 0) = wHist.at<double>(i, k);
+            w[i] = wHist.at<double>(i, k);
 			a[i] = aHist.at<double>(i, k);
 		}
         alt_old = alt;
@@ -749,22 +749,19 @@ void euler2Quaternion(Mat src, Mat& dst)
 		cos(r1 / 2)*cos(r2 / 2)*cos(r3 / 2) + sin(r1 / 2)*sin(r2 / 2)*sin(r3 / 2));
 }
 
-void motionModel(Mat mu, Quaternion qbw, cv::Vec3d a, Mat w, Mat pibHat, int nf, 
+void motionModel(Mat mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat, int nf, 
         double dt, Mat& f, Mat& F_out)
 {
     double v1 = mu.at<double>(3, 0);
     double v2 = mu.at<double>(4, 0);
     double v3 = mu.at<double>(5, 0);
-    double w1 = w.at<double>(0, 0);
-    double w2 = w.at<double>(1, 0);
-    double w3 = w.at<double>(2, 0);
 
     Matx33d Rb2w, Rw2b; 
     Rb2w = qbw.rotation();
     Rw2b = Rb2w.t();
 
     Mat gw = (Mat_<double>(3, 1) << 0, 0, -9.80665);
-    Mat A = (Mat_<double>(3, 3) << 0, -w3, w2, w3, 0, -w1, -w2, w1, 0);
+    Mat A = (Mat_<double>(3, 3) << 0, -w[2], w[1], w[2], 0, -w[0], -w[1], w[0], 0);
     Mat f1 = (cv::Mat)Rb2w*mu.rowRange(3, 6);            // UAS location
     Mat f2 = -A*mu.rowRange(3, 6) + (cv::Mat)a - (cv::Mat)Rw2b*gw; // Linear Velocity
 
@@ -786,9 +783,9 @@ void motionModel(Mat mu, Quaternion qbw, cv::Vec3d a, Mat w, Mat pibHat, int nf,
             2 * qbw.coord[0]*qbw.coord[2] - 2 * qbw.coord[1]*qbw.coord[3],
             2 * qbw.coord[0]*qbw.coord[3] + 2 * qbw.coord[1]*qbw.coord[2],
             -pow(qbw.coord[0] , 2) - pow(qbw.coord[1] , 2) + pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
-            0, 0, 0, 0, w3, -w2,
-            0, 0, 0, -w3, 0, w1,
-            0, 0, 0, w2, -w1, 0);
+            0, 0, 0, 0, w[2], -w[1],
+            0, 0, 0, -w[2], 0, w[0],
+            0, 0, 0, w[1], -w[0], 0);
 
 
     Mat Fi = Mat::zeros(15, 15, CV_64F);
@@ -808,17 +805,17 @@ void motionModel(Mat mu, Quaternion qbw, cv::Vec3d a, Mat w, Mat pibHat, int nf,
         double pib3 = pibHat.at<double>(2, i);
 
         fi = (Mat_<double>(3,1)<<
-                    (-v2 + pib1*v1)*pib3 + pib2*w1 - (1 + pow(pib1 , 2))*w3
-+ pib1*pib2*w2,
-                    (-v3 + pib2*v1)*pib3 - pib1*w1 + (1 + pow(pib2 , 2))*w2
-- pib1*pib2*w3,
-                    (-w3*pib1 + w2*pib2)*pib3 + v1*pow(pib3 , 2));
+                    (-v2 + pib1*v1)*pib3 + pib2*w[0] - (1 + pow(pib1 , 2))*w[2]
++ pib1*pib2*w[1],
+                    (-v3 + pib2*v1)*pib3 - pib1*w[0] + (1 + pow(pib2 , 2))*w[1]
+- pib1*pib2*w[2],
+                    (-w[2]*pib1 + w[1]*pib2)*pib3 + v1*pow(pib3 , 2));
         FiTemp = (Mat_<double>(3, 3) <<
-                    pib3*v3 - 2 * pib1*w2 + pib2*w1, w3 + pib1*w1, pib1*v3
+                    pib3*v3 - 2 * pib1*w[1] + pib2*w[0], w[2] + pib1*w[0], pib1*v3
 - v1,
-                    -w3 - pib2*w2, pib3*v3 - pib1*w2 + 2 * pib2*w1, pib2*v3
+                    -w[2] - pib2*w[1], pib3*v3 - pib1*w[1] + 2 * pib2*w[0], pib2*v3
 - v2,
-                    -pib3*w2, pib3*w1, 2 * pib3*v3 - pib1*w2 + pib2*w1);
+                    -pib3*w[1], pib3*w[0], 2 * pib3*v3 - pib1*w[1] + pib2*w[0]);
         // work on Fib
         Fib_ith = (Mat_<double>(3, 6) <<
                     0, 0, 0, -pib3, 0, pib1*pib3,
