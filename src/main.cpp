@@ -321,7 +321,7 @@ int main()
 				xiwHatHist.at<Vec3d>(j, i)[2] = xiwHat.at<double>(2, i);
 
 				// Removing bad features
-				if (mu.at<double>(8 + 3 * i, 0) < 1 / 10 || mu.at<double>(8 + 3 * i, 0) > 1 / d_min)
+				if (mu.at<double>(8 + 3 * i, 0) < 1./10 || mu.at<double>(8 + 3 * i, 0) > 1 / d_min)
 				{
 					xiwHatHist.at<Vec3d>(j, i)[0] = 0;
 					xiwHatHist.at<Vec3d>(j, i)[1] = 0;
