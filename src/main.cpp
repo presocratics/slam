@@ -16,7 +16,6 @@ int main()
 	std::vector<double> altHist_v;
 	std::vector<double> dtHist_v;
 	std::vector<double> qbwHist_v;
-	std::vector<double> rHist_v;
 	std::vector<double> wHist_v;
 
 	std::vector<double> pibHist_v;
@@ -29,7 +28,7 @@ int main()
 	int stepStart = 1700;
 
 	// Load experimental data (IMU, altimeter)
-	loadData(aHist_v, altHist_v, dtHist_v, qbwHist_v, rHist_v, wHist_v);
+	loadData(aHist_v, altHist_v, dtHist_v, qbwHist_v, wHist_v);
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
 	loadData(pibHist_v, ppbHist_v, refFlag_v, renewHist_v);
 
@@ -38,7 +37,6 @@ int main()
 	Mat altHist = Mat(altHist_v).reshape(1, 1);
 	Mat dtHist = Mat(dtHist_v).reshape(1, 1);
 	Mat qbwHist = Mat::zeros(4, n, CV_64F);
-	Mat rHist = Mat::zeros(3, n, CV_64F);
 	Mat wHist = Mat::zeros(3, n, CV_64F);
 	Mat pibHist = Mat::zeros(stepEnd, 5, CV_64FC3);
 	Mat ppbHist = Mat::zeros(stepEnd, 5, CV_64FC3);
@@ -49,7 +47,6 @@ int main()
 	
 	reshapeMat(aHist_v, aHist);
 	reshapeMat(qbwHist_v, qbwHist);
-	reshapeMat(rHist_v, rHist);
 	reshapeMat(wHist_v, wHist);
 	reshapeMat3D(pibHist_v, pibHist);
 	reshapeMat3D(ppbHist_v, ppbHist);
@@ -624,13 +621,12 @@ void loadData(vector<double>& pibHist, vector<double>& ppbHist, vector<double>& 
     hexToVec( "../data/renewHist.hex", renewHist );
 }
 
-void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dtHist, vector<double>& qbwHist, vector<double>& rHist, vector<double>& wHist)
+void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dtHist, vector<double>& qbwHist, vector<double>& wHist)
 {
     hexToVec( "../data/aHist.hex", aHist );
     hexToVec( "../data/altHist.hex", altHist );
     hexToVec( "../data/dtHist.hex", dtHist );
     hexToVec( "../data/qbwHist.hex", qbwHist );
-    hexToVec( "../data/rHist.hex", rHist );
     hexToVec( "../data/wHist.hex", wHist );
 }
 
