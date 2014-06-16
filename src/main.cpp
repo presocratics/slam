@@ -129,7 +129,7 @@ int main()
 	double d_init = 5;
 	double time = 0;
 	double dt;
-    double alt, alt_old;
+    double altHat;
     Quaternion qbw;
     Matx33d Rb2w, Rw2b;
     cv::Vec3d w;
@@ -208,11 +208,6 @@ int main()
         Rb2w = sense.quaternion.rotation();
 		Rw2b = Rb2w.t();
 
-        alt_old = alt;
-        alt = sense.get_altitude(k);
-
-
-
 		// line 59
 		for (int i = 0; i < nf; i++)
 		{
@@ -220,7 +215,7 @@ int main()
 			r *= 180 / M_PI; 
 
 			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + (cv::Mat)r;
-			d0 = -alt / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
+			d0 = -sense.altitude / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
 
 			d0 = (d0 > d_init) ? d_init : d0;
 
@@ -371,7 +366,7 @@ int main()
 		mu = mu + f*sense.dt;
 
 		// Measurement model
-		measurementModel(k, nf, alt, pibHist, pib0, ppbHist, mu.rowRange(0,21), sense.quaternion, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
+		measurementModel(k, nf, sense.altitude, pibHist, pib0, ppbHist, mu.rowRange(0,21), sense.quaternion, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
 
 		if (flagBias == 1)
 		{
@@ -381,7 +376,7 @@ int main()
 		}
 
         // TODO: Why are we modifying Hist?
-		alt = meas.at<double>(0, 0);
+		altHat = meas.at<double>(0, 0);
 
 		G = sense.dt*Mat::eye(6 + 3 * nf, 6 + 3 * nf, CV_64F);
 		G.at<double>(0, 0) = 0.5*pow(sense.dt, 2);
@@ -400,7 +395,7 @@ int main()
 		}
 
 		// for 2nd street data set
-		if (k > stepStart - 1 && alt - alt_old < -0.6)
+		if (k > stepStart - 1 && altHat - sense.get_altitude(k-1) < -0.6)
 		{
 			Q0 = 20;
 		}
