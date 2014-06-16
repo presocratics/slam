@@ -208,12 +208,6 @@ int main()
         Rb2w = sense.quaternion.rotation();
 		Rw2b = Rb2w.t();
 
-		for (int i = 0; i < 3; i++)
-		{
-            w[i] = wHist.at<double>(i, k);
-			a[i] = aHist.at<double>(i, k);
-		}
-        a=sense.get_acceleration(k);
         alt_old = alt;
         alt = sense.get_altitude(k);
 
@@ -355,7 +349,7 @@ int main()
 		}
 
 		// Motion model
-		motionModel(mu, sense.quaternion, a, sense.angular_velocity, pibHat, nf, sense.dt, f, F);
+		motionModel(mu, sense.quaternion, sense.acceleration, sense.angular_velocity, pibHat, nf, sense.dt, f, F);
 
 
 		if (flagBias == 1)
