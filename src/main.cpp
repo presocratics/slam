@@ -192,7 +192,6 @@ int main()
 		{
 			sums += pow(qbwHist.at<double>(i, k ), 2);
 		}
-        qbw = sense.get_quaternion( k );
         //double qbw_norm;
         //qbw_norm = norm(qbw);
         //qbw*=(1/qbw_norm);
@@ -206,7 +205,7 @@ int main()
 		//}
 		//std::cout << "sums " << sums << std::endl;
 
-        Rb2w = qbw.rotation();
+        Rb2w = sense.quaternion.rotation();
 		Rw2b = Rb2w.t();
 
 		for (int i = 0; i < 3; i++)
@@ -223,7 +222,7 @@ int main()
 		// line 59
 		for (int i = 0; i < nf; i++)
 		{
-            r = qbw.euler();
+            r = sense.quaternion.euler();
 			r *= 180 / M_PI; 
 
 			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + (cv::Mat)r;
@@ -267,11 +266,11 @@ int main()
 				xb0wHat.at<double>(1, i) = mu.at<double>(1, 0);
 				xb0wHat.at<double>(2, i) = mu.at<double>(2, 0);
 
-				qb0w.at<double>(0, i) = qbw.coord[0];
-				qb0w.at<double>(1, i) = qbw.coord[1];
-				qb0w.at<double>(2, i) = qbw.coord[2];
-				qb0w.at<double>(3, i) = qbw.coord[3];
-                tempR = qbw.rotation();
+				qb0w.at<double>(0, i) = sense.quaternion.coord[0];
+				qb0w.at<double>(1, i) = sense.quaternion.coord[1];
+				qb0w.at<double>(2, i) = sense.quaternion.coord[2];
+				qb0w.at<double>(3, i) = sense.quaternion.coord[3];
+                tempR = sense.quaternion.rotation();
 
 
 				Rw2b0.push_back(tempR.t());
@@ -356,7 +355,7 @@ int main()
 		}
 
 		// Motion model
-		motionModel(mu, qbw, a, w, pibHat, nf, sense.dt, f, F);
+		motionModel(mu, sense.quaternion, a, w, pibHat, nf, sense.dt, f, F);
 
 
 		if (flagBias == 1)
@@ -378,7 +377,7 @@ int main()
 		mu = mu + f*sense.dt;
 
 		// Measurement model
-		measurementModel(k, nf, alt, pibHist, pib0, ppbHist, mu.rowRange(0,21), qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
+		measurementModel(k, nf, alt, pibHist, pib0, ppbHist, mu.rowRange(0,21), sense.quaternion, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
 
 		if (flagBias == 1)
 		{
