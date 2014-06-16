@@ -1,6 +1,6 @@
 #ifndef  sensors_INC
 #define  Sensors_INC
-
+#define MAXLINE 1024            /*  */
 #include <cv.h>
 #include "Quaternion.hpp"
 /*
@@ -19,13 +19,9 @@ class Sensors
         }
 
         /* ====================  ACCESSORS     ======================================= */
-        double get_altitude(int timestep) { 
-            return altitudeHist.at<double>(0,timestep); 
-        }
+        double get_altitude();
 
-        double get_dt(int timestep) { 
-            return dtHist.at<double>(0,timestep); 
-        }
+        double get_dt();
 
         cv::Vec3d get_acceleration ( int timestep ) { 
             return Mat2Vec3d( accelerationHist, timestep ); 
@@ -42,9 +38,13 @@ class Sensors
         void update();
         void set_index( int i ) { index=i; }
         void set_acceleration( cv::Mat& src ) { accelerationHist=src; }
-        void set_altitude( cv::Mat& src ) { altitudeHist=src; }
+        void set_altitude ( const char *fn ) {
+            altitude_fp = open_source(fn);
+        }		
         void set_quaternion( cv::Mat& src ) { quaternionHist=src; }
-        void set_dt( cv::Mat& src ) { dtHist=src; }
+        void set_dt ( const char *fn ) {
+            dt_fp = open_source(fn);
+        }		
         void set_angular_velocity( cv::Mat& src ) { angular_velocityHist=src; }
 
         /* ====================  OPERATORS     ======================================= */
@@ -64,11 +64,14 @@ class Sensors
         /* ====================  METHODS       ======================================= */
         cv::Vec3d Mat2Vec3d( cv::Mat src, int timestep );
         cv::Vec4d Mat2Vec4d( cv::Mat src, int timestep );
+        FILE* open_source ( const char *fn );
+        void get_val ( FILE* fp, const char *str, const char *fmt, ... );
 
         /* ====================  DATA MEMBERS  ======================================= */
         int index;
 
         /* Sources */
+        FILE *altitude_fp, *dt_fp;
         cv::Mat accelerationHist, altitudeHist, quaternionHist, dtHist,
             angular_velocityHist;
 

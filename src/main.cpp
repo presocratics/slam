@@ -55,8 +55,8 @@ int main()
 	reshapeMat(renewHist_v, renewHist);
 
     sense.set_acceleration( aHist );
-    sense.set_altitude( altHist );
-    sense.set_dt( dtHist );
+    sense.set_altitude( "../data/altHist.txt" );
+    sense.set_dt( "../data/dtHist.txt" );
     sense.set_quaternion( qbwHist );
     sense.set_angular_velocity( wHist );
 
@@ -129,7 +129,7 @@ int main()
 	double d_init = 5;
 	double time = 0;
 	double dt;
-    double altHat;
+    double altHat, alt_old;
     Quaternion qbw;
     Matx33d Rb2w, Rw2b;
     cv::Vec3d w;
@@ -181,6 +181,7 @@ int main()
     sense.set_index( stepStart-1 );
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
+        alt_old = sense.altitude;
         sense.update();
 		renewk = -1;
 		renewi = -1;
@@ -395,7 +396,7 @@ int main()
 		}
 
 		// for 2nd street data set
-		if (k > stepStart - 1 && altHat - sense.get_altitude(k-1) < -0.6)
+		if (k > stepStart - 1 && altHat - alt_old < -0.6)
 		{
 			Q0 = 20;
 		}
