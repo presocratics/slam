@@ -22,8 +22,6 @@ void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dt
 void copyMat(Mat& src, Mat& dst);
 void reshapeMat(vector<double> src, Mat& dst);
 void reshapeMat3D(vector<double> src, Mat& dst);
-void quaternion2Rotation(Mat src, Mat& dst);
-void quaternion2Euler(Mat src, Mat& dst);
 void euler2Quaternion(Mat src, Mat& dst);
 void jacobianH(Mat mu, Quaternion qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k);
 void motionModel(Mat mu, Quaternion qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, Mat& f, Mat& F);

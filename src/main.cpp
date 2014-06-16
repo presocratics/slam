@@ -744,44 +744,6 @@ void euler2Quaternion(Mat src, Mat& dst)
 		cos(r1 / 2)*cos(r2 / 2)*cos(r3 / 2) + sin(r1 / 2)*sin(r2 / 2)*sin(r3 / 2));
 }
 
-
-/************************************************************************************************
-* Quaternion to Euler Angles. Q = 4x1
-**************************************************************************************************/
-void quaternion2Euler(Mat src, Mat& dst)
-{
-	double q1 = src.at<double>(0, 0);
-	double q2 = src.at<double>(1, 0);
-	double q3 = src.at<double>(2, 0);
-	double q4 = src.at<double>(3, 0);
-	dst = (Mat_<std::complex<double> >(3, 1) <<
-	atan2(2 * q2*q3 + 2 * q4*q1, pow(q3 , 2) - pow(q2 , 2) - pow(q1 , 2) + pow(q4 , 2)),
-	-1*asin(2 * q1*q3 - 2 * q4*q2),
-	atan2(2 * q1*q2 + 2 * q4*q3, pow(q1 , 2) + pow(q4 , 2) - pow(q3 , 2) - pow(q2 , 2)));
-}
-
-/************************************************************************************************
-* Quaternion to Rotation Matrix. Q = 4x1
-**************************************************************************************************/
-void quaternion2Rotation(Mat src, Mat& dst)
-{
-	double q1 = src.at<double>(0, 0);
-	double q2 = src.at<double>(1, 0);
-	double q3 = src.at<double>(2, 0);
-	double q4 = src.at<double>(3, 0);
-
-	// -(!) Different From Wikipedia ... ??
-	dst.at<double>(0, 0) = pow(q4, 2) + pow(q1, 2) - pow(q2, 2) - pow(q3, 2);
-	dst.at<double>(1, 0) = 2 * (q1*q2 + q4*q3);
-	dst.at<double>(2, 0) = 2 * (q1*q3 - q4*q2);
-	dst.at<double>(0, 1) = 2 * (q1*q2 - q4*q3);
-	dst.at<double>(1, 1) = pow(q4, 2) - pow(q1, 2) + pow(q2, 2) - pow(q3, 2);
-	dst.at<double>(2, 1) = 2 * (q4*q1 + q2*q3);
-	dst.at<double>(0, 2) = 2 * (q4*q2 + q1*q3);
-	dst.at<double>(1, 2) = 2 * (q2*q3 - q4*q1);
-	dst.at<double>(2, 2) = pow(q4, 2) - pow(q1, 2) - pow(q2, 2) + pow(q3, 2);
-}
-
 void motionModel(Mat mu, Quaternion qbw, Mat a, Mat w, Mat pibHat, int nf, 
         double dt, Mat& f, Mat& F_out)
 {
