@@ -22,7 +22,7 @@ class Quaternion
 
         /* ====================  OPERATORS     ======================================= */
         cv::Vec3d euler();
-        cv::Vec3d rotation();
+        cv::Matx33d rotation();
 
         /* ====================  DATA MEMBERS  ======================================= */
         cv::Vec4d coord;
