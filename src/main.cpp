@@ -178,20 +178,21 @@ int main()
 	Mat R;
 	Mat K;
 
+    sense.set_index( stepStart-1 );
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
+        sense.update();
 		renewk = -1;
 		renewi = -1;
 		// Compute time
-		dt = dtHist.at<double>(0, k);
-		time = time + dt;
+		time = time + sense.dt;
 		double sums = 0;
 		// Read sensor measurements
 		for (int i = 0; i < 4; i++)
 		{
 			sums += pow(qbwHist.at<double>(i, k ), 2);
-			qbw.coord[i] = qbwHist.at<double>(i, k);
 		}
+        qbw = sense.get_quaternion( k );
         //double qbw_norm;
         //qbw_norm = norm(qbw);
         //qbw*=(1/qbw_norm);
@@ -211,6 +212,7 @@ int main()
 		for (int i = 0; i < 3; i++)
 		{
             w[i] = wHist.at<double>(i, k);
+			a[i] = aHist.at<double>(i, k);
 		}
         a=sense.get_acceleration(k);
         alt_old = alt;
@@ -354,7 +356,7 @@ int main()
 		}
 
 		// Motion model
-		motionModel(mu, qbw, a, w, pibHat, nf, dt, f, F);
+		motionModel(mu, qbw, a, w, pibHat, nf, sense.dt, f, F);
 
 
 		if (flagBias == 1)
@@ -362,9 +364,9 @@ int main()
 			F.at<double>(6 + 3 * nf, 6 + 3 * nf) = 1;
 			F.at<double>(7 + 3 * nf, 7 + 3 * nf) = 1;
 			F.at<double>(8 + 3 * nf, 8 + 3 * nf) = 1;
-			F.at<double>(3, 6 + 3 * nf) = -1*dt;
-			F.at<double>(4, 7 + 3 * nf) = -1 * dt;
-			F.at<double>(5, 8 + 3 * nf) = -1 * dt;
+			F.at<double>(3, 6 + 3 * nf) = -1*sense.dt;
+			F.at<double>(4, 7 + 3 * nf) = -1 * sense.dt;
+			F.at<double>(5, 8 + 3 * nf) = -1 * sense.dt;
 			Mat abiasHat = mu.rowRange(6 + 3 * nf, 6 + 3 * nf + 3);
 			f.at<double>(3, 0) = f.at<double>(3, 0) - abiasHat.at<double>(0, 0);
 			f.at<double>(4, 0) = f.at<double>(4, 0) - abiasHat.at<double>(1, 0);
@@ -373,7 +375,7 @@ int main()
 			f.at<double>(7 + 3 * nf, 0) = 0;
 			f.at<double>(8 + 3 * nf, 0) = 0;
 		}
-		mu = mu + f*dt;
+		mu = mu + f*sense.dt;
 
 		// Measurement model
 		measurementModel(k, nf, alt, pibHist, pib0, ppbHist, mu.rowRange(0,21), qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
@@ -388,20 +390,20 @@ int main()
         // TODO: Why are we modifying Hist?
 		alt = meas.at<double>(0, 0);
 
-		G = dt*Mat::eye(6 + 3 * nf, 6 + 3 * nf, CV_64F);
-		G.at<double>(0, 0) = 0.5*pow(dt, 2);
-		G.at<double>(1, 1) = 0.5*pow(dt, 2);
-		G.at<double>(2, 2) = 0.5*pow(dt, 2);
+		G = sense.dt*Mat::eye(6 + 3 * nf, 6 + 3 * nf, CV_64F);
+		G.at<double>(0, 0) = 0.5*pow(sense.dt, 2);
+		G.at<double>(1, 1) = 0.5*pow(sense.dt, 2);
+		G.at<double>(2, 2) = 0.5*pow(sense.dt, 2);
 
 		if (flagBias == 1)
 		{
-			G = dt*Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
-			G.at<double>(0, 0) = 0.5*pow(dt, 2);
-			G.at<double>(1, 1) = 0.5*pow(dt, 2);
-			G.at<double>(2, 2) = 0.5*pow(dt, 2);
-			G.at<double>(6 + 3 * nf, 6 + 3 * nf) = 0.5*pow(dt, 2);
-			G.at<double>(7 + 3 * nf, 7 + 3 * nf) = 0.5*pow(dt, 2);
-			G.at<double>(8 + 3 * nf, 8 + 3 * nf) = 0.5*pow(dt, 2);
+			G = sense.dt*Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
+			G.at<double>(0, 0) = 0.5*pow(sense.dt, 2);
+			G.at<double>(1, 1) = 0.5*pow(sense.dt, 2);
+			G.at<double>(2, 2) = 0.5*pow(sense.dt, 2);
+			G.at<double>(6 + 3 * nf, 6 + 3 * nf) = 0.5*pow(sense.dt, 2);
+			G.at<double>(7 + 3 * nf, 7 + 3 * nf) = 0.5*pow(sense.dt, 2);
+			G.at<double>(8 + 3 * nf, 8 + 3 * nf) = 0.5*pow(sense.dt, 2);
 		}
 
 		// for 2nd street data set

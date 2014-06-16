@@ -15,19 +15,32 @@ class Sensors
         /* ====================  LIFECYCLE     ======================================= */
         Sensors () /* constructor */
         {
-            i=0;
+            index=0;
         }
 
         /* ====================  ACCESSORS     ======================================= */
-        double get_altitude(int i) { return altitudeHist.at<double>(0,i); }
-        cv::Vec3d get_acceleration(int i);
-        cv::Vec3d get_angular_velocity(int i);
-        cv::Vec4d get_quaternion(int i);
-        double get_dt( int i );
+        double get_altitude(int timestep) { 
+            return altitudeHist.at<double>(0,timestep); 
+        }
+
+        double get_dt(int timestep) { 
+            return dtHist.at<double>(0,timestep); 
+        }
+
+        cv::Vec3d get_acceleration ( int timestep ) { 
+            return Mat2Vec3d( accelerationHist, timestep ); 
+        }
+        cv::Vec3d get_angular_velocity ( int timestep ) { 
+            return Mat2Vec3d( angular_velocityHist, timestep ); 
+        }
+        cv::Vec4d get_quaternion ( int timestep ) { 
+            return Mat2Vec4d( quaternionHist, timestep ); 
+        }
+
 
         /* ====================  MUTATORS      ======================================= */
         void update();
-        void set_index( int index ) { i=index; }
+        void set_index( int i ) { index=i; }
         void set_acceleration( cv::Mat& src ) { accelerationHist=src; }
         void set_altitude( cv::Mat& src ) { altitudeHist=src; }
         void set_quaternion( cv::Mat& src ) { quaternionHist=src; }
@@ -36,6 +49,12 @@ class Sensors
 
         /* ====================  OPERATORS     ======================================= */
 
+        /* ====================  DATA MEMBERS  ======================================= */
+        double altitude;
+        cv::Vec3d acceleration, angular_velocity;
+        Quaternion quaternion;
+        double dt;
+
     protected:
         /* ====================  METHODS       ======================================= */
 
@@ -43,13 +62,11 @@ class Sensors
 
     private:
         /* ====================  METHODS       ======================================= */
+        cv::Vec3d Mat2Vec3d( cv::Mat src, int timestep );
+        cv::Vec4d Mat2Vec4d( cv::Mat src, int timestep );
 
         /* ====================  DATA MEMBERS  ======================================= */
-        int i;
-        double altitude;
-        cv::Vec3d acceleration, angular_velocity;
-        Quaternion quaternion;
-        double dt;
+        int index;
 
         /* Sources */
         cv::Mat accelerationHist, altitudeHist, quaternionHist, dtHist,

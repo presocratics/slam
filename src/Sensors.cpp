@@ -10,42 +10,33 @@
     void
 Sensors::update ( )
 {
-    altitude = get_altitude( i );
-    acceleration = get_acceleration( i );
-    quaternion = get_quaternion( i );
-    //dt = get_dt( i );
-    //angular_velocity = get_angular_velocity( i );
-    ++i;
+    altitude = get_altitude( index );
+    acceleration = get_acceleration( index );
+    quaternion = get_quaternion( index );
+    dt = get_dt( index );
+    angular_velocity = get_angular_velocity( index );
+    ++index;
     return ;
 }		/* -----  end of method Sensors::update  ----- */
 
-
-/*
- *--------------------------------------------------------------------------------------
- *       Class:  Sensors
- *      Method:  Sensors :: get_acceleration
- * Description:  Returns acceleration at timestep i.
- *--------------------------------------------------------------------------------------
- */
     cv::Vec3d
-Sensors::get_acceleration ( int i )
+Sensors::Mat2Vec3d ( cv::Mat src, int timestep )
 {
-    cv::Vec3d a;
-    for( int j=0; j<3; ++j )
+    cv::Vec3d r;
+    for( int i=0; i<3; ++i )
     {
-        a[j] = accelerationHist.at<double>(j, i);
+        r[i] = src.at<double>(i, timestep);
     }
-    return a;
-}		/* -----  end of method Sensors::get_acceleration  ----- */
+    return r;
+}		/* -----  end of method Sensors::Mat2Vec  ----- */
 
     cv::Vec4d
-Sensors::get_quaternion ( int i )
+Sensors::Mat2Vec4d ( cv::Mat src, int timestep )
 {
-    cv::Vec4d q;
-    for( int j=0; j<4; ++j )
+    cv::Vec4d r;
+    for( int i=0; i<4; ++i )
     {
-        q[j] = quaternionHist.at<double>(j, i);
+        r[i] = src.at<double>(i, timestep);
     }
-    return q ;
-}		/* -----  end of method Sensors::get_quaternion  ----- */
-
+    return r;
+}		/* -----  end of method Sensors::Mat2Vec  ----- */
