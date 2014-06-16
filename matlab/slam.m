@@ -52,18 +52,18 @@ for k = stepStart:stepEnd
     
     %! reading sensor measurements
     qbw = qbwHist(:,k);    
-
     %qbw = qbw/norm(qbw); %% Remove norm?
      
-    Rb2w = func_quaternion2Rotation(qbw);       Rw2b = Rb2w';
-
+    Rb2w = func_quaternion2Rotation(qbw);       
+    Rw2b = Rb2w';
+    
     w = wHist(:,k);
     a = aHist(:,k);
+    
     
     qbwHist(:,k) = qbw;
     wHist(:,k) = w;
     aHist(:,k) = a;
-    
     for i = 1:nf
         r = func_quaternion2Euler(qbw)*180/pi;
         pibr = atan2(pibHist(2,k,i),1)*180/pi + r;
@@ -133,7 +133,6 @@ for k = stepStart:stepEnd
     end
     
     %! saving the history of the estimates
-   
     muHist(:,k) = mu;
     
     
@@ -147,10 +146,9 @@ for k = stepStart:stepEnd
         pibHat(2,i) = mu(6+3*i-1);
         pibHat(3,i) = mu(6+3*i-0);
     end
-    
     %! motion model
     [f F] = func_motionModel( mu(1:6+3*nf), qbw, a, w, pibHat, nf, dt);
-    
+  
     if flagBias == 1
         F(6+3*nf+1:6+3*nf+3,6+3*nf+1:6+3*nf+3) = eye(3);
         F(4:6,6+3*nf+1:6+3*nf+3) = -eye(3)*dt;
@@ -158,17 +156,15 @@ for k = stepStart:stepEnd
         f(4:6,1) = f(4:6,1) - abiasHat;
         f(6+3*nf+1:6+3*nf+3,1) = zeros(3,1);
     end
-   
     mu = mu + f*dt;
- 
+    
     %! measurement model
     [meas hmu H pibHat xiwHat] = func_measurementModel( k, nf, altHist(k), pibHist, pib0, ppbHist, mu(1:6+3*nf,1), qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag(k,:), 0 );
    
     if flagBias == 1
         H(1:size(H,1),6+3*nf+1:6+3*nf+3) = zeros(size(H,1),3);
     end
-     
-        
+    
     measHist(1:length(meas),k) = meas;
     altHist(k) = meas(1);
     
@@ -180,7 +176,6 @@ for k = stepStart:stepEnd
     if flagBias == 1
         G(6+3*nf+1:6+3*nf+3,6+3*nf+1:6+3*nf+3) = eye(3)*1/2*dt^2;
     end
-    
     %! for the 2nd street data set
     if k > stepStart && altHist(k)-altHist(k-1) < -0.6
         Q0 = 20;
@@ -191,6 +186,7 @@ for k = stepStart:stepEnd
     if flagBias == 1
         Q(6+3*nf+1:6+3*nf+3,6+3*nf+1:6+3*nf+3) = 0.002*eye(3);
     end
+    
     R = 0.1/770*R0*eye(length(meas));
    
     %! altimeter noise covariance
@@ -205,14 +201,18 @@ for k = stepStart:stepEnd
         %! reflection measurment noise covariance
         R(1+6*i-1:1+6*i-0, 1+6*i-1:1+6*i-0) = 10/770*R0*eye(2);
     end
-    
     %! EKF measurement update
+    tmp1=F*P*F';
     P = F*P*F'+G*Q*G';
-    pause
-     str=sprintf('../data/varout/var%d.hex',k);
-        matlab2txt(F,str,'w');
-    K = P*H'*inv(H*P*H'+R);
-  
+    
+    temppp=H*P*H'+R;
+    
+    %inv(temppp)
+    %pause
+    K=P*H';
+    K=K/temppp;
+    
+    %/temppp;
     mu = mu + K*(meas-hmu);
     P = (eye(size(K*H))-K*H)*P;	P = (P'+P)/2;
     

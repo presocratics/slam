@@ -1,6 +1,6 @@
 #include "main.h"
 //#include "ourerr.hpp"
-
+#define THRESH 2e-10           /*  */
 using std::cout; 
 using std::cerr; 
 using std::endl;
@@ -208,14 +208,12 @@ int main()
 		quaternion2Rotation(qbw, Rb2w);
 		Rw2b = Rb2w.t();
 
-
 		for (int i = 0; i < 3; i++)
 		{
 			w.at<double>(i, 0) = wHist.at<double>(i, k);
 			a.at<double>(i, 0) = aHist.at<double>(i, k);
 		}
 
-		
 
 		// line 59
 		for (int i = 0; i < nf; i++)
@@ -333,7 +331,6 @@ int main()
 
 		} // i loop
 		
-
 		// Saving the history of the estimates
 		tempRect = Rect(k, 0, 1, mu.rows);
 		tempMat1 = muHist(tempRect);
@@ -375,12 +372,8 @@ int main()
 		}
 		mu = mu + f*dt;
 
-
-
 		// Measurement model
 		measurementModel(k, nf, altHist.at<double>(0,k), pibHist, pib0, ppbHist, mu.rowRange(0,21), qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
-
-
 
 		if (flagBias == 1)
 		{
@@ -421,6 +414,7 @@ int main()
 			Q.at<double>(7 + 3 * nf, 7 + 3 * nf) = 0.002;
 			Q.at<double>(8 + 3 * nf, 8 + 3 * nf) = 0.002;
 		}
+
 		R = 0.1 / 770 * R0*Mat::eye(meas.rows, meas.rows, CV_64F);
 
 		// altimeter noise covariance
@@ -443,12 +437,30 @@ int main()
 
 		// EKF measurement update
 
-		P = F*P*F.t() + G*Q*G.t();
+        cv::Mat tmp1, tmp2;
+        cv::Mat Pcopy = P.clone();
+        
+        /* Put multiplication on multiple lines for less error */
+        tmp1 = F*P;
+        tmp1 *= F.t();
+        tmp2 = G*Q;
+        tmp2 *= G.t();
 
+		P = tmp1 + tmp2;
 
-		Mat temppp = (H*P*H.t() + R);
-		K = P*H.t()*temppp.inv();
+        cv::Mat temppp=H*P;
+        temppp *= H.t();
+        temppp += R;
 
+        K = P*H.t();
+        cv::Mat K2= K*temppp.inv();
+
+        K=K.t();
+        temppp=temppp.t();
+        solve(temppp, K, K);
+        K=K.t();
+
+        //K *= temppp.inv();
 		// error Check Passed: P, F, Q, H, G, temppp, K
 
 
@@ -771,141 +783,108 @@ void quaternion2Rotation(Mat src, Mat& dst)
 	dst.at<double>(2, 2) = pow(q4, 2) - pow(q1, 2) - pow(q2, 2) + pow(q3, 2);
 }
 
-void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, Mat& f_out, Mat& F_out)
+void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, Mat& f, Mat& F_out)
 {
-	double v1 = mu.at<double>(3, 0);
-	double v2 = mu.at<double>(4, 0);
-	double v3 = mu.at<double>(5, 0);
-	double w1 = w.at<double>(0, 0);
-	double w2 = w.at<double>(1, 0);
-	double w3 = w.at<double>(2, 0);
-	double qbw1 = qbw.at<double>(0, 0);
-	double qbw2 = qbw.at<double>(1, 0);
-	double qbw3 = qbw.at<double>(2, 0);
-	double qbw4 = qbw.at<double>(3, 0);
+    double v1 = mu.at<double>(3, 0);
+    double v2 = mu.at<double>(4, 0);
+    double v3 = mu.at<double>(5, 0);
+    double w1 = w.at<double>(0, 0);
+    double w2 = w.at<double>(1, 0);
+    double w3 = w.at<double>(2, 0);
+    double qbw1 = qbw.at<double>(0, 0);
+    double qbw2 = qbw.at<double>(1, 0);
+    double qbw3 = qbw.at<double>(2, 0);
+    double qbw4 = qbw.at<double>(3, 0);
 
-	Mat Rb2w = Mat::zeros(3, 3, CV_64F);
-	Mat Rw2b = Mat::zeros(3, 3, CV_64F);
-	quaternion2Rotation(qbw, Rb2w);
-	Rw2b = Rb2w.t();
+    Mat Rb2w = Mat::zeros(3, 3, CV_64F);
+    Mat Rw2b = Mat::zeros(3, 3, CV_64F);
+    quaternion2Rotation(qbw, Rb2w);
+    Rw2b = Rb2w.t();
 
-	Mat gw = (Mat_<double>(3, 1) << 0, 0, -9.80665);
-	Mat A = (Mat_<double>(3, 3) << 0, -w3, w2, w3, 0, -w1, -w2, w1, 0);
-	Mat f1 = Rb2w*mu.rowRange(3, 6);			// UAS location
-	Mat f2 = A*mu.rowRange(3, 6) + a - Rw2b*gw; // Linear Velocity
-	
-	Mat f(mu.rows, f1.cols, CV_64F, Scalar(0));
-
-	//f = [f1;f2]
-	Rect f1_R(0, 0, f1.cols, f1.rows);
-	Rect f2_R(0, f1.rows, f2.cols, f2.rows);
-
-	Mat f1_A = f(f1_R);
-	Mat f2_B = f(f2_R);
-	f1.copyTo(f1_A);
-	f2.copyTo(f2_B);
-	Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, pow(qbw1, 2) - pow(qbw2, 2) - pow(qbw3 , 2) + pow(qbw4 , 2), 2 * qbw1*qbw2 - 2 * qbw3*qbw4, 2 * qbw1*qbw3 + 2 * qbw2*qbw4,
-				0, 0, 0, 2 * qbw1*qbw2 + 2 * qbw3*qbw4, - pow(qbw1 , 2) + pow(qbw2 , 2) - pow(qbw3 , 2) + pow(qbw4 , 2), 2 * qbw2*qbw3 - 2 * qbw1*qbw4,
-				 0, 0, 0, 2 * qbw1*qbw3 - 2 * qbw2*qbw4, 2 * qbw1*qbw4 + 2 * qbw2*qbw3, -pow(qbw1 , 2) - pow(qbw2 , 2) + pow(qbw3 , 2) + pow(qbw4 , 2),
-				 0, 0, 0, 0, w3, -w2,
-				 0, 0, 0, -w3, 0, w1,
-				 0, 0, 0, w2, -w1, 0);
-
-	
-	Mat Fi = Mat::zeros(15, 15, CV_64F);
-	Mat FiTemp;
-	Mat Fib = Mat::zeros(15, 6, CV_64F);
-	Mat Fib_ith;
-	Mat Fi_ith = Mat::zeros(3,15,CV_64F);
-	Mat Fib_A;
-	Mat Fi_A;
-	Rect Fib_R;
-	Rect Fi_R;
-	Mat fi;
-	Mat Fi_ith_1;
-	Mat Fi_ith_2;
-	Mat Fi_ith_3;
-	Rect Fi_ith_1_R;
-	Rect Fi_ith_2_R;
-	Rect Fi_ith_3_R;
-	Mat Fi_ith_A;
-	Mat Fi_ith_B;
-	Mat Fi_ith_C;
-	
-	Rect f_R;
-	Mat f_A;
-	for (int i = 0; i < nf; i++)
-	{
-		double pib1 = pibHat.at<double>(0, i);
-		double pib2 = pibHat.at<double>(1, i);
-		double pib3 = pibHat.at<double>(2, i);
-
-		fi = (Mat_<double>(3,1)<< 
-					(-v2 + pib1*v1)*pib3 + pib2*w1 - (1 + pow(pib1 , 2))*w3 + pib1*pib2*w2,
-					(-v3 + pib2*v1)*pib3 - pib1*w1 + (1 + pow(pib2 , 2))*w2 - pib1*pib2*w3,
-					(-w3*pib1 + w2*pib2)*pib3 + v1*pow(pib3 , 2));
-		FiTemp = (Mat_<double>(3, 3) <<
-					pib3*v3 - 2 * pib1*w2 + pib2*w1, w3 + pib1*w1, pib1*v3 - v1,
-					-w3 - pib2*w2, pib3*v3 - pib1*w2 + 2 * pib2*w1, pib2*v3 - v2,
-					-pib3*w2, pib3*w1, 2 * pib3*v3 - pib1*w2 + pib2*w1);
-		// work on Fib
-		Fib_ith = (Mat_<double>(3, 6) <<
-					0, 0, 0, -pib3, 0, pib1*pib3,
-					0, 0, 0, 0, -pib3, pib2*pib3,
-					0, 0, 0, 0, 0, pow(pib3, 2));
-
-		Fib_R = Rect(0, 3*i, Fib.cols, 3);
-		Fib_A = Fib(Fib_R);
-		Fib_ith.copyTo(Fib_A);
- 		//cout << "Fib_ith: " << Fib_ith << endl;
-
-		// work on Fi
-
-			// work on Fi_ith -> LHS of line 40
-			Fi_ith_1 = Mat::zeros(3, 3 * (i), CV_64F);
-			Fi_ith_2 = FiTemp;
-			Fi_ith_3 = Mat::zeros(3, 3 * (nf-i-1), CV_64F);
-
-			Fi_ith_1_R = Rect(0, 0, Fi_ith_1.cols, Fi_ith_1.rows);
-			Fi_ith_2_R = Rect(Fi_ith_1.cols, 0, Fi_ith_2.cols, Fi_ith_2.rows);
-			Fi_ith_3_R = Rect(Fi_ith_1.cols+FiTemp.cols, 0, Fi_ith_3.cols, Fi_ith_3.rows);
-			Fi_ith_A = Fi_ith(Fi_ith_1_R);
-			Fi_ith_B = Fi_ith(Fi_ith_2_R);
-			Fi_ith_C = Fi_ith(Fi_ith_3_R);
-
-			Fi_ith_1.copyTo(Fi_ith_A);
-			Fi_ith_2.copyTo(Fi_ith_B);
-			Fi_ith_3.copyTo(Fi_ith_C);
-			
-		Fi_R = Rect(0, 3 * i, Fi.cols, 3);
-		Fi_A = Fi(Fi_R);
-		Fi_ith.copyTo(Fi_A);
-
-		f_R = Rect(0, 6 + 3 * i, f.cols, 3 );
-		f_A = f(f_R);
-		fi.copyTo(f_A);
-		
-	}
-	
-	f.copyTo(f_out);
-	Mat temp_out;
-	Mat temp1 = Mat::eye(mu.rows, mu.rows, CV_64F);
-	Mat temp_Fb_A;
-	Mat temp_Fib_A;
-	Mat temp_Fi_A;
-	Rect temp_Fb_R(0, 0, Fb.cols, Fb.rows);
-	Rect temp_Fib_R(0, Fb.rows, Fib.cols, Fib.rows);
-	Rect temp_Fi_R(Fib.cols,Fb.rows,Fi.cols,Fi.rows);
-	temp_Fb_A = F_out(temp_Fb_R);
-	temp_Fib_A = F_out(temp_Fib_R);
-	temp_Fi_A = F_out(temp_Fi_R);
-	Fb.copyTo(temp_Fb_A);
-	Fib.copyTo(temp_Fib_A);
-	Fi.copyTo(temp_Fi_A);
+    Mat gw = (Mat_<double>(3, 1) << 0, 0, -9.80665);
+    Mat A = (Mat_<double>(3, 3) << 0, -w3, w2, w3, 0, -w1, -w2, w1, 0);
+    Mat f1 = Rb2w*mu.rowRange(3, 6);            // UAS location
+    Mat f2 = -A*mu.rowRange(3, 6) + a - Rw2b*gw; // Linear Velocity
 
 
-	F_out = dt*F_out + temp1;
 
+    //f = [f1;f2]
+    blockAssign(f, f1, Point(0,0));
+    blockAssign(f, f2, Point(0, f1.rows));
+
+    Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, pow(qbw1, 2) - pow(qbw2, 2) -
+pow(qbw3 , 2) + pow(qbw4 , 2), 2 * qbw1*qbw2 - 2 * qbw3*qbw4, 2 * qbw1*qbw3
++ 2 * qbw2*qbw4,
+                0, 0, 0, 2 * qbw1*qbw2 + 2 * qbw3*qbw4, - pow(qbw1 , 2) +
+pow(qbw2 , 2) - pow(qbw3 , 2) + pow(qbw4 , 2), 2 * qbw2*qbw3 - 2 *
+qbw1*qbw4,
+                 0, 0, 0, 2 * qbw1*qbw3 - 2 * qbw2*qbw4, 2 * qbw1*qbw4 + 2
+* qbw2*qbw3, -pow(qbw1 , 2) - pow(qbw2 , 2) + pow(qbw3 , 2) + pow(qbw4 , 2),
+                 0, 0, 0, 0, w3, -w2,
+                 0, 0, 0, -w3, 0, w1,
+                 0, 0, 0, w2, -w1, 0);
+
+
+    Mat Fi = Mat::zeros(15, 15, CV_64F);
+    Mat FiTemp;
+    Mat Fib = Mat::zeros(15, 6, CV_64F);
+    Mat Fib_ith;
+    Mat Fi_ith = Mat::zeros(3,15,CV_64F);
+    Mat fi;
+    Mat Fi_ith_1;
+    Mat Fi_ith_2;
+    Mat Fi_ith_3;
+
+    for (int i = 0; i < nf; i++)
+    {
+        double pib1 = pibHat.at<double>(0, i);
+        double pib2 = pibHat.at<double>(1, i);
+        double pib3 = pibHat.at<double>(2, i);
+
+        fi = (Mat_<double>(3,1)<<
+                    (-v2 + pib1*v1)*pib3 + pib2*w1 - (1 + pow(pib1 , 2))*w3
++ pib1*pib2*w2,
+                    (-v3 + pib2*v1)*pib3 - pib1*w1 + (1 + pow(pib2 , 2))*w2
+- pib1*pib2*w3,
+                    (-w3*pib1 + w2*pib2)*pib3 + v1*pow(pib3 , 2));
+        FiTemp = (Mat_<double>(3, 3) <<
+                    pib3*v3 - 2 * pib1*w2 + pib2*w1, w3 + pib1*w1, pib1*v3
+- v1,
+                    -w3 - pib2*w2, pib3*v3 - pib1*w2 + 2 * pib2*w1, pib2*v3
+- v2,
+                    -pib3*w2, pib3*w1, 2 * pib3*v3 - pib1*w2 + pib2*w1);
+        // work on Fib
+        Fib_ith = (Mat_<double>(3, 6) <<
+                    0, 0, 0, -pib3, 0, pib1*pib3,
+                    0, 0, 0, 0, -pib3, pib2*pib3,
+                    0, 0, 0, 0, 0, pow(pib3, 2));
+
+        blockAssign(Fib, Fib_ith, Point(0, 3*i));
+
+
+        // work on Fi
+
+            // work on Fi_ith -> LHS of line 40
+            Fi_ith_1 = Mat::zeros(3, 3 * (i), CV_64F);
+            Fi_ith_2 = FiTemp;
+            Fi_ith_3 = Mat::zeros(3, 3 * (nf-i-1), CV_64F);
+            blockAssign(Fi_ith, Fi_ith_1, Point(0,0));
+            blockAssign(Fi_ith, Fi_ith_2, Point(Fi_ith_1.cols,0));
+            blockAssign(Fi_ith, Fi_ith_3,
+Point(Fi_ith_1.cols+FiTemp.cols,0));
+        blockAssign(Fi, Fi_ith, Point(0,3*i));
+        blockAssign(f, fi, Point(0,6+3*i));
+
+    }
+
+
+
+    Mat temp1 = Mat::eye(mu.rows, mu.rows, CV_64F);
+    F_out.setTo(0);
+    blockAssign(F_out, Fb, Point(0,0));
+    blockAssign(F_out, Fib, Point(0,Fb.rows));
+    blockAssign(F_out, Fi,Point(Fib.cols,Fb.rows));
+    F_out = dt*F_out + temp1;
 }
 
 /************************************************************************************************
