@@ -129,6 +129,7 @@ int main()
 	double d_init = 5;
 	double time = 0;
 	double dt;
+    double alt, alt_old;
     Quaternion qbw;
     Matx33d Rb2w, Rw2b;
 	Mat w = Mat::zeros(3, 1, CV_64F);
@@ -212,6 +213,9 @@ int main()
 			w.at<double>(i, 0) = wHist.at<double>(i, k);
 			a[i] = aHist.at<double>(i, k);
 		}
+        alt_old = alt;
+        alt = altHist.at<double>(0,k);
+
 
 
 		// line 59
@@ -221,7 +225,7 @@ int main()
 			r *= 180 / M_PI; 
 
 			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + (cv::Mat)r;
-			d0 = -altHist.at<double>(0, k) / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
+			d0 = -alt / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
 
 			d0 = (d0 > d_init) ? d_init : d0;
 
@@ -372,7 +376,7 @@ int main()
 		mu = mu + f*dt;
 
 		// Measurement model
-		measurementModel(k, nf, altHist.at<double>(0,k), pibHist, pib0, ppbHist, mu.rowRange(0,21), qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
+		measurementModel(k, nf, alt, pibHist, pib0, ppbHist, mu.rowRange(0,21), qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
 
 		if (flagBias == 1)
 		{
@@ -381,7 +385,8 @@ int main()
 			tempMat1.setTo(0);
 		}
 
-		altHist.at<double>(0, k) = meas.at<double>(0, 0);
+        // TODO: Why are we modifying Hist?
+		alt = meas.at<double>(0, 0);
 
 		G = dt*Mat::eye(6 + 3 * nf, 6 + 3 * nf, CV_64F);
 		G.at<double>(0, 0) = 0.5*pow(dt, 2);
@@ -400,7 +405,7 @@ int main()
 		}
 
 		// for 2nd street data set
-		if (k > stepStart - 1 && altHist.at<double>(0, k) - altHist.at<double>(0, k - 1) < -0.6)
+		if (k > stepStart - 1 && alt - alt_old < -0.6)
 		{
 			Q0 = 20;
 		}
