@@ -132,7 +132,7 @@ int main()
     Quaternion qbw;
     Matx33d Rb2w, Rw2b;
 	Mat w = Mat::zeros(3, 1, CV_64F);
-	Mat a = Mat::zeros(3, 1, CV_64F);
+    cv::Vec3d a;
 
 	// inside nf loop
     cv::Vec3d r;
@@ -210,7 +210,7 @@ int main()
 		for (int i = 0; i < 3; i++)
 		{
 			w.at<double>(i, 0) = wHist.at<double>(i, k);
-			a.at<double>(i, 0) = aHist.at<double>(i, k);
+			a[i] = aHist.at<double>(i, k);
 		}
 
 
@@ -744,7 +744,7 @@ void euler2Quaternion(Mat src, Mat& dst)
 		cos(r1 / 2)*cos(r2 / 2)*cos(r3 / 2) + sin(r1 / 2)*sin(r2 / 2)*sin(r3 / 2));
 }
 
-void motionModel(Mat mu, Quaternion qbw, Mat a, Mat w, Mat pibHat, int nf, 
+void motionModel(Mat mu, Quaternion qbw, cv::Vec3d a, Mat w, Mat pibHat, int nf, 
         double dt, Mat& f, Mat& F_out)
 {
     double v1 = mu.at<double>(3, 0);
@@ -761,7 +761,7 @@ void motionModel(Mat mu, Quaternion qbw, Mat a, Mat w, Mat pibHat, int nf,
     Mat gw = (Mat_<double>(3, 1) << 0, 0, -9.80665);
     Mat A = (Mat_<double>(3, 3) << 0, -w3, w2, w3, 0, -w1, -w2, w1, 0);
     Mat f1 = (cv::Mat)Rb2w*mu.rowRange(3, 6);            // UAS location
-    Mat f2 = -A*mu.rowRange(3, 6) + a - (cv::Mat)Rw2b*gw; // Linear Velocity
+    Mat f2 = -A*mu.rowRange(3, 6) + (cv::Mat)a - (cv::Mat)Rw2b*gw; // Linear Velocity
 
 
 
