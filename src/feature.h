@@ -1,5 +1,8 @@
 // feature class header
 
+#ifndef FEATURE_H
+#define FEATURE_H
+
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <stdio.h>
@@ -7,19 +10,19 @@
 using namespace cv;
 
 class Feature{
-    private:
+    public:
         Vec3d X;
         Scalar RGB;
         int ID;
         int refFlag;
-    public:
+
         // constructor
         Feature();
         ~Feature(); 
         Feature(Vec3d pos, Scalar color, int n, int ref );
 
         // accessor
-        cv::Vec3d getX();
+        Vec3d getX();
         Scalar getRGB();
         int getID();
         int getRefFlag();
@@ -32,3 +35,4 @@ class Feature{
 
 };
 
+#endif
