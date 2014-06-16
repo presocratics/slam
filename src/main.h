@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <cstdio>
 #include "Quaternion.hpp"
+#include "Sensors.hpp"
 using namespace cv;
 
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );

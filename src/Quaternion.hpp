@@ -1,4 +1,4 @@
-#ifndef  quaternion_INC
+#ifndef  Quaternion_INC
 #define  Quaternion_INC
 #include <cv.h>
 

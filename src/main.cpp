@@ -10,6 +10,7 @@ int main()
 	// number of timesteps
 	int n = 4391;
 	int flagBias = 1;
+    Sensors sense;
 
 	// Initialize variables
 	std::vector<double> aHist_v;
@@ -53,9 +54,11 @@ int main()
 	reshapeMat(refFlag_v, refFlag);
 	reshapeMat(renewHist_v, renewHist);
 
- //a
-
-
+    sense.set_acceleration( aHist );
+    sense.set_altitude( altHist );
+    sense.set_dt( dtHist );
+    sense.set_quaternion( qbwHist );
+    sense.set_angular_velocity( wHist );
 
 
 	FILE *file;
@@ -208,10 +211,10 @@ int main()
 		for (int i = 0; i < 3; i++)
 		{
             w[i] = wHist.at<double>(i, k);
-			a[i] = aHist.at<double>(i, k);
 		}
+        a=sense.get_acceleration(k);
         alt_old = alt;
-        alt = altHist.at<double>(0,k);
+        alt = sense.get_altitude(k);
 
 
 
