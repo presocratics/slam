@@ -1,4 +1,6 @@
 #include "main.h"
+
+
 //#include "ourerr.hpp"
 #define THRESH 2e-10           /*  */
 using std::cout; 
@@ -56,36 +58,36 @@ int main()
 	reshapeMat(refFlag_v, refFlag);
 	reshapeMat(renewHist_v, renewHist);
 
- //a
 
 
+    States mu;
+    //Feature f1(Vec3d(0,0,0), Scalar(0,0,0), 0,0 );
+    //f1.setX(Vec3d(10,11,12));
+    //muu.addFeature(f1);
+    //Feature tempmu = muu.features[0];
+    //cout << tempmu.X << endl;
 
 
-	FILE *file;
-	file = fopen("qbwHistOut.txt", "w");
-	for (int i = 0; i<qbwHist.rows; i++)
-	{
-		for (int j = 0; j<qbwHist.cols; j++)
-		{
-			fprintf(file, "%f ", qbwHist.at<double>(i, j));
-		}
-		fprintf(file, "\n");
-	}
-	fclose(file);
 
 	clock_t startTime = clock();
 
 
 	// State initialization
-	Mat mu = Mat::zeros(21, 1, CV_64F);
-	mu.at<double>(2, 0) = -1 * altHist.at<double>(0, stepStart - 1);
-	
+    // mu = [pos vel features bias]
+    //    = [X    V  features  b  ]
+    //
+	//Mat mu = Mat::zeros(21, 1, CV_64F);
+	//mu.at<double>(2, 0) = -1 * altHist.at<double>(0, stepStart - 1);
+	mu.X[2] = -1 * altHist.at<double>(0, stepStart - 1);
+
 	double d0 = 1;
 	for (int i = 0; i < nf; i++)
 	{
-		mu.at<double>(6 + 3 * i, 0) = pibHist.at<Vec3d>(stepStart - 1, i)[0];
-		mu.at<double>(6 + 3 * i + 1, 0) = pibHist.at<Vec3d>(stepStart - 1, i)[1];
-		mu.at<double>(6 + 3 * i+2, 0) = 1/d0;
+		//mu.at<double>(6 + 3 * i, 0) = pibHist.at<Vec3d>(stepStart - 1, i)[0];
+		//mu.at<double>(6 + 3 * i + 1, 0) = pibHist.at<Vec3d>(stepStart - 1, i)[1];
+		//mu.at<double>(6 + 3 * i+2, 0) = 1/d0;
+        Feature ith_feature(Vec3d(pibHist.at<Vec3d>(stepStart - 1, i)[0], pibHist.at<Vec3d>(stepStart - 1, i)[1], 1/d0), Scalar(0,0,0), 0, 0);
+        mu.addFeature(ith_feature);
 	}
 	
 	// Covariance Initialization
@@ -107,18 +109,19 @@ int main()
 
 	if (flagBias == 1)
 	{
-		Mat muTemp = mu.clone();
-		mu.release();
-		mu = Mat::zeros(24, 1, CV_64F);
-		copyMat(muTemp, mu);
+		//Mat muTemp = mu.clone();
+		//mu.release();
+		//mu = Mat::zeros(24, 1, CV_64F);
+		//copyMat(muTemp, mu);
 		Mat temp = P.clone();
 		P.release();
 		P = Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
 		copyMat(temp, P);
-		mu.at<double>(6 + 3 * nf, 0) = 0;
-		mu.at<double>(6 + 3 * nf + 1, 0) = 0;
-		mu.at<double>(6 + 3 * nf + 2, 0) = 0;
-		P.at<double>(6 + 3 * nf, 6 + 3 * nf) = pow(10, -4);
+		//mu.at<double>(6 + 3 * nf, 0) = 0;
+		//mu.at<double>(6 + 3 * nf + 1, 0) = 0;
+		//mu.at<double>(6 + 3 * nf + 2, 0) = 0;
+		mu.setb(Vec3d(0,0,0));
+        P.at<double>(6 + 3 * nf, 6 + 3 * nf) = pow(10, -4);
 		P.at<double>(6 + 3 * nf+1, 6 + 3 * nf+1) = pow(10, -4);
 		P.at<double>(6 + 3 * nf + 2, 6 + 3 * nf + 2) = pow(10, -4);
 		P.at<double>(23,23) = pow(10, -4);
@@ -162,10 +165,11 @@ int main()
 	double d_max = 15;
 	double d_min = 0.5;
 
-	Mat muHist(mu.rows, stepEnd, CV_64F);
+	//Mat muHist(mu.rows, stepEnd, CV_64F);
+    vector<States> muHist;
 	Mat PHist(mu.rows, stepEnd, CV_64F);
 
-	Mat pibHat(3, 5, CV_64F, Scalar(0));					// EKF vars
+	Mat pibHat(3, nf, CV_64F, Scalar(0));					// EKF vars
 	Mat f = Mat::zeros(mu.rows, 1, CV_64F);		// Motion model ouputs
 	Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
 
@@ -226,7 +230,8 @@ int main()
 
 			d0 = (d0 > d_init) ? d_init : d0;
 
-			d0Hist.at<double>(k, i) = 1 / mu.at<double>(8 + 3 * i, 0);
+			//d0Hist.at<double>(k, i) = 1 / mu.at<double>(8 + 3 * i, 0);
+            d0Hist.at<double>(k, i) = 1 / mu.features[i].X[2];
 			// Expreiment: renew elements are piecewise constant
 			renewZero = renewHist.at<double>(i, k - 1);
 			renewZero2 = renewHist.at<double>(i, k);
@@ -258,9 +263,13 @@ int main()
 
 
 				// Location and orientation of each anchor
-				xb0wHat.at<double>(0, i) = mu.at<double>(0, 0);
-				xb0wHat.at<double>(1, i) = mu.at<double>(1, 0);
-				xb0wHat.at<double>(2, i) = mu.at<double>(2, 0);
+			  //xb0wHat.at<double>(0, i) = mu.at<double>(0, 0);
+			  //xb0wHat.at<double>(1, i) = mu.at<double>(1, 0);
+			  //xb0wHat.at<double>(2, i) = mu.at<double>(2, 0);
+				xb0wHat.at<double>(0, i) = mu.X[0];
+				xb0wHat.at<double>(1, i) = mu.X[1];
+				xb0wHat.at<double>(2, i) = mu.X[2];
+
 
 				qb0w.at<double>(0, i) = qbw.at<double>(0, 0);
 				qb0w.at<double>(1, i) = qbw.at<double>(1, 0);
@@ -282,10 +291,11 @@ int main()
 
 				// Re-initialize the state for a new feature
 
-				mu.at<double>(6 + 3 * i, 0) = pibHist.at<Vec3d>(k, i)[0];
-				mu.at<double>(6 + 3 * i + 1, 0) = pibHist.at<Vec3d>(k, i)[1];
-				mu.at<double>(6 + 3 * i + 2, 0) = 1 / d0;
-
+			//	mu.at<double>(6 + 3 * i, 0) = pibHist.at<Vec3d>(k, i)[0];
+			//	mu.at<double>(6 + 3 * i + 1, 0) = pibHist.at<Vec3d>(k, i)[1];
+			//	mu.at<double>(6 + 3 * i + 2, 0) = 1 / d0;
+                mu.features[i].X = Vec3d(  pibHist.at<Vec3d>(k, i)[0],  pibHist.at<Vec3d>(k, i)[1]
+,   1 / d0);
 			} // if k
 
 
@@ -298,19 +308,19 @@ int main()
 			// Position of the feature w.r.t. the anchor
 			tempRect = Rect(i, 0, 1, xbb0Hat.rows);
 			tempMat1 = xbb0Hat(tempRect);
-			tempMat2 = Rw2b0[i]*(mu.rowRange(0,3) - xb0wHat.col(i));
+			tempMat2 = Rw2b0[i]*((Mat)mu.X - xb0wHat.col(i));
 			tempMat2.copyTo(tempMat1);
 			
 			Rb2b0.push_back(Rw2b0[i] * Rb2w);
 
 			// Setting max and min depth
-			if (mu.at<double>(8 + 3 * i) < 1 / d_max)
+			if (mu.features[i].X[2] < 1 / d_max)
 			{
-				mu.at<double>(8 + 3 * i) = 1 / d_max;
+				mu.features[i].X[2] = 1 / d_max;
 			}
-			else if (mu.at<double>(8 + 3 * i) > 1 / d_min)
+			else if ( mu.features[i].X[2] > 1 / d_min)
 			{
-				mu.at<double>(8 + 3 * i) = 1 / d_min;
+				mu.features[i].X[2] = 1 / d_min;
 			}
 
 			// Leaving the final estimate of each feature's location
@@ -321,7 +331,7 @@ int main()
 				xiwHatHist.at<Vec3d>(j, i)[2] = xiwHat.at<double>(2, i);
 
 				// Removing bad features
-				if (mu.at<double>(8 + 3 * i, 0) < 1 / 10 || mu.at<double>(8 + 3 * i, 0) > 1 / d_min)
+				if (mu.features[i].X[2] < 1 / 10 || mu.features[i].X[2] > 1 / d_min)
 				{
 					xiwHatHist.at<Vec3d>(j, i)[0] = 0;
 					xiwHatHist.at<Vec3d>(j, i)[1] = 0;
@@ -332,10 +342,7 @@ int main()
 		} // i loop
 		
 		// Saving the history of the estimates
-		tempRect = Rect(k, 0, 1, mu.rows);
-		tempMat1 = muHist(tempRect);
-		mu.copyTo(tempMat1);
-
+        muHist.push_back(mu);
 		
 		for (int i = 0; i < mu.rows; i++)
 		{
@@ -345,9 +352,9 @@ int main()
 		// Extended Kalman Filter Prediction
 		for (int i = 0; i < nf; i++)
 		{
-			pibHat.at<double>(0, i) = mu.at<double>(6 + 3 * i, 0);
-			pibHat.at<double>(1, i) = mu.at<double>(7 + 3 * i, 0);
-			pibHat.at<double>(2, i) = mu.at<double>(8 + 3 * i, 0);
+			pibHat.at<double>(0, i) = mu.features[i].X[0];
+			pibHat.at<double>(1, i) = mu.features[i].X[1];
+			pibHat.at<double>(2, i) = mu.features[i].X[2];
 		}
 
 		// Motion model
@@ -362,7 +369,7 @@ int main()
 			F.at<double>(3, 6 + 3 * nf) = -1*dt;
 			F.at<double>(4, 7 + 3 * nf) = -1 * dt;
 			F.at<double>(5, 8 + 3 * nf) = -1 * dt;
-			Mat abiasHat = mu.rowRange(6 + 3 * nf, 6 + 3 * nf + 3);
+			Mat abiasHat = (Mat)mu.b;
 			f.at<double>(3, 0) = f.at<double>(3, 0) - abiasHat.at<double>(0, 0);
 			f.at<double>(4, 0) = f.at<double>(4, 0) - abiasHat.at<double>(1, 0);
 			f.at<double>(5, 0) = f.at<double>(5, 0) - abiasHat.at<double>(2, 0);
@@ -370,10 +377,22 @@ int main()
 			f.at<double>(7 + 3 * nf, 0) = 0;
 			f.at<double>(8 + 3 * nf, 0) = 0;
 		}
-		mu = mu + f*dt;
+        States fxdt;
+        
+        fxdt.setX(Vec3d( dt*f.at<double>(0,0), dt*f.at<double>(1,0), dt*f.at<double>(2,0)) );
+        fxdt.setV(Vec3d( dt*f.at<double>(3,0), dt*f.at<double>(4,0), dt*f.at<double>(5,0)) );
+        for(int i=0; i < nf; i++)
+        {
+            Feature tempfeat( Vec3d(  f.at<double>(6+3*i,0)*dt,  f.at<double>(7+3*i,0)*dt,  f.at<double>(8+3*i,0)*dt), Scalar(0,0,0), 0, 0 );
+            fxdt.addFeature(tempfeat);
+        }
+        fxdt.setb(Vec3d(0,0,0));
+
+        mu.add(fxdt);
+		//mu = mu + f*dt;
 
 		// Measurement model
-		measurementModel(k, nf, altHist.at<double>(0,k), pibHist, pib0, ppbHist, mu.rowRange(0,21), qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
+		measurementModel(k, nf, altHist.at<double>(0,k), pibHist, pib0, ppbHist, mu, qbw, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
 
 		if (flagBias == 1)
 		{
@@ -463,8 +482,22 @@ int main()
         //K *= temppp.inv();
 		// error Check Passed: P, F, Q, H, G, temppp, K
 
+        Mat kx = K*(meas-hmu);
+        States kmh;
+        
+        kmh.setX(Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) );
+        kmh.setV(Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) );
+        for(int i=0; i < nf; i++)
+        {
+            Feature tempfeat( Vec3d(  kx.at<double>(6+3*i,0),  kx.at<double>(7+3*i,0),  kx.at<double>(8+3*i,0)), Scalar(0,0,0), 0, 0 );
+            kmh.addFeature(tempfeat);
+        }
+        kmh.setb(Vec3d(  kx.at<double>(6+3*nf,0),  kx.at<double>(7+3*nf,0),  kx.at<double>(8+3*nf,0)));
 
-		mu = mu + K*(meas - hmu);
+        mu.add(kmh);
+
+
+		//mu = mu + K*(meas - hmu);
 		P = (Mat::eye(mu.rows, mu.rows, CV_64F) - K*H)*P;
 		P = (P.t() + P) / 2;
 
@@ -478,31 +511,18 @@ int main()
 	cout << double(clock() - startTime) / (double)CLOCKS_PER_SEC << " seconds." << endl;
 
 
-	FILE *file1;
-	file1 = fopen("xiwHist.txt", "w");
-	for (int i = 0; i< xiwHatHist.rows; i++)
-	{
-		for (int j = 0; j<xiwHatHist.cols; j++)
-		{
-			fprintf(file1, "%f ", xiwHatHist.at<double>(i, j));
-		}
-		fprintf(file1, "\n");
-	}
-	fclose(file1);
-
-
 	int plotFlag = 1;
 
 	if (plotFlag == 1)
 	{
-		int w = 400;
-		int h = 600;
+		int w = 800;
+		int h = 1200;
 		double scaleW = 10;
 		double scaleH = 10;
 		Mat plot = Mat::zeros(w, h, CV_8UC3);
 		for (int i = stepStart - 1; i < stepEnd; i++)
 		{
-			circle(plot, Point(muHist.at<double>(1, i)*scaleW+300, 480-(muHist.at<double>(0, i)*scaleH + 400)), 3, Scalar(0, 10, 220));
+			circle(plot, Point(muHist[i-stepStart+1].X[1]*scaleW+w/2, h/2-(muHist[i-stepStart+1].X[0]*scaleH + h/4 )), 3, Scalar(0, 10, 220));
 		}
 		for (int i = 0; i < stepEnd; i++)
 		{
@@ -514,7 +534,7 @@ int main()
 				if (xiwHatHist.at<Vec3d>(i, j)[0] + xiwHatHist.at<Vec3d>(i, j)[1] != 0.)
 				{
 
-					circle(plot, Point(xiwHatHist.at<Vec3d>(i, j)[1] * scaleW + 300, 480 - (xiwHatHist.at<Vec3d>(i , j)[0] * scaleH + 400)), 2, Scalar(220, 120, 0));
+					circle(plot, Point(xiwHatHist.at<Vec3d>(i, j)[1] * scaleW + w/2, h/2 - (xiwHatHist.at<Vec3d>(i , j)[0] * scaleH + h/4  )), 2, Scalar(220, 120, 0));
 				}
 			}
 		}
@@ -685,19 +705,19 @@ void reshapeMat3D(vector<double> src, Mat& dst)
 /************************************************************************************************
 * JacobianH. Note: 'i' here should be 1 less 'i' in matlab
 **************************************************************************************************/
-void jacobianH(Mat mu, Mat qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k)
+void jacobianH(States mu, Mat qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k)
 {
-	double xbw1 = mu.at<double>(0, 0);
-	double xbw2 = mu.at<double>(1, 0);
-	double xbw3 = mu.at<double>(2, 0);
+	double xbw1 = mu.X[0];
+	double xbw2 = mu.X[1];
+	double xbw3 = mu.X[2];
 	double qbw1 = qbw.at<double>(0, 0);
 	double qbw2 = qbw.at<double>(1, 0);
 	double qbw3 = qbw.at<double>(2, 0);
 	double qbw4 = qbw.at<double>(3, 0);
 
-	double pib1 = mu.at<double>(6 + 3 * i, 0);
-	double pib2 = mu.at<double>(7 + 3 * i, 0);
-	double pib3 = mu.at<double>(8 + 3 * i, 0);
+	double pib1 = mu.features[i].X[0];
+	double pib2 = mu.features[i].X[1];
+	double pib3 = mu.features[i].X[2];
 
 	double xb0w1 = xb0w.at<double>(0, 0);
 	double xb0w2 = xb0w.at<double>(1, 0);
@@ -783,11 +803,11 @@ void quaternion2Rotation(Mat src, Mat& dst)
 	dst.at<double>(2, 2) = pow(q4, 2) - pow(q1, 2) - pow(q2, 2) + pow(q3, 2);
 }
 
-void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, Mat& f, Mat& F_out)
+void motionModel(States mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, Mat& f, Mat& F_out)
 {
-    double v1 = mu.at<double>(3, 0);
-    double v2 = mu.at<double>(4, 0);
-    double v3 = mu.at<double>(5, 0);
+    double v1 = mu.V[0];
+    double v2 = mu.V[1];
+    double v3 = mu.V[2];
     double w1 = w.at<double>(0, 0);
     double w2 = w.at<double>(1, 0);
     double w3 = w.at<double>(2, 0);
@@ -803,8 +823,8 @@ void motionModel(Mat mu, Mat qbw, Mat a, Mat w, Mat pibHat, int nf, double dt, M
 
     Mat gw = (Mat_<double>(3, 1) << 0, 0, -9.80665);
     Mat A = (Mat_<double>(3, 3) << 0, -w3, w2, w3, 0, -w1, -w2, w1, 0);
-    Mat f1 = Rb2w*mu.rowRange(3, 6);            // UAS location
-    Mat f2 = -A*mu.rowRange(3, 6) + a - Rw2b*gw; // Linear Velocity
+    Mat f1 = Rb2w*(Mat)mu.V;            // UAS location
+    Mat f2 = -A*(Mat)mu.V + a - Rw2b*gw; // Linear Velocity
 
 
 
@@ -892,7 +912,7 @@ Point(Fi_ith_1.cols+FiTemp.cols,0));
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
-        Mat ppbHist, Mat mu, Mat qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w,
+        Mat ppbHist, States mu, Mat qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w,
         vector<Mat> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu,
         Mat& H, Mat& pibHat, Mat& xiwHat)
 {
@@ -934,9 +954,9 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		H2_R = Rect(i, 0, 1, pibHat.rows);
 		H2_A = pibHat(H2_R);
 		temp = (Mat_<double>(3, 1) <<
-			mu.at<double>(6 + 3 * i, 0),
-			mu.at<double>(7 + 3 * i, 0),
-			mu.at<double>(8 + 3 * i, 0));
+			mu.features[i].X[0],
+			mu.features[i].X[1],
+			mu.features[i].X[2]);
 		temp.copyTo(H2_A);
 	
 		//xibHat.col(i) = (Mat_<double>(3, 1) <<
@@ -971,7 +991,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		//xpbHat.col(i) = Rw2b*(S*Rb2w*xibHat.col(i) * n.t()*mu.rowRange(0, 3));
 		H2_R = Rect(i, 0, 1, xpbHat.rows);
 		H2_A = xpbHat(H2_R);
-		temp = Rw2b*(S*Rb2w*xibHat.col(i) -2*n* n.t()*mu.rowRange(0, 3));
+		temp = Rw2b*(S*Rb2w*xibHat.col(i) -2*n* n.t()*(Mat)mu.X);
 		temp.copyTo(H2_A);
 
 		//ppbHat.col(i) = (Mat_<double>(2, 1) <<
@@ -988,7 +1008,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		//xiwHat.col(i) = mu.rowRange(0, 3) + Rb2w*xibHat.col(i);
 		H2_R = Rect(i, 0, 1, xiwHat.rows);
 		H2_A = xiwHat(H2_R);
-		temp = mu.rowRange(0, 3) + Rb2w*xibHat.col(i);
+		temp = (Mat)mu.X + Rb2w*xibHat.col(i);
 		temp.copyTo(H2_A);
 
 		jacobianH(mu, qbw, xb0wHat.col(i), qb0w.col(i), i, Hb, Hi,k);
@@ -1006,7 +1026,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 			meas.at<double>(6*i + 5, 0) = ppbHist.at<Vec3d>(k, i)[0]; // reflection
 			meas.at<double>(6*i + 6, 0) = ppbHist.at<Vec3d>(k, i)[1];
 
-			hmu.at<double>(0, 0) = -mu.at<double>(2,0);
+			hmu.at<double>(0, 0) = -mu.X[2];
 			hmu.at<double>(6*i + 1, 0) = pibHat.at<double>(0, i);
 			hmu.at<double>(6*i + 2, 0) = pibHat.at<double>(1, i);
 			hmu.at<double>(6*i + 3, 0) = pib0Hat.at<double>(0, i);
@@ -1016,12 +1036,12 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 
 			H.row(0).col(2).setTo(-1);
             // For each feature
-            cv::Mat Hfeat = cv::Mat::zeros(6,24,CV_64F);
-            blockAssign( Hfeat, cv::Mat::eye(2,2,CV_64F), cv::Point(6+3*i,0) );
-            blockAssign( Hfeat, Hb, cv::Point(0,2) );
-            blockAssign( Hfeat, Hi, cv::Point(6+3*i,2) );
+            Mat Hfeat = Mat::zeros(6,24,CV_64F);
+            blockAssign( Hfeat, Mat::eye(2,2,CV_64F), Point(6+3*i,0) );
+            blockAssign( Hfeat, Hb, Point(0,2) );
+            blockAssign( Hfeat, Hi, Point(6+3*i,2) );
             
-            blockAssign( H, Hfeat, cv::Point(0,1+6*i) );
+            blockAssign( H, Hfeat, Point(0,1+6*i) );
 
 			// features without reflection
 			if (refFlag.at<double>(0, i) == 0)

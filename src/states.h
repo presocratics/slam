@@ -17,6 +17,7 @@ class States{
         std::vector<Feature> features;
         Vec3d b;
         int nf;
+        int rows;
 
         // constructor
         States();
@@ -36,7 +37,7 @@ class States{
         void setFeature(int i, Feature f);
         void addFeature(Feature f);
         void setb(Vec3d bias);
-
+        void add(States a);
 
 };
 
