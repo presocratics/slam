@@ -54,11 +54,11 @@ int main()
 	reshapeMat(refFlag_v, refFlag);
 	reshapeMat(renewHist_v, renewHist);
 
-    sense.set_acceleration( aHist );
+    sense.set_acceleration( "../data/aHistF.txt" );
     sense.set_altitude( "../data/altHist.txt" );
     sense.set_dt( "../data/dtHist.txt" );
-    sense.set_quaternion( qbwHist );
-    sense.set_angular_velocity( wHist );
+    sense.set_quaternion( "../data/qbwHistF.txt" );
+    sense.set_angular_velocity( "../data/wHistF.txt" );
 
 
 	FILE *file;
@@ -178,7 +178,6 @@ int main()
 	Mat R;
 	Mat K;
 
-    sense.set_index( stepStart-1 );
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
         alt_old = sense.altitude;

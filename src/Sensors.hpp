@@ -15,7 +15,7 @@ class Sensors
         /* ====================  LIFECYCLE     ======================================= */
         Sensors () /* constructor */
         {
-            index=0;
+            ;
         }
 
         /* ====================  ACCESSORS     ======================================= */
@@ -24,15 +24,12 @@ class Sensors
         double get_dt();
 
         cv::Vec3d get_acceleration ( );  
-        cv::Vec3d get_angular_velocity ( int timestep ) { 
-            return Mat2Vec3d( angular_velocityHist, timestep ); 
-        }
+        cv::Vec3d get_angular_velocity ( );
         cv::Vec4d get_quaternion ( );
 
 
         /* ====================  MUTATORS      ======================================= */
         void update();
-        void set_index( int i ) { index=i; }
         void set_acceleration( const char *fn ) { 
             acceleration_fp=open_source(fn); 
         }
@@ -49,7 +46,9 @@ class Sensors
             dt_fp = open_source(fn);
         }		
 
-        void set_angular_velocity( cv::Mat& src ) { angular_velocityHist=src; }
+        void set_angular_velocity( const char *fn ) { 
+            angular_velocity_fp=open_source(fn); 
+        }
 
         /* ====================  OPERATORS     ======================================= */
 
@@ -72,12 +71,10 @@ class Sensors
         void get_val ( FILE* fp, const char *str, const char *fmt, ... );
 
         /* ====================  DATA MEMBERS  ======================================= */
-        int index;
 
         /* Sources */
         FILE *altitude_fp, *dt_fp, *acceleration_fp,
-             *quaternion_fp;
-        cv::Mat angular_velocityHist;
+             *quaternion_fp, *angular_velocity_fp;
 
 }; /* -----  end of class Sensors  ----- */
 
