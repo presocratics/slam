@@ -23,9 +23,7 @@ class Sensors
 
         double get_dt();
 
-        cv::Vec3d get_acceleration ( int timestep ) { 
-            return Mat2Vec3d( accelerationHist, timestep ); 
-        }
+        cv::Vec3d get_acceleration ( );  
         cv::Vec3d get_angular_velocity ( int timestep ) { 
             return Mat2Vec3d( angular_velocityHist, timestep ); 
         }
@@ -37,14 +35,20 @@ class Sensors
         /* ====================  MUTATORS      ======================================= */
         void update();
         void set_index( int i ) { index=i; }
-        void set_acceleration( cv::Mat& src ) { accelerationHist=src; }
+        void set_acceleration( const char *fn ) { 
+            acceleration_fp=open_source(fn); 
+        }
+
         void set_altitude ( const char *fn ) {
             altitude_fp = open_source(fn);
         }		
+
         void set_quaternion( cv::Mat& src ) { quaternionHist=src; }
+
         void set_dt ( const char *fn ) {
             dt_fp = open_source(fn);
         }		
+
         void set_angular_velocity( cv::Mat& src ) { angular_velocityHist=src; }
 
         /* ====================  OPERATORS     ======================================= */
@@ -71,9 +75,8 @@ class Sensors
         int index;
 
         /* Sources */
-        FILE *altitude_fp, *dt_fp;
-        cv::Mat accelerationHist, altitudeHist, quaternionHist, dtHist,
-            angular_velocityHist;
+        FILE *altitude_fp, *dt_fp, *acceleration_fp;
+        cv::Mat quaternionHist, angular_velocityHist;
 
 }; /* -----  end of class Sensors  ----- */
 
