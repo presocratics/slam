@@ -49,7 +49,7 @@ Sensors::open_source ( const char *fn )
     if( (fp=fopen(fn,"r"))==NULL )
         err_sys("fopen altitude");
     //TODO: Bogus hack to skip first 1700
-    for( int i=0; i<1699; ++i )
+    for( int i=0; i<1698; ++i )
         fgets( line, MAXLINE, fp );
     return fp ;
 }		/* -----  end of method Sensors::open_source  ----- */

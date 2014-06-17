@@ -13,6 +13,8 @@
 #include <cstdio>
 #include "Quaternion.hpp"
 #include "Sensors.hpp"
+#include "feature.h"
+#include "states.h"
 using namespace cv;
 
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );
@@ -24,12 +26,12 @@ void copyMat(Mat& src, Mat& dst);
 void reshapeMat(vector<double> src, Mat& dst);
 void reshapeMat3D(vector<double> src, Mat& dst);
 void euler2Quaternion(Mat src, Mat& dst);
-void jacobianH(Mat mu, Quaternion qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k);
-void motionModel(Mat mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat, int nf, double dt, Mat& f, Mat& F);
-void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0, 
-        Mat ppbHist, Mat mu, Quaternion qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w,
-        vector<Matx33d> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu,
-        Mat& H, Mat& pibHat, Mat& xiwHat);
+void jacobianH(States mu, Quaternion qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k);
+void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat, int nf, double dt, Mat& f, Mat& F);
+void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
+        Mat ppbHist, States mu, Quaternion qbw, Mat xb0wHat, Mat xbb0Hat,
+        Mat qb0w, vector<Matx33d> Rb2b0, Mat refFlag, int flagMeas, Mat& meas,
+        Mat& hmu, Mat& H, Mat& pibHat, Mat& xiwHat);
 vector<int> findIndex(const Mat& src, double val);
 
 #endif
