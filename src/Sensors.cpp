@@ -12,7 +12,7 @@ Sensors::update ( )
 {
     altitude = get_altitude( );
     acceleration = get_acceleration( );
-    quaternion = get_quaternion( index );
+    quaternion = get_quaternion( );
     dt = get_dt( );
     angular_velocity = get_angular_velocity( index );
     ++index;
@@ -95,4 +95,12 @@ Sensors::get_acceleration ( )
     cv::Vec3d acc;
     get_val( acceleration_fp, "acc", "%lf,%lf,%lf", &acc[0], &acc[1], &acc[2] );
     return acc;
+}		/* -----  end of method Sensors::get_acceleration  ----- */
+
+    cv::Vec4d
+Sensors::get_quaternion ( )
+{
+    cv::Vec4d q;
+    get_val( quaternion_fp, "quat", "%lf,%lf,%lf,%lf", &q[0], &q[1], &q[2], &q[3] );
+    return q;
 }		/* -----  end of method Sensors::get_acceleration  ----- */

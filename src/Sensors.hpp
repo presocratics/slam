@@ -27,9 +27,7 @@ class Sensors
         cv::Vec3d get_angular_velocity ( int timestep ) { 
             return Mat2Vec3d( angular_velocityHist, timestep ); 
         }
-        cv::Vec4d get_quaternion ( int timestep ) { 
-            return Mat2Vec4d( quaternionHist, timestep ); 
-        }
+        cv::Vec4d get_quaternion ( );
 
 
         /* ====================  MUTATORS      ======================================= */
@@ -43,7 +41,9 @@ class Sensors
             altitude_fp = open_source(fn);
         }		
 
-        void set_quaternion( cv::Mat& src ) { quaternionHist=src; }
+        void set_quaternion( const char *fn ) { 
+            quaternion_fp=open_source(fn); 
+        }
 
         void set_dt ( const char *fn ) {
             dt_fp = open_source(fn);
@@ -75,8 +75,9 @@ class Sensors
         int index;
 
         /* Sources */
-        FILE *altitude_fp, *dt_fp, *acceleration_fp;
-        cv::Mat quaternionHist, angular_velocityHist;
+        FILE *altitude_fp, *dt_fp, *acceleration_fp,
+             *quaternion_fp;
+        cv::Mat angular_velocityHist;
 
 }; /* -----  end of class Sensors  ----- */
 
