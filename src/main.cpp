@@ -57,11 +57,11 @@ int main()
 	reshapeMat(refFlag_v, refFlag);
 	reshapeMat(renewHist_v, renewHist);
 
-    sense.set_acceleration( "../data/aHistF.txt" );
-    sense.set_altitude( "../data/altHist.txt" );
-    sense.set_dt( "../data/dtHist.txt" );
-    sense.set_quaternion( "../data/qbwHistF.txt" );
-    sense.set_angular_velocity( "../data/wHistF.txt" );
+    sense.set_acceleration( "../data/aHistF.hex", true );
+    sense.set_altitude( "../data/altHist.hex", true );
+    sense.set_dt( "../data/dtHist.hex", true );
+    sense.set_quaternion( "../data/qbwHistF.hex", true );
+    sense.set_angular_velocity( "../data/wHistF.hex", true );
     sense.update();
 
 

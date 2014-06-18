@@ -75,7 +75,9 @@ Sensors::get_val ( FILE* fp, const char *str, const char *fmt, ... )
 Sensors::get_altitude( )
 { 
     double alt;
-    get_val( altitude_fp, "alt", "%lf", &alt );
+    char str[4];
+    strcpy( str, (altitudeIsHex) ? "%lx" : "%lf" );
+    get_val( altitude_fp, "alt", str, &alt );
     return alt;
 }		/* -----  end of method Sensors::get_altitude  ----- */
 
@@ -83,7 +85,9 @@ Sensors::get_altitude( )
 Sensors::get_dt ( )
 {
     double d;
-    get_val( dt_fp, "dt", "%lf", &d );
+    char str[4];
+    strcpy( str, (dtIsHex) ? "%lx" : "%lf" );
+    get_val( dt_fp, "dt", str, &d );
     return d;
 }		/* -----  end of method Sensors::get_dt  ----- */
 
@@ -92,7 +96,9 @@ Sensors::get_dt ( )
 Sensors::get_acceleration ( )
 {
     cv::Vec3d acc;
-    get_val( acceleration_fp, "acc", "%lf,%lf,%lf", &acc[0], &acc[1], &acc[2] );
+    char str[12];
+    strcpy( str, (accelerationIsHex) ? "%lx,%lx,%lx" : "%lf,%lf,%lf" );
+    get_val( acceleration_fp, "acc", str, &acc[0], &acc[1], &acc[2] );
     return acc;
 }		/* -----  end of method Sensors::get_acceleration  ----- */
 
@@ -100,7 +106,9 @@ Sensors::get_acceleration ( )
 Sensors::get_angular_velocity ( )
 {
     cv::Vec3d w;
-    get_val( angular_velocity_fp, "w", "%lf,%lf,%lf", &w[0], &w[1], &w[2] );
+    char str[12];
+    strcpy( str, (angular_velocityIsHex) ? "%lx,%lx,%lx" : "%lf,%lf,%lf" );
+    get_val( angular_velocity_fp, "w", str, &w[0], &w[1], &w[2] );
     return w;
 }		/* -----  end of method Sensors::get_angular_velocity  ----- */
 
@@ -108,6 +116,8 @@ Sensors::get_angular_velocity ( )
 Sensors::get_quaternion ( )
 {
     cv::Vec4d q;
-    get_val( quaternion_fp, "quat", "%lf,%lf,%lf,%lf", &q[0], &q[1], &q[2], &q[3] );
+    char str[15];
+    strcpy( str, (quaternionIsHex) ? "%lx,%lx,%lx,%lx" : "%lf,%lf,%lf,%lf" );
+    get_val( quaternion_fp, "quat", str, &q[0], &q[1], &q[2], &q[3] );
     return q;
 }		/* -----  end of method Sensors::get_acceleration  ----- */

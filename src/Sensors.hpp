@@ -13,10 +13,7 @@ class Sensors
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        Sensors () /* constructor */
-        {
-            ;
-        }
+        Sensors (){;} /* constructor */
 
         /* ====================  ACCESSORS     ======================================= */
         double get_altitude();
@@ -30,23 +27,28 @@ class Sensors
 
         /* ====================  MUTATORS      ======================================= */
         void update();
-        void set_acceleration( const char *fn ) { 
+        void set_acceleration( const char *fn, bool isHex ) { 
+            accelerationIsHex = isHex;
             acceleration_fp=open_source(fn); 
         }
 
-        void set_altitude ( const char *fn ) {
+        void set_altitude ( const char *fn, bool isHex ) {
+            altitudeIsHex = isHex;
             altitude_fp = open_source(fn);
         }		
 
-        void set_quaternion( const char *fn ) { 
+        void set_quaternion( const char *fn, bool isHex ) { 
+            quaternionIsHex = isHex;
             quaternion_fp=open_source(fn); 
         }
 
-        void set_dt ( const char *fn ) {
+        void set_dt ( const char *fn, bool isHex ) {
+            dtIsHex = isHex;
             dt_fp = open_source(fn);
         }		
 
-        void set_angular_velocity( const char *fn ) { 
+        void set_angular_velocity( const char *fn, bool isHex ) { 
+            angular_velocityIsHex = isHex;
             angular_velocity_fp=open_source(fn); 
         }
 
@@ -71,6 +73,8 @@ class Sensors
         void get_val ( FILE* fp, const char *str, const char *fmt, ... );
 
         /* ====================  DATA MEMBERS  ======================================= */
+        bool accelerationIsHex, altitudeIsHex, angular_velocityIsHex, dtIsHex,
+             quaternionIsHex;
 
         /* Sources */
         FILE *altitude_fp, *dt_fp, *acceleration_fp,
