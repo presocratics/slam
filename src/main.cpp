@@ -685,21 +685,6 @@ void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i
 
 }
 
-/************************************************************************************************
-* Euler Angles to Quaternion. Q = 4x1
-**************************************************************************************************/
-void euler2Quaternion(Mat src, Mat& dst)
-{
-	double r1 = src.at<double>(0, 0);
-	double r2 = src.at<double>(1, 0);
-	double r3 = src.at<double>(2, 0);
-	dst = (Mat_<double> (4, 1) <<
-		sin(r1 / 2)*cos(r2 / 2)*cos(r3 / 2) - cos(r1 / 2)*sin(r2 / 2)*sin(r3 / 2),
-		cos(r1 / 2)*sin(r2 / 2)*cos(r3 / 2) + sin(r1 / 2)*cos(r2 / 2)*sin(r3 / 2),
-		cos(r1 / 2)*cos(r2 / 2)*sin(r3 / 2) - sin(r1 / 2)*sin(r2 / 2)*cos(r3 / 2),
-		cos(r1 / 2)*cos(r2 / 2)*cos(r3 / 2) + sin(r1 / 2)*sin(r2 / 2)*sin(r3 / 2));
-}
-
 void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat,
     int nf, double dt, States& f, Mat& F_out)
 {
