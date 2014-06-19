@@ -55,6 +55,25 @@ Sensors::open_source ( const char *fn )
 }		/* -----  end of method Sensors::open_source  ----- */
 
 
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  Sensors
+ *      Method:  Sensors :: get_val
+ * Description:  Returns value from next line of file pointer in specified
+ * format. Functions that call this can take advantage of the fact the the type of
+ * the vars in the va_list is unknown to get_val. This allows hex to be read
+ * into a double e.g.
+ *
+ * Suppose the string stored in line is the hex value of some double:
+ *
+ * double val;
+ * get_val(fp,"foo","%lx",&val);
+ *
+ * Note that this would not work if vsscanf were used in the calling function in
+ * this way.
+ *
+ *--------------------------------------------------------------------------------------
+ */
     void
 Sensors::get_val ( FILE* fp, const char *str, const char *fmt, ... )
 {
