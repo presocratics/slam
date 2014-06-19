@@ -727,9 +727,9 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
         double pib3 = pibHat.at<double>(2, i);
 
         fi.X = cv::Vec3d( 
-                (-mu.V[1] + pib1*mu.V[0])*pib3 + pib2*w[0] - (1 + pow(pib1 , 2))*w[2] + pib1*pib2*w[1],
-                    (-mu.V[2] + pib2*mu.V[0])*pib3 - pib1*w[0] + (1 + pow(pib2 , 2))*w[1] - pib1*pib2*w[2],
-                    (-w[2]*pib1 + w[1]*pib2)*pib3 + mu.V[0]*pow(pib3 , 2));
+                (-mu.V[1] + pib1*mu.V[0])*pib3 + pib2*w[0] - (1 + pib1*pib1)*w[2] + pib1*pib2*w[1],
+                (-mu.V[2] + pib2*mu.V[0])*pib3 - pib1*w[0] + (1 + pib2*pib2)*w[1] - pib1*pib2*w[2],
+                (-w[2]*pib1 + w[1]*pib2)*pib3 + mu.V[0]*pib3*pib3);
         f.addFeature(fi);
 
         FiTemp = (Mat_<double>(3, 3) <<
@@ -753,14 +753,14 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
 
         // work on Fi
 
-            // work on Fi_ith -> LHS of line 40
-            Fi_ith_1 = Mat::zeros(3, 3 * (i), CV_64F);
-            Fi_ith_2 = FiTemp;
-            Fi_ith_3 = Mat::zeros(3, 3 * (nf-i-1), CV_64F);
-            blockAssign(Fi_ith, Fi_ith_1, Point(0,0));
-            blockAssign(Fi_ith, Fi_ith_2, Point(Fi_ith_1.cols,0));
-            blockAssign(Fi_ith, Fi_ith_3,
-Point(Fi_ith_1.cols+FiTemp.cols,0));
+        // work on Fi_ith -> LHS of line 40
+        Fi_ith_1 = Mat::zeros(3, 3 * (i), CV_64F);
+        Fi_ith_2 = FiTemp;
+        Fi_ith_3 = Mat::zeros(3, 3 * (nf-i-1), CV_64F);
+        blockAssign(Fi_ith, Fi_ith_1, Point(0,0));
+        blockAssign(Fi_ith, Fi_ith_2, Point(Fi_ith_1.cols,0));
+        blockAssign(Fi_ith, Fi_ith_3,
+        Point(Fi_ith_1.cols+FiTemp.cols,0));
         blockAssign(Fi, Fi_ith, Point(0,3*i));
 
     }
