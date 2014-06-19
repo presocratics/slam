@@ -1,7 +1,7 @@
 // states class header
 #ifndef STATES_H
 #define STATES_H
-
+#include "Quaternion.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <stdio.h>
@@ -38,7 +38,7 @@ class States{
         void addFeature(Feature f);
         void setb(Vec3d bias);
         void add(States a);
-
+        States dynamics(Quaternion qbw, cv::Vec3d a, cv::Vec3d w );
 };
 
 #endif

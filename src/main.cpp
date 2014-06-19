@@ -139,7 +139,7 @@ int main()
 	Mat PHist(mu.rows, stepEnd, CV_64F);
 
 	Mat pibHat(3, nf, CV_64F, Scalar(0));					// EKF vars
-	Mat f = Mat::zeros(mu.rows, 1, CV_64F);		// Motion model ouputs
+    States f;
 	Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
 
 	Mat H = Mat::zeros(31, mu.rows, CV_64F);			// Measurement model ouputs
@@ -306,30 +306,21 @@ int main()
 			F.at<double>(3, 6 + 3 * nf) = -1*sense.dt;
 			F.at<double>(4, 7 + 3 * nf) = -1 * sense.dt;
 			F.at<double>(5, 8 + 3 * nf) = -1 * sense.dt;
-			Mat abiasHat = (Mat)mu.b;
-			f.at<double>(3, 0) = f.at<double>(3, 0) - abiasHat.at<double>(0, 0);
-			f.at<double>(4, 0) = f.at<double>(4, 0) - abiasHat.at<double>(1, 0);
-			f.at<double>(5, 0) = f.at<double>(5, 0) - abiasHat.at<double>(2, 0);
-			f.at<double>(6 + 3 * nf, 0) = 0;
-			f.at<double>(7 + 3 * nf, 0) = 0;
-			f.at<double>(8 + 3 * nf, 0) = 0;
+            f.V -= mu.b;
+            f.b = cv::Vec3d(0,0,0);
 		}
         States fxdt;
+
+        // TODO: Encapsulate this in a * operator?
+        f.X*=sense.dt;
+        f.V*=sense.dt;
         
-        fxdt.setX(Vec3d( sense.dt*f.at<double>(0,0), sense.dt*f.at<double>(1,0),
-            sense.dt*f.at<double>(2,0)) );
-        fxdt.setV(Vec3d( sense.dt*f.at<double>(3,0), sense.dt*f.at<double>(4,0),
-            sense.dt*f.at<double>(5,0)) );
         for(int i=0; i < nf; i++)
         {
-            Feature tempfeat( Vec3d(  f.at<double>(6+3*i,0)*sense.dt,
-                f.at<double>(7+3*i,0)*sense.dt,  f.at<double>(8+3*i,0)*sense.dt),
-                Scalar(0,0,0), 0, 0 );
-            fxdt.addFeature(tempfeat);
+            f.features[i].X*=sense.dt;
         }
-        fxdt.setb(Vec3d(0,0,0));
 
-        mu.add(fxdt);
+        mu.add(f);
 
 		// Measurement model
 		measurementModel(k, nf, sense.altitude, pibHist, pib0, ppbHist, mu,
@@ -345,7 +336,6 @@ int main()
 			tempMat1.setTo(0);
 		}
 
-        // TODO: Why are we modifying Hist?
 		altHat = meas.at<double>(0, 0);
 
 		G = sense.dt*Mat::eye(6 + 3 * nf, 6 + 3 * nf, CV_64F);
@@ -710,26 +700,13 @@ void euler2Quaternion(Mat src, Mat& dst)
 		cos(r1 / 2)*cos(r2 / 2)*cos(r3 / 2) + sin(r1 / 2)*sin(r2 / 2)*sin(r3 / 2));
 }
 
-void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat, int nf, double dt, Mat& f, Mat& F_out)
+void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat,
+    int nf, double dt, States& f, Mat& F_out)
 {
-    double v1 = mu.V[0];
-    double v2 = mu.V[1];
-    double v3 = mu.V[2];
 
-    Matx33d Rb2w, Rw2b; 
-    Rb2w = qbw.rotation();
-    Rw2b = Rb2w.t();
+    f = mu.dynamics( qbw, a, w );
 
-    Mat gw = (Mat_<double>(3, 1) << 0, 0, -9.80665);
-    Mat A = (Mat_<double>(3, 3) << 0, -w[2], w[1], w[2], 0, -w[0], -w[1], w[0], 0);
-    Mat f1 = (cv::Mat)Rb2w*(Mat)mu.V;            // UAS location
-    Mat f2 = -A*(Mat)mu.V + (cv::Mat)a - (cv::Mat)Rw2b*gw; // Linear Velocity
-
-
-
-    //f = [f1;f2]
-    blockAssign(f, f1, Point(0,0));
-    blockAssign(f, f2, Point(0, f1.rows));
+    // Generalized matrix multiplication
 
     Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, 
             pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
@@ -753,29 +730,28 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
     Mat Fib = Mat::zeros(15, 6, CV_64F);
     Mat Fib_ith;
     Mat Fi_ith = Mat::zeros(3,15,CV_64F);
-    Mat fi;
     Mat Fi_ith_1;
     Mat Fi_ith_2;
     Mat Fi_ith_3;
 
     for (int i = 0; i < nf; i++)
     {
+        Feature fi;
         double pib1 = pibHat.at<double>(0, i);
         double pib2 = pibHat.at<double>(1, i);
         double pib3 = pibHat.at<double>(2, i);
 
-        fi = (Mat_<double>(3,1)<<
-                    (-v2 + pib1*v1)*pib3 + pib2*w[0] - (1 + pow(pib1 , 2))*w[2]
-+ pib1*pib2*w[1],
-                    (-v3 + pib2*v1)*pib3 - pib1*w[0] + (1 + pow(pib2 , 2))*w[1]
-- pib1*pib2*w[2],
-                    (-w[2]*pib1 + w[1]*pib2)*pib3 + v1*pow(pib3 , 2));
+        fi.X = cv::Vec3d( 
+                (-mu.V[1] + pib1*mu.V[0])*pib3 + pib2*w[0] - (1 + pow(pib1 , 2))*w[2] + pib1*pib2*w[1],
+                    (-mu.V[2] + pib2*mu.V[0])*pib3 - pib1*w[0] + (1 + pow(pib2 , 2))*w[1] - pib1*pib2*w[2],
+                    (-w[2]*pib1 + w[1]*pib2)*pib3 + mu.V[0]*pow(pib3 , 2));
+
         FiTemp = (Mat_<double>(3, 3) <<
-                    pib3*v3 - 2 * pib1*w[1] + pib2*w[0], w[2] + pib1*w[0], pib1*v3
-- v1,
-                    -w[2] - pib2*w[1], pib3*v3 - pib1*w[1] + 2 * pib2*w[0], pib2*v3
-- v2,
-                    -pib3*w[1], pib3*w[0], 2 * pib3*v3 - pib1*w[1] + pib2*w[0]);
+                    pib3*mu.V[2] - 2 * pib1*w[1] + pib2*w[0], w[2] + pib1*w[0], pib1*mu.V[2]
+- mu.V[0],
+                    -w[2] - pib2*w[1], pib3*mu.V[2] - pib1*w[1] + 2 * pib2*w[0], pib2*mu.V[2]
+- mu.V[1],
+                    -pib3*w[1], pib3*w[0], 2 * pib3*mu.V[2] - pib1*w[1] + pib2*w[0]);
         // work on Fib
         Fib_ith = (Mat_<double>(3, 6) <<
                     0, 0, 0, -pib3, 0, pib1*pib3,
@@ -796,7 +772,7 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
             blockAssign(Fi_ith, Fi_ith_3,
 Point(Fi_ith_1.cols+FiTemp.cols,0));
         blockAssign(Fi, Fi_ith, Point(0,3*i));
-        blockAssign(f, fi, Point(0,6+3*i));
+        f.addFeature(fi);
 
     }
 
