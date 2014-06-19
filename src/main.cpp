@@ -185,11 +185,10 @@ int main()
 		// line 59
 		for (int i = 0; i < nf; i++)
 		{
-
 			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + (cv::Mat)r;
 			d0 = -sense.altitude / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
 
-			d0 = (d0 > d_init) ? d_init : d0;
+			d0 = fmin(d0,d_init);
 
 			//d0Hist.at<double>(k, i) = 1 / mu.at<double>(8 + 3 * i, 0);
             d0Hist.at<double>(k, i) = 1 / mu.features[i].X[2];
