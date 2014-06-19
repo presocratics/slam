@@ -116,11 +116,11 @@ int main()
     cv::Vec3d r;
 	Mat pibr;
 	Mat d0Hist(stepEnd, 5, CV_64F, Scalar(0));
-	Mat xb0wHat(3, 5, CV_64F, Scalar(0));
+    vector<cv::Vec3d> xb0wHat(nf);
 	Mat xb0wHatHist(stepEnd, 5, CV_64FC3, Scalar(0));
 	Mat xiwHat(3, 5, CV_64F, Scalar(0));
 	Mat xiwHatHist(stepEnd, 5, CV_64FC3, Scalar(0));
-    vector<Quaternion> qb0w(nf,Quaternion());
+    vector<Quaternion> qb0w(nf);
 	vector<int> renewIndex;
 	int renewZero, renewZero2;
 	int renewi = -1;
@@ -222,9 +222,7 @@ int main()
 
 
 				// Location and orientation of each anchor
-				xb0wHat.at<double>(0, i) = mu.X[0];
-				xb0wHat.at<double>(1, i) = mu.X[1];
-				xb0wHat.at<double>(2, i) = mu.X[2];
+                xb0wHat[i] = mu.X;
 
 
                 qb0w[i].coord = sense.quaternion.coord;
@@ -247,14 +245,12 @@ int main()
                         pibHist.at<Vec3d>(k, i)[1] ,   1 / d0);
 			} // if k
 
-			xb0wHatHist.at<Vec3d>(k, i)[0] = xb0wHat.at<double>(0, i);
-			xb0wHatHist.at<Vec3d>(k, i)[1] = xb0wHat.at<double>(1, i);
-			xb0wHatHist.at<Vec3d>(k, i)[2] = xb0wHat.at<double>(2, i);
+			xb0wHatHist.at<Vec3d>(k, i) = xb0wHat[i];
 
 			// Position of the feature w.r.t. the anchor
 			tempRect = Rect(i, 0, 1, xbb0Hat.rows);
 			tempMat1 = xbb0Hat(tempRect);
-			tempMat2 = (cv::Mat)Rw2b0[i]*((Mat)mu.X - xb0wHat.col(i));
+			tempMat2 = (Mat) (Rw2b0[i]*(mu.X - xb0wHat[i]));
 			tempMat2.copyTo(tempMat1);
 			
 			Rb2b0.push_back(Rw2b0[i] * Rb2w);
@@ -657,7 +653,7 @@ void reshapeMat3D(vector<double> src, Mat& dst)
 /************************************************************************************************
 * JacobianH. Note: 'i' here should be 1 less 'i' in matlab
 **************************************************************************************************/
-void jacobianH(States mu, Quaternion qbw, Mat xb0w, Quaternion qb0w, int i, Mat& Hb, Mat& Hi, int k)
+void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i, Mat& Hb, Mat& Hi, int k)
 {
 	double xbw1 = mu.X[0];
 	double xbw2 = mu.X[1];
@@ -671,9 +667,9 @@ void jacobianH(States mu, Quaternion qbw, Mat xb0w, Quaternion qb0w, int i, Mat&
 	double pib2 = mu.features[i].X[1];
 	double pib3 = mu.features[i].X[2];
 
-	double xb0w1 = xb0w.at<double>(0, 0);
-	double xb0w2 = xb0w.at<double>(1, 0);
-	double xb0w3 = xb0w.at<double>(2, 0);
+	double xb0w1 = xb0w[0];
+	double xb0w2 = xb0w[1];
+	double xb0w3 = xb0w[2];
 	double qb0w1 = qb0w.coord[0];
 	double qb0w2 = qb0w.coord[1];
 	double qb0w3 = qb0w.coord[2];
@@ -822,7 +818,7 @@ Point(Fi_ith_1.cols+FiTemp.cols,0));
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
-    Mat ppbHist, States mu, Quaternion qbw, Mat xb0wHat, Mat xbb0Hat,
+    Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, Mat xbb0Hat,
     vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
     Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, Mat& xiwHat)
 {
@@ -921,7 +917,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		temp = (Mat)mu.X + (cv::Mat)Rb2w*xibHat.col(i);
 		temp.copyTo(H2_A);
 
-		jacobianH(mu, qbw, xb0wHat.col(i), qb0w[i], i, Hb, Hi,k);
+		jacobianH(mu, qbw, xb0wHat[i], qb0w[i], i, Hb, Hi,k);
 
 
 		// 0: all
