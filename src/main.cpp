@@ -639,7 +639,7 @@ void reshapeMat3D(vector<double> src, Mat& dst)
 /************************************************************************************************
 * JacobianH. Note: 'i' here should be 1 less 'i' in matlab
 **************************************************************************************************/
-void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i, Mat& Hb, Mat& Hi, int k)
+void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i, Mat& Hb, Mat& Hi )
 {
 	double xbw1 = mu.X[0];
 	double xbw2 = mu.X[1];
@@ -756,11 +756,7 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
         blockAssign(Fi_ith, Fi_ith_3,
         Point(Fi_ith_1.cols+FiTemp.cols,0));
         blockAssign(Fi, Fi_ith, Point(0,3*i));
-
     }
-
-
-
     Mat temp1 = Mat::eye(mu.rows, mu.rows, CV_64F);
     F_out.setTo(0);
     blockAssign(F_out, Fb, Point(0,0));
@@ -870,7 +866,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		//xiwHat.col(i) = mu.rowRange(0, 3) + Rb2w*xibHat.col(i);
         add(mu.X,(Mat)Rb2w*xibHat.col(i), xiwHat[i] );
 
-		jacobianH(mu, qbw, xb0wHat[i], qb0w[i], i, Hb, Hi,k);
+		jacobianH(mu, qbw, xb0wHat[i], qb0w[i], i, Hb, Hi);
 
 
 		// 0: all
