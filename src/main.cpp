@@ -117,7 +117,7 @@ int main()
 	Mat d0Hist(stepEnd, 5, CV_64F, Scalar(0));
     vector<cv::Vec3d> xb0wHat(nf);
 	Mat xb0wHatHist(stepEnd, 5, CV_64FC3, Scalar(0));
-	Mat xiwHat(3, 5, CV_64F, Scalar(0));
+    vector<cv::Vec3d> xiwHat(nf);
 	Mat xiwHatHist(stepEnd, 5, CV_64FC3, Scalar(0));
     vector<Quaternion> qb0w(nf);
 	vector<int> renewIndex;
@@ -132,8 +132,8 @@ int main()
 
 	Mat xbb0Hat(3, 5, CV_64F, Scalar(0));
 
-	double d_max = 15;
-	double d_min = 0.5;
+	const double d_max = 15;
+	const double d_min = 0.5;
 
     vector<States> muHist;
 	Mat PHist(mu.rows, stepEnd, CV_64F);
@@ -267,9 +267,7 @@ int main()
 			// Leaving the final estimate of each feature's location
 			if (k < stepEnd - 1 && renewHist.at<double>(i, k + 1) != renewZero2 || k == stepEnd)
 			{
-				xiwHatHist.at<Vec3d>(j, i)[0] = xiwHat.at<double>(0, i);
-				xiwHatHist.at<Vec3d>(j, i)[1] = xiwHat.at<double>(1, i);
-				xiwHatHist.at<Vec3d>(j, i)[2] = xiwHat.at<double>(2, i);
+				xiwHatHist.at<Vec3d>(j, i) = xiwHat[i];
 
 				// Removing bad features
 				if (mu.features[i].X[2] < 1. / 10 || mu.features[i].X[2] > 1 / d_min)
@@ -821,7 +819,7 @@ Point(Fi_ith_1.cols+FiTemp.cols,0));
 void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
     Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, Mat xbb0Hat,
     vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
-    Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, Mat& xiwHat)
+    Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, vector<cv::Vec3d>& xiwHat)
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -913,10 +911,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		temp.copyTo(H2_A);
 
 		//xiwHat.col(i) = mu.rowRange(0, 3) + Rb2w*xibHat.col(i);
-		H2_R = Rect(i, 0, 1, xiwHat.rows);
-		H2_A = xiwHat(H2_R);
-		temp = (Mat)mu.X + (cv::Mat)Rb2w*xibHat.col(i);
-		temp.copyTo(H2_A);
+        add(mu.X,(Mat)Rb2w*xibHat.col(i), xiwHat[i] );
 
 		jacobianH(mu, qbw, xb0wHat[i], qb0w[i], i, Hb, Hi,k);
 

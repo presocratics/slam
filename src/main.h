@@ -31,7 +31,7 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
 void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
         Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, Mat xbb0Hat,
         vector<Quaternion> qb0w, vector<Matx33d> Rb2b0, Mat refFlag, int flagMeas, Mat& meas,
-        Mat& hmu, Mat& H, Mat& pibHat, Mat& xiwHat);
+        Mat& hmu, Mat& H, Mat& pibHat, vector<Vec3d>& xiwHat);
 vector<int> findIndex(const Mat& src, double val);
 
 #endif
