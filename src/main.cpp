@@ -114,7 +114,6 @@ int main()
 
 	// inside nf loop
     cv::Vec3d r;
-	Mat pibr;
 	Mat d0Hist(stepEnd, 5, CV_64F, Scalar(0));
     vector<cv::Vec3d> xb0wHat(nf);
 	Mat xb0wHatHist(stepEnd, 5, CV_64FC3, Scalar(0));
@@ -185,8 +184,9 @@ int main()
 		// line 59
 		for (int i = 0; i < nf; i++)
 		{
-			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + (cv::Mat)r;
-			d0 = -sense.altitude / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
+            cv::Vec3d pibr;
+			add( atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI, r, pibr );
+			d0 = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
 
 			d0 = fmin(d0,d_init);
 
