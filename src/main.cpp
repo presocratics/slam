@@ -198,7 +198,6 @@ int main()
 
 			if (k == stepStart-1 || renewHist.at<double>(i, k) != renewZero)
 			{
-
 				renewIndex = findIndex(renewHist, renewHist.at<double>(i, k));
 
 				// Find max
@@ -234,7 +233,6 @@ int main()
 				qb0w.at<double>(3, i) = sense.quaternion.coord[3];
                 tempR = sense.quaternion.rotation();
 
-
 				Rw2b0.push_back(tempR.t());
 				if (Rw2b0.size() > 5)
 				{
@@ -244,7 +242,7 @@ int main()
 
 				pib0.at<double>(0, i) = pibHist.at<Vec3d>(k, i)[0];
 				pib0.at<double>(1, i) = pibHist.at<Vec3d>(k, i)[1];
-				j = j + 1;
+				++j;
 
 				// Re-initialize the state for a new feature
 
@@ -309,8 +307,8 @@ int main()
 		}
 
 		// Motion model
-		motionModel(mu, sense.quaternion, sense.acceleration, sense.angular_velocity, pibHat, nf, sense.dt, f, F);
-
+		motionModel(mu, sense.quaternion, sense.acceleration, sense.angular_velocity,
+                pibHat, nf, sense.dt, f, F);
 
 		if (flagBias == 1)
 		{
