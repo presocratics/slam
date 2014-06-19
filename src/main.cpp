@@ -22,9 +22,9 @@ int main()
 	std::vector<double> refFlag_v;
 	std::vector<double> renewHist_v;
 	
-	int nf = 5;
-	int stepEnd = 4340;
-	int stepStart = 1700;
+	const int nf = 5;
+	const int stepEnd = 4340;
+	const int stepStart = 1700;
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
 	loadData(pibHist_v, ppbHist_v, refFlag_v, renewHist_v);
@@ -120,7 +120,7 @@ int main()
 	Mat xb0wHatHist(stepEnd, 5, CV_64FC3, Scalar(0));
 	Mat xiwHat(3, 5, CV_64F, Scalar(0));
 	Mat xiwHatHist(stepEnd, 5, CV_64FC3, Scalar(0));
-	Mat qb0w(4, 5, CV_64F, Scalar(0));
+    vector<Quaternion> qb0w(nf,Quaternion());
 	vector<int> renewIndex;
 	int renewZero, renewZero2;
 	int renewi = -1;
@@ -227,10 +227,7 @@ int main()
 				xb0wHat.at<double>(2, i) = mu.X[2];
 
 
-				qb0w.at<double>(0, i) = sense.quaternion.coord[0];
-				qb0w.at<double>(1, i) = sense.quaternion.coord[1];
-				qb0w.at<double>(2, i) = sense.quaternion.coord[2];
-				qb0w.at<double>(3, i) = sense.quaternion.coord[3];
+                qb0w[i].coord = sense.quaternion.coord;
                 tempR = sense.quaternion.rotation();
 
 				Rw2b0.push_back(tempR.t());
@@ -660,7 +657,7 @@ void reshapeMat3D(vector<double> src, Mat& dst)
 /************************************************************************************************
 * JacobianH. Note: 'i' here should be 1 less 'i' in matlab
 **************************************************************************************************/
-void jacobianH(States mu, Quaternion qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Mat& Hi, int k)
+void jacobianH(States mu, Quaternion qbw, Mat xb0w, Quaternion qb0w, int i, Mat& Hb, Mat& Hi, int k)
 {
 	double xbw1 = mu.X[0];
 	double xbw2 = mu.X[1];
@@ -677,10 +674,10 @@ void jacobianH(States mu, Quaternion qbw, Mat xb0w, Mat qb0w, int i, Mat& Hb, Ma
 	double xb0w1 = xb0w.at<double>(0, 0);
 	double xb0w2 = xb0w.at<double>(1, 0);
 	double xb0w3 = xb0w.at<double>(2, 0);
-	double qb0w1 = qb0w.at<double>(0, 0);
-	double qb0w2 = qb0w.at<double>(1, 0);
-	double qb0w3 = qb0w.at<double>(2, 0);
-	double qb0w4 = qb0w.at<double>(3, 0);
+	double qb0w1 = qb0w.coord[0];
+	double qb0w2 = qb0w.coord[1];
+	double qb0w3 = qb0w.coord[2];
+	double qb0w4 = qb0w.coord[3];
 
 	Hb = (Mat_<double>(4, 6) <<
 		-(2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4)) / ((2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(xb0w2 - xbw2) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(xb0w3 - xbw3) - ((pow(qbw1 , 2) - pow(qbw2 , 2) - pow(qbw3 , 2) + pow(qbw4 , 2))*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw2 + 2 * qbw3*qbw4) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(2 * qbw1*qbw3 - 2 * qbw2*qbw4)) / pib3 + (xb0w1 - xbw1)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) - (pib1*((2 * qbw1*qbw2 - 2 * qbw3*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) - (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(pow(qbw1 , 2) - pow(qbw2 , 2) + pow(qbw3 , 2) - pow(qbw4 , 2)) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(2 * qbw1*qbw4 + 2 * qbw2*qbw3))) / pib3 + (pib2*((2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(pow(qbw1 , 2) + pow(qbw2 , 2) - pow(qbw3 , 2) - pow(qbw4 , 2)) - (2 * qbw1*qbw3 + 2 * qbw2*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw4 - 2 * qbw2*qbw3))) / pib3) - ((pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2))*(((2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4))*(pow(qbw1 , 2) - pow(qbw2 , 2) - pow(qbw3 , 2) + pow(qbw4 , 2)) - (2 * qbw1*qbw2 + 2 * qbw3*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) + pow((qb0w3) , 2) - pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w4)+2 * (qb0w2)*(qb0w3))*(2 * qbw1*qbw3 - 2 * qbw2*qbw4)) / pib3 - (2 * (qb0w1)*(qb0w4)+2 * (qb0w2)*(qb0w3))*(xb0w3 - xbw3) - (2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4))*(xb0w1 - xbw1) + (xb0w2 - xbw2)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) + pow((qb0w3) , 2) - pow((qb0w4) , 2)) + (pib1*((pow(qbw1 , 2) - pow(qbw2 , 2) + pow(qbw3 , 2) - pow(qbw4 , 2))*(pow((qb0w1) , 2) - pow((qb0w2) , 2) + pow((qb0w3) , 2) - pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw2 - 2 * qbw3*qbw4) + (2 * (qb0w1)*(qb0w4)+2 * (qb0w2)*(qb0w3))*(2 * qbw1*qbw4 + 2 * qbw2*qbw3))) / pib3 + (pib2*((2 * qbw1*qbw4 - 2 * qbw2*qbw3)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) + pow((qb0w3) , 2) - pow((qb0w4) , 2)) - (2 * (qb0w1)*(qb0w4)+2 * (qb0w2)*(qb0w3))*(pow(qbw1 , 2) + pow(qbw2 , 2) - pow(qbw3 , 2) - pow(qbw4 , 2)) + (2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw3 + 2 * qbw2*qbw4))) / pib3)) / pow(((2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(xb0w2 - xbw2) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(xb0w3 - xbw3) - ((pow(qbw1 , 2) - pow(qbw2 , 2) - pow(qbw3 , 2) + pow(qbw4 , 2))*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw2 + 2 * qbw3*qbw4) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(2 * qbw1*qbw3 - 2 * qbw2*qbw4)) / pib3 + (xb0w1 - xbw1)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) - (pib1*((2 * qbw1*qbw2 - 2 * qbw3*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) - (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(pow(qbw1 , 2) - pow(qbw2 , 2) + pow(qbw3 , 2) - pow(qbw4 , 2)) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(2 * qbw1*qbw4 + 2 * qbw2*qbw3))) / pib3 + (pib2*((2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(pow(qbw1 , 2) + pow(qbw2 , 2) - pow(qbw3 , 2) - pow(qbw4 , 2)) - (2 * qbw1*qbw3 + 2 * qbw2*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw4 - 2 * qbw2*qbw3))) / pib3) , 2),
@@ -825,9 +822,9 @@ Point(Fi_ith_1.cols+FiTemp.cols,0));
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
-        Mat ppbHist, States mu, Quaternion qbw, Mat xb0wHat, Mat xbb0Hat, Mat qb0w,
-        vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas, Mat& meas, Mat& hmu,
-        Mat& H, Mat& pibHat, Mat& xiwHat)
+    Mat ppbHist, States mu, Quaternion qbw, Mat xb0wHat, Mat xbb0Hat,
+    vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
+    Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, Mat& xiwHat)
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -924,7 +921,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 		temp = (Mat)mu.X + (cv::Mat)Rb2w*xibHat.col(i);
 		temp.copyTo(H2_A);
 
-		jacobianH(mu, qbw, xb0wHat.col(i), qb0w.col(i), i, Hb, Hi,k);
+		jacobianH(mu, qbw, xb0wHat.col(i), qb0w[i], i, Hb, Hi,k);
 
 
 		// 0: all
