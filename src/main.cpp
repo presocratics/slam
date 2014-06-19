@@ -272,9 +272,7 @@ int main()
 				// Removing bad features
 				if (mu.features[i].X[2] < 1. / 10 || mu.features[i].X[2] > 1 / d_min)
 				{
-					xiwHatHist.at<Vec3d>(j, i)[0] = 0;
-					xiwHatHist.at<Vec3d>(j, i)[1] = 0;
-					xiwHatHist.at<Vec3d>(j, i)[2] = 0;
+					xiwHatHist.at<Vec3d>(j, i) = cv::Vec3d(0,0,0);
 				}
 			}
 
