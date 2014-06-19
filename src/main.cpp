@@ -131,9 +131,6 @@ int main()
 	Mat pib0(2, 5, CV_64F, Scalar(0));
 
 	Mat xbb0Hat(3, 5, CV_64F, Scalar(0));
-	Mat tempMat1;
-	Mat tempMat2;
-	Rect tempRect;
 
 	double d_max = 15;
 	double d_min = 0.5;
@@ -248,6 +245,8 @@ int main()
 			xb0wHatHist.at<Vec3d>(k, i) = xb0wHat[i];
 
 			// Position of the feature w.r.t. the anchor
+            cv::Rect tempRect;
+            Mat tempMat1, tempMat2;
 			tempRect = Rect(i, 0, 1, xbb0Hat.rows);
 			tempMat1 = xbb0Hat(tempRect);
 			tempMat2 = (Mat) (Rw2b0[i]*(mu.X - xb0wHat[i]));
@@ -343,6 +342,8 @@ int main()
 
 		if (flagBias == 1)
 		{
+            cv::Rect tempRect;
+            Mat tempMat1;
 			tempRect = Rect(6+3*nf, 0, 3, H.rows);
 			tempMat1 = H(tempRect);
 			tempMat1.setTo(0);
