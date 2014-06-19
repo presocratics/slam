@@ -98,7 +98,6 @@ int main()
         P.at<double>(6 + 3 * nf, 6 + 3 * nf) = PINIT;
 		P.at<double>(6 + 3 * nf+1, 6 + 3 * nf+1) = PINIT;
 		P.at<double>(6 + 3 * nf + 2, 6 + 3 * nf + 2) = PINIT;
-		P.at<double>(23,23) = PINIT; //TODO Hardcoded?
 	}
 
 	// %% Line 40
@@ -690,8 +689,6 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
 {
 
     f = mu.dynamics( qbw, a, w );
-
-    // Generalized matrix multiplication
 
     Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, 
             pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
