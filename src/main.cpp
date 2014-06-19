@@ -2,6 +2,7 @@
 
 
 //#include "ourerr.hpp"
+#define PINIT 1e-4            /*  */
 #define THRESH 2e-10           /*  */
 using std::cout; 
 using std::cerr; 
@@ -16,12 +17,6 @@ int main()
     States mu;
 
 	// Initialize variables
-	std::vector<double> aHist_v;
-	std::vector<double> altHist_v;
-	std::vector<double> dtHist_v;
-	std::vector<double> qbwHist_v;
-	std::vector<double> wHist_v;
-
 	std::vector<double> pibHist_v;
 	std::vector<double> ppbHist_v;
 	std::vector<double> refFlag_v;
@@ -31,27 +26,16 @@ int main()
 	int stepEnd = 4340;
 	int stepStart = 1700;
 
-	// Load experimental data (IMU, altimeter)
-	loadData(aHist_v, altHist_v, dtHist_v, qbwHist_v, wHist_v);
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
 	loadData(pibHist_v, ppbHist_v, refFlag_v, renewHist_v);
 
 	// Reshape to Matrix
-	Mat aHist = Mat::zeros(3, n, CV_64F);
-	Mat altHist = Mat(altHist_v).reshape(1, 1);
-	Mat dtHist = Mat(dtHist_v).reshape(1, 1);
-	Mat qbwHist = Mat::zeros(4, n, CV_64F);
-	Mat wHist = Mat::zeros(3, n, CV_64F);
 	Mat pibHist = Mat::zeros(stepEnd, 5, CV_64FC3);
 	Mat ppbHist = Mat::zeros(stepEnd, 5, CV_64FC3);
 	Mat refFlag = Mat::zeros(5, stepEnd, CV_64F);
 	Mat renewHist = Mat::zeros(5, stepEnd, CV_64F);
 	Mat noise = Mat::zeros(1 + 6 * 50, stepEnd, CV_64F);
-	altHist = altHist + 0.05*Mat::ones(1, n, CV_64F);
 	
-	reshapeMat(aHist_v, aHist);
-	reshapeMat(qbwHist_v, qbwHist);
-	reshapeMat(wHist_v, wHist);
 	reshapeMat3D(pibHist_v, pibHist);
 	reshapeMat3D(ppbHist_v, ppbHist);
 	reshapeMat(refFlag_v, refFlag);
@@ -64,27 +48,19 @@ int main()
     sense.set_angular_velocity( "../data/wHistF.hex", true );
     sense.update();
 
-
-
-
 	clock_t startTime = clock();
-
 
 	// State initialization
     // mu = [pos vel features bias]
     //    = [X    V  features  b  ]
     //
-	//Mat mu = Mat::zeros(21, 1, CV_64F);
-	//mu.at<double>(2, 0) = -1 * altHist.at<double>(0, stepStart - 1);
 	mu.X[2] = -1 * sense.altitude;
 
 	double d0 = 1;
 	for (int i = 0; i < nf; i++)
 	{
-		//mu.at<double>(6 + 3 * i, 0) = pibHist.at<Vec3d>(stepStart - 1, i)[0];
-		//mu.at<double>(6 + 3 * i + 1, 0) = pibHist.at<Vec3d>(stepStart - 1, i)[1];
-		//mu.at<double>(6 + 3 * i+2, 0) = 1/d0;
-        Feature ith_feature(Vec3d(pibHist.at<Vec3d>(stepStart - 1, i)[0], pibHist.at<Vec3d>(stepStart - 1, i)[1], 1/d0), Scalar(0,0,0), 0, 0);
+        Feature ith_feature(Vec3d(pibHist.at<Vec3d>(stepStart - 1, i)[0],
+                    pibHist.at<Vec3d>(stepStart - 1, i)[1], 1/d0), Scalar(0,0,0), 0, 0);
         mu.addFeature(ith_feature);
 	}
 	
@@ -95,9 +71,9 @@ int main()
 	
 	Mat P = Mat::eye(6 + 3 * nf,6 + 3 * nf, CV_64F);
 
-	P.at<double>(0, 0) = pow(10, -4);	// Location of UAV
-	P.at<double>(1, 1) = pow(10, -4);
-	P.at<double>(2, 2) = pow(10, -4);
+	P.at<double>(0, 0) = PINIT;	// Location of UAV
+	P.at<double>(1, 1) = PINIT;
+	P.at<double>(2, 2) = PINIT;
 	
 	// Inverse depth
 	for (int i = 0; i < nf; i++)
@@ -119,10 +95,10 @@ int main()
 		//mu.at<double>(6 + 3 * nf + 1, 0) = 0;
 		//mu.at<double>(6 + 3 * nf + 2, 0) = 0;
 		mu.setb(Vec3d(0,0,0));
-        P.at<double>(6 + 3 * nf, 6 + 3 * nf) = pow(10, -4);
-		P.at<double>(6 + 3 * nf+1, 6 + 3 * nf+1) = pow(10, -4);
-		P.at<double>(6 + 3 * nf + 2, 6 + 3 * nf + 2) = pow(10, -4);
-		P.at<double>(23,23) = pow(10, -4);
+        P.at<double>(6 + 3 * nf, 6 + 3 * nf) = PINIT;
+		P.at<double>(6 + 3 * nf+1, 6 + 3 * nf+1) = PINIT;
+		P.at<double>(6 + 3 * nf + 2, 6 + 3 * nf + 2) = PINIT;
+		P.at<double>(23,23) = PINIT; //TODO Hardcoded?
 	}
 
 	// %% Line 40
@@ -163,7 +139,6 @@ int main()
 	double d_max = 15;
 	double d_min = 0.5;
 
-	//Mat muHist(mu.rows, stepEnd, CV_64F);
     vector<States> muHist;
 	Mat PHist(mu.rows, stepEnd, CV_64F);
 
@@ -183,23 +158,18 @@ int main()
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
         alt_old = sense.altitude;
+		// Read sensor measurements
         sense.update();
 		renewk = -1;
 		renewi = -1;
 		// Compute time
-		time = time + sense.dt;
-		double sums = 0;
-		// Read sensor measurements
-		for (int i = 0; i < 4; i++)
-		{
-			sums += pow(qbwHist.at<double>(i, k ), 2);
-		}
+		time += sense.dt;
+
+        //TODO: Do we need this norm?
         //double qbw_norm;
         //qbw_norm = norm(qbw);
         //qbw*=(1/qbw_norm);
-
-
-		//normalize qbw  -(!) NEED FIX =======================================================
+		//normalize qbw  -(!) NEED FIX ==================================================
 		//for (int i = 0; i < 4; i++)
 		//{
 		//	sums = pow(sums, 0.5);
@@ -209,12 +179,12 @@ int main()
 
         Rb2w = sense.quaternion.rotation();
 		Rw2b = Rb2w.t();
+        r = sense.quaternion.euler();
+        r *= 180 / M_PI; 
 
 		// line 59
 		for (int i = 0; i < nf; i++)
 		{
-            r = sense.quaternion.euler();
-			r *= 180 / M_PI; 
 
 			pibr = atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI + (cv::Mat)r;
 			d0 = -sense.altitude / sin(pibr.at<double>(1, 0) / 180 * M_PI) * 2;
@@ -254,9 +224,6 @@ int main()
 
 
 				// Location and orientation of each anchor
-			  //xb0wHat.at<double>(0, i) = mu.at<double>(0, 0);
-			  //xb0wHat.at<double>(1, i) = mu.at<double>(1, 0);
-			  //xb0wHat.at<double>(2, i) = mu.at<double>(2, 0);
 				xb0wHat.at<double>(0, i) = mu.X[0];
 				xb0wHat.at<double>(1, i) = mu.X[1];
 				xb0wHat.at<double>(2, i) = mu.X[2];
@@ -282,15 +249,9 @@ int main()
 
 				// Re-initialize the state for a new feature
 
-			//	mu.at<double>(6 + 3 * i, 0) = pibHist.at<Vec3d>(k, i)[0];
-			//	mu.at<double>(6 + 3 * i + 1, 0) = pibHist.at<Vec3d>(k, i)[1];
-			//	mu.at<double>(6 + 3 * i + 2, 0) = 1 / d0;
-                mu.features[i].X = Vec3d(  pibHist.at<Vec3d>(k, i)[0],  pibHist.at<Vec3d>(k, i)[1]
-,   1 / d0);
+                mu.features[i].X = Vec3d( pibHist.at<Vec3d>(k, i)[0], 
+                        pibHist.at<Vec3d>(k, i)[1] ,   1 / d0);
 			} // if k
-
-
-
 
 			xb0wHatHist.at<Vec3d>(k, i)[0] = xb0wHat.at<double>(0, i);
 			xb0wHatHist.at<Vec3d>(k, i)[1] = xb0wHat.at<double>(1, i);
@@ -480,7 +441,8 @@ int main()
         kmh.setV(Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) );
         for(int i=0; i < nf; i++)
         {
-            Feature tempfeat( Vec3d(  kx.at<double>(6+3*i,0),  kx.at<double>(7+3*i,0),  kx.at<double>(8+3*i,0)), Scalar(0,0,0), 0, 0 );
+            Feature tempfeat( Vec3d(  kx.at<double>(6+3*i,0),  kx.at<double>(7+3*i,0),
+                        kx.at<double>(8+3*i,0)), Scalar(0,0,0), 0, 0 );
             kmh.addFeature(tempfeat);
         }
         kmh.setb(Vec3d(  kx.at<double>(6+3*nf,0),  kx.at<double>(7+3*nf,0),  kx.at<double>(8+3*nf,0)));
@@ -513,19 +475,19 @@ int main()
 		Mat plot = Mat::zeros(w, h, CV_8UC3);
 		for (int i = stepStart - 1; i < stepEnd; i++)
 		{
-			circle(plot, Point(muHist[i-stepStart+1].X[1]*scaleW+w/2, h/2-(muHist[i-stepStart+1].X[0]*scaleH + h/4 )), 3, Scalar(0, 10, 220));
+			circle(plot, Point(muHist[i-stepStart+1].X[1]*scaleW+w/2,
+                        h/2-(muHist[i-stepStart+1].X[0]*scaleH + h/4 )), 3, Scalar(0, 10, 220));
 		}
 		for (int i = 0; i < stepEnd; i++)
 		{
-
 			for (int j = 0; j < 5; j++)
 			{
-				//
 				//Point(xiwHatHist.at<Vec3d>(i, j)[0], xiwHatHist.at<Vec3d>(i, j)[0])
 				if (xiwHatHist.at<Vec3d>(i, j)[0] + xiwHatHist.at<Vec3d>(i, j)[1] != 0.)
 				{
-
-					circle(plot, Point(xiwHatHist.at<Vec3d>(i, j)[1] * scaleW + w/2, h/2 - (xiwHatHist.at<Vec3d>(i , j)[0] * scaleH + h/4  )), 2, Scalar(220, 120, 0));
+					circle(plot, Point(xiwHatHist.at<Vec3d>(i, j)[1] * scaleW + w/2,
+                                h/2 - (xiwHatHist.at<Vec3d>(i , j)[0] * scaleH + h/4  )),
+                            2, Scalar(220, 120, 0));
 				}
 			}
 		}
