@@ -328,11 +328,15 @@ int main()
 		}
         States fxdt;
         
-        fxdt.setX(Vec3d( sense.dt*f.at<double>(0,0), sense.dt*f.at<double>(1,0), sense.dt*f.at<double>(2,0)) );
-        fxdt.setV(Vec3d( sense.dt*f.at<double>(3,0), sense.dt*f.at<double>(4,0), sense.dt*f.at<double>(5,0)) );
+        fxdt.setX(Vec3d( sense.dt*f.at<double>(0,0), sense.dt*f.at<double>(1,0),
+            sense.dt*f.at<double>(2,0)) );
+        fxdt.setV(Vec3d( sense.dt*f.at<double>(3,0), sense.dt*f.at<double>(4,0),
+            sense.dt*f.at<double>(5,0)) );
         for(int i=0; i < nf; i++)
         {
-            Feature tempfeat( Vec3d(  f.at<double>(6+3*i,0)*sense.dt,  f.at<double>(7+3*i,0)*sense.dt,  f.at<double>(8+3*i,0)*sense.dt), Scalar(0,0,0), 0, 0 );
+            Feature tempfeat( Vec3d(  f.at<double>(6+3*i,0)*sense.dt,
+                f.at<double>(7+3*i,0)*sense.dt,  f.at<double>(8+3*i,0)*sense.dt),
+                Scalar(0,0,0), 0, 0 );
             fxdt.addFeature(tempfeat);
         }
         fxdt.setb(Vec3d(0,0,0));
@@ -340,7 +344,9 @@ int main()
         mu.add(fxdt);
 
 		// Measurement model
-		measurementModel(k, nf, sense.altitude, pibHist, pib0, ppbHist, mu, sense.quaternion, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(), 0, meas, hmu, H, pibHat, xiwHat);
+		measurementModel(k, nf, sense.altitude, pibHist, pib0, ppbHist, mu,
+            sense.quaternion, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(),
+            0, meas, hmu, H, pibHat, xiwHat);
 
 		if (flagBias == 1)
 		{
