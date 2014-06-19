@@ -108,7 +108,7 @@ void States::add(States a)
  *--------------------------------------------------------------------------------------
  */
     States
-States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w )
+States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w, cv::Mat pibHat, int nf )
 {
     States predicted_state;
     Matx33d A;
@@ -127,6 +127,16 @@ States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w )
 
     gemm( -A, V, 1, a, 1, predicted_state.V );
     gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
+    for( int i=0; i<nf; ++i )
+    {
+        Feature fi;
+        Vec3d pib( pibHat.at<double>(0, i), pibHat.at<double>(1, i), pibHat.at<double>(2, i) );
+        fi.X = cv::Vec3d( 
+                (-V[1] + pib[0]*V[0])*pib[2] + pib[1]*w[0] - (1 + pib[0]*pib[0])*w[2] + pib[0]*pib[1]*w[1],
+                (-V[2] + pib[1]*V[0])*pib[2] - pib[0]*w[0] + (1 + pib[1]*pib[1])*w[1] - pib[0]*pib[1]*w[2],
+                (-w[2]*pib[0] + w[1]*pib[1])*pib[2] + V[0]*pib[2]*pib[2]);
+        predicted_state.addFeature(fi);
+    }
     return predicted_state;
 }		/* -----  end of method States::dynamics  ----- */
 

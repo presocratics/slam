@@ -688,7 +688,7 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
     int nf, double dt, States& f, Mat& F_out)
 {
 
-    f = mu.dynamics( qbw, a, w );
+    f = mu.dynamics( qbw, a, w, pibHat, nf );
 
     Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, 
             pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
@@ -718,7 +718,6 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
 
     for (int i = 0; i < nf; i++)
     {
-        Feature fi;
         Matx13d pib( pibHat.at<double>(0, i),
                      pibHat.at<double>(1, i),
                      pibHat.at<double>(2, i) );
@@ -726,11 +725,6 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
         double pib2 = pibHat.at<double>(1, i);
         double pib3 = pibHat.at<double>(2, i);
 
-        fi.X = cv::Vec3d( 
-                (-mu.V[1] + pib1*mu.V[0])*pib3 + pib2*w[0] - (1 + pib1*pib1)*w[2] + pib1*pib2*w[1],
-                (-mu.V[2] + pib2*mu.V[0])*pib3 - pib1*w[0] + (1 + pib2*pib2)*w[1] - pib1*pib2*w[2],
-                (-w[2]*pib1 + w[1]*pib2)*pib3 + mu.V[0]*pib3*pib3);
-        f.addFeature(fi);
 
         FiTemp = (Mat_<double>(3, 3) <<
                     (pib * Matx31d( mu.V[2], w[0], -2*w[1]))(0,0),
