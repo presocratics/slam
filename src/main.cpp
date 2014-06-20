@@ -115,7 +115,7 @@ int main()
 	vector<Matx33d> Rw2b0;
 	vector<Matx33d> Rb2b0;
     Matx33d tempR;
-	Mat pib0(2, 5, CV_64F, Scalar(0));
+    vector<cv::Vec3d> pib0(nf);
 
 	Mat xbb0Hat(3, 5, CV_64F, Scalar(0));
 
@@ -218,8 +218,7 @@ int main()
 					Rw2b0.pop_back();
 				}
 
-				pib0.at<double>(0, i) = pibHist.at<Vec3d>(k, i)[0];
-				pib0.at<double>(1, i) = pibHist.at<Vec3d>(k, i)[1];
+                pib0[i] = pibHist.at<Vec3d>(k, i);
 				++j;
 
 				// Re-initialize the state for a new feature
@@ -756,7 +755,7 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
 * measurementModel
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
-void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
+void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
     Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, Mat xbb0Hat,
     vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
     Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, vector<cv::Vec3d>& xiwHat)
@@ -863,8 +862,8 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, Mat pib0,
 			meas.at<double>(6*i + 1, 0) = pibHist.at<Vec3d>(k, i)[0]; // current view 
 			meas.at<double>(6*i + 2, 0) = pibHist.at<Vec3d>(k, i)[1];
 			//std::cout << "pibHist(3): " << pibHist.at<Vec3d>(k, i)[1] << std::endl;
-			meas.at<double>(6*i + 3, 0) = pib0.at<double>(0, i);		// initial view
-			meas.at<double>(6*i + 4, 0) = pib0.at<double>(1, i);
+			meas.at<double>(6*i + 3, 0) = pib0[i][0];		// initial view
+			meas.at<double>(6*i + 4, 0) = pib0[i][1];
 			meas.at<double>(6*i + 5, 0) = ppbHist.at<Vec3d>(k, i)[0]; // reflection
 			meas.at<double>(6*i + 6, 0) = ppbHist.at<Vec3d>(k, i)[1];
 
