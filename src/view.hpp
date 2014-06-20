@@ -62,10 +62,11 @@ class View
         }
 
         /* ====================  OPERATORS     ======================================= */
+        View& operator-=(const View& rhs );
 
         /* ====================  DATA MEMBERS  ======================================= */
         double altitude;
-        vector<Vfeat> features;
+        std::vector<Vfeat> features;
 
     protected:
         /* ====================  METHODS       ======================================= */
@@ -78,5 +79,10 @@ class View
         /* ====================  DATA MEMBERS  ======================================= */
 
 }; /* -----  end of class View  ----- */
+inline View operator-(View lhs, const View& rhs)
+{
+    lhs-=rhs;
+    return lhs;
+}
 
 #endif   /* ----- #ifndef view_INC  ----- */

@@ -369,31 +369,21 @@ int main()
 
         //K *= temppp.inv();
 		// error Check Passed: P, F, Q, H, G, temppp, K
-
-        vector<double> foo,baz;
-        foo.push_back(meas.altitude);
-        baz.push_back(hmu.altitude);
-        vector<Vfeat>::iterator it=meas.features.begin();
-        vector<Vfeat>::iterator hi=hmu.features.begin();
-        for( ; it!=meas.features.end(); ++it, ++hi )
+        View foo = meas-hmu;
+        vector<double> bar;
+        bar.push_back(foo.altitude);
+        vector<Vfeat>::iterator it=foo.features.begin();
+        for( ; it!=foo.features.end(); ++it )
         {
-            foo.push_back(it->current.x);
-            foo.push_back(it->current.y);
-            foo.push_back(it->initial.x);
-            foo.push_back(it->initial.y);
-            foo.push_back(it->reflection.x);
-            foo.push_back(it->reflection.y);
-
-            baz.push_back(hi->current.x);
-            baz.push_back(hi->current.y);
-            baz.push_back(hi->initial.x);
-            baz.push_back(hi->initial.y);
-            baz.push_back(hi->reflection.x);
-            baz.push_back(hi->reflection.y);
+            bar.push_back(it->current.x);
+            bar.push_back(it->current.y);
+            bar.push_back(it->initial.x);
+            bar.push_back(it->initial.y);
+            bar.push_back(it->reflection.x);
+            bar.push_back(it->reflection.y);
         }
-        Mat bar(foo);
-        Mat bat(baz);
-        Mat kx = K*(bar-bat);
+        Mat baz(bar);
+        Mat kx = K*baz;
         States kmh;
         
         kmh.setX(Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) );
