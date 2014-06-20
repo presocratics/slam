@@ -70,11 +70,8 @@ int main()
 	double R0 = 10;					// 10 for simulation & 1 for experiments
 	
 	Mat P = Mat::eye(6 + 3 * nf,6 + 3 * nf, CV_64F);
+    blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0) );
 
-	P.at<double>(0, 0) = PINIT;	// Location of UAV
-	P.at<double>(1, 1) = PINIT;
-	P.at<double>(2, 2) = PINIT;
-	
 	// Inverse depth
 	for (int i = 0; i < nf; i++)
 	{
@@ -83,21 +80,11 @@ int main()
 
 	if (flagBias == 1)
 	{
-		//Mat muTemp = mu.clone();
-		//mu.release();
-		//mu = Mat::zeros(24, 1, CV_64F);
-		//copyMat(muTemp, mu);
 		Mat temp = P.clone();
 		P.release();
 		P = Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
 		copyMat(temp, P);
-		//mu.at<double>(6 + 3 * nf, 0) = 0;
-		//mu.at<double>(6 + 3 * nf + 1, 0) = 0;
-		//mu.at<double>(6 + 3 * nf + 2, 0) = 0;
-		mu.setb(Vec3d(0,0,0));
-        P.at<double>(6 + 3 * nf, 6 + 3 * nf) = PINIT;
-		P.at<double>(6 + 3 * nf+1, 6 + 3 * nf+1) = PINIT;
-		P.at<double>(6 + 3 * nf + 2, 6 + 3 * nf + 2) = PINIT;
+        blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6+3*nf,6+3*nf) );
 	}
 
 	// %% Line 40
