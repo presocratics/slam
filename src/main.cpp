@@ -744,9 +744,6 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
 	Mat S = Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
-	Mat xibHat = Mat::zeros(3, 6, CV_64F);
-	Mat xib0Hat = Mat::zeros(3, 6, CV_64F);
-	Mat xpbHat = Mat::zeros(3, 6, CV_64F);
 
     cv::Matx33d Rb2w, Rw2b;
     Rb2w = qbw.rotation();
@@ -767,57 +764,50 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 	Mat temp;
 	for (int i = 0; i < nf; i++)
 	{
-        cv::Vec3d pib0Hat, ppbHat;
-		//pibHat.col(i) = (Mat_<double>(3, 1) <<
-		//	mu.at<double>(6 + 3 * i, 0),
-		//	mu.at<double>(7 + 3 * i, 0),
-		//	mu.at<double>(8 + 3 * i, 0));
+        cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat;
 
         pibHat[i] = mu.features[i].X;
 	
-		//xibHat.col(i) = (Mat_<double>(3, 1) <<
-		//	1 / pibHat.at<double>(2, i),
-		//	pibHat.at<double>(0, i) / pibHat.at<double>(2, i),
-		//	pibHat.at<double>(1, i) / pibHat.at<double>(2, i));
-
-		H2_R = Rect(i, 0, 1, xibHat.rows);
-		H2_A = xibHat(H2_R);
-		temp = (Mat_<double>(3, 1) <<
+		xibHat = cv::Vec3d(
 				1 / pibHat[i][2],
 				pibHat[i][0] / pibHat[i][2],
 				pibHat[i][1] / pibHat[i][2]);
-		temp.copyTo(H2_A);
 
-		H2_R = Rect(i, 0, 1, xib0Hat.rows);
-		H2_A = xib0Hat(H2_R);
-		temp = (Mat)xbb0Hat[i] + (cv::Mat)Rb2b0[i] * xibHat.col(i);
-		temp.copyTo(H2_A);
+        Mat temp;
+        temp =  (Mat)xbb0Hat[i] + (cv::Mat)Rb2b0[i] * (cv::Mat)xibHat;
+        xib0Hat = cv::Vec3d( temp.at<double>(0,0),
+                            temp.at<double>(1,0),
+                            temp.at<double>(2,0) );
 
 		//pib0Hat.col(i) = (Mat_<double>(2, 1) <<
 		//	xib0Hat.at<double>(1, i) / xib0Hat.at<double>(0, i),
 		//	xib0Hat.at<double>(2, i) / xib0Hat.at<double>(0, i));
         pib0Hat = cv::Vec3d(
-				xib0Hat.at<double>(1, i) / xib0Hat.at<double>(0, i),
-				xib0Hat.at<double>(2, i) / xib0Hat.at<double>(0, i),
+				xib0Hat[1] / xib0Hat[0],
+				xib0Hat[2] / xib0Hat[0],
                 0);
 
 		//xpbHat.col(i) = Rw2b*(S*Rb2w*xibHat.col(i) * n.t()*mu.rowRange(0, 3));
-		H2_R = Rect(i, 0, 1, xpbHat.rows);
-		H2_A = xpbHat(H2_R);
-		temp = (cv::Mat)Rw2b*(S*(cv::Mat)Rb2w*xibHat.col(i) -2*n* n.t()*(Mat)mu.X);
-		temp.copyTo(H2_A);
+        temp = S * (Mat)Rb2w*(Mat)xibHat;
+        temp -= 2*n*n.t()*(Mat)mu.X; 
+        temp = (Mat)Rw2b * temp;
+        xpbHat = cv::Vec3d( temp.at<double>(0,0),
+                            temp.at<double>(1,0),
+                            temp.at<double>(2,0) );
+        //gemm(S*(Mat)Rb2w,xibHat, 1, Mat(), 0, temp1 );
+		//temp = (cv::Mat)Rw2b*(S*(cv::Mat)Rb2w*xibHat -2*n* n.t()*(Mat)mu.X);
 
 		//ppbHat.col(i) = (Mat_<double>(2, 1) <<
 		//	xpbHat.at<double>(1, i) / xpbHat.at<double>(0, i),
 		//	xpbHat.at<double>(2, i) / xpbHat.at<double>(0, i));
 
 		ppbHat = cv::Vec3d(
-			xpbHat.at<double>(1, i) / xpbHat.at<double>(0, i),
-			xpbHat.at<double>(2, i) / xpbHat.at<double>(0, i),
+			xpbHat[1] / xpbHat[0],
+			xpbHat[2] / xpbHat[0],
             0);
 
 		//xiwHat.col(i) = mu.rowRange(0, 3) + Rb2w*xibHat.col(i);
-        add(mu.X,(Mat)Rb2w*xibHat.col(i), xiwHat[i] );
+        add(mu.X,(Mat)Rb2w*(Mat)xibHat, xiwHat[i] );
 
 		jacobianH(mu, qbw, xb0wHat[i], qb0w[i], i, Hb, Hi);
 
