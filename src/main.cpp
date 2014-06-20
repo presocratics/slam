@@ -37,7 +37,6 @@ int main()
     vector<Quaternion> qb0w(nf);
     vector<States> muHist;
 
-	vector<int> renewIndex;
 	vector<Matx33d> Rw2b0, Rb2b0;
 
     vector<cv::Vec3d> pib0(nf);
@@ -112,6 +111,7 @@ int main()
 
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
+        vector<int> renewIndex;
         int renewk, renewi;
         Mat pibHat(3, nf, CV_64F, Scalar(0));					// EKF vars
         Mat G, Q, R, K;	
