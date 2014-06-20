@@ -117,7 +117,7 @@ int main()
     Matx33d tempR;
     vector<cv::Vec3d> pib0(nf);
 
-	Mat xbb0Hat(3, 5, CV_64F, Scalar(0));
+    vector<Vec3d> xbb0Hat(nf);
 
 	const double d_max = 15;
 	const double d_min = 0.5;
@@ -230,12 +230,7 @@ int main()
 			xb0wHatHist.at<Vec3d>(k, i) = xb0wHat[i];
 
 			// Position of the feature w.r.t. the anchor
-            cv::Rect tempRect;
-            Mat tempMat1, tempMat2;
-			tempRect = Rect(i, 0, 1, xbb0Hat.rows);
-			tempMat1 = xbb0Hat(tempRect);
-			tempMat2 = (Mat) (Rw2b0[i]*(mu.X - xb0wHat[i]));
-			tempMat2.copyTo(tempMat1);
+			xbb0Hat[i] = Rw2b0[i]*(mu.X - xb0wHat[i]);
 			
 			Rb2b0.push_back(Rw2b0[i] * Rb2w);
 
@@ -756,7 +751,7 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
-    Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, Mat xbb0Hat,
+    Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, vector<cv::Vec3d> xbb0Hat,
     vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
     Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, vector<cv::Vec3d>& xiwHat)
 {
@@ -816,10 +811,9 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 				pibHat.at<double>(1, i) / pibHat.at<double>(2, i));
 		temp.copyTo(H2_A);
 
-		//xib0Hat.col(i) = xbb0Hat.col(i) + Rb2b0[i]*xibHat.col(i);
 		H2_R = Rect(i, 0, 1, xib0Hat.rows);
 		H2_A = xib0Hat(H2_R);
-		temp = xbb0Hat.col(i) + (cv::Mat)Rb2b0[i] * xibHat.col(i);
+		temp = (Mat)xbb0Hat[i] + (cv::Mat)Rb2b0[i] * xibHat.col(i);
 		temp.copyTo(H2_A);
 
 		//pib0Hat.col(i) = (Mat_<double>(2, 1) <<
