@@ -599,8 +599,6 @@ void reshapeMat3D(vector<double> src, Mat& dst)
 			}
 		}
 	}
-
-
 }
 
 /************************************************************************************************
@@ -751,18 +749,8 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 
 	Mat Hb;
 	Mat Hi;
-	Rect H2_R;
-	Rect H3_R;
-	Rect H4_R;
-	Rect H5_R;
-	Rect H6_R;
-	Mat H2_A;
-	Mat H3_A;
-	Mat H4_A;
-	Mat H5_A;
-	Mat H6_A;
-	Mat temp;
-	for (int i = 0; i < nf; i++)
+    std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
+	for (int i = 0; i < nf; i++, ++mi, ++hi)
 	{
         cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat;
 
@@ -801,13 +789,9 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 		if (flagMeas == 0)
 		{
 			meas.altitude = alt;							// altitude
-            meas.features[i].set_views( pibHist.at<Vec3d>(k,i),
-                                        pib0[i],
-                                        ppbHist.at<Vec3d>(k,i) );
+            mi->set_views( pibHist.at<Vec3d>(k,i), pib0[i], ppbHist.at<Vec3d>(k,i) );
             hmu.altitude = -mu.X[2];
-            hmu.features[i].set_views( pibHat[i],
-                                       pib0Hat,
-                                       ppbHat );
+            hi->set_views( pibHat[i], pib0Hat, ppbHat );
 
 			H.row(0).col(2).setTo(-1);
             // For each feature
@@ -823,7 +807,6 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 			{
 				meas.features[i].reflection = cv::Point2d(0,0);
 			}
-
 		}
     } // end for loop
 
