@@ -120,7 +120,7 @@ int main()
         Mat G, Q, R, K;	
         Mat H = Mat::zeros(31, mu.rows, CV_64F);			// Measurement model ouputs
         View meas(nf);
-        Mat hmu = Mat::zeros(31, 1, CV_64F);
+        View hmu(nf);
         double altHat, alt_old;
         Matx33d Rb2w, Rw2b;
         alt_old = sense.altitude;
@@ -370,10 +370,12 @@ int main()
         //K *= temppp.inv();
 		// error Check Passed: P, F, Q, H, G, temppp, K
 
-        vector<double> foo;
+        vector<double> foo,baz;
         foo.push_back(meas.altitude);
-        for( vector<Vfeat>::iterator it=meas.features.begin();
-                it!=meas.features.end(); ++it )
+        baz.push_back(hmu.altitude);
+        vector<Vfeat>::iterator it=meas.features.begin();
+        vector<Vfeat>::iterator hi=hmu.features.begin();
+        for( ; it!=meas.features.end(); ++it, ++hi )
         {
             foo.push_back(it->current.x);
             foo.push_back(it->current.y);
@@ -381,9 +383,17 @@ int main()
             foo.push_back(it->initial.y);
             foo.push_back(it->reflection.x);
             foo.push_back(it->reflection.y);
+
+            baz.push_back(hi->current.x);
+            baz.push_back(hi->current.y);
+            baz.push_back(hi->initial.x);
+            baz.push_back(hi->initial.y);
+            baz.push_back(hi->reflection.x);
+            baz.push_back(hi->reflection.y);
         }
         Mat bar(foo);
-        Mat kx = K*(bar-hmu);
+        Mat bat(baz);
+        Mat kx = K*(bar-bat);
         States kmh;
         
         kmh.setX(Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) );
@@ -739,7 +749,7 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, vector<cv:
 void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
     Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, vector<cv::Vec3d> xbb0Hat,
     vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
-    View& meas, Mat& hmu, Mat& H, vector<cv::Vec3d>& pibHat, vector<cv::Vec3d>& xiwHat)
+    View& meas, View& hmu, Mat& H, vector<cv::Vec3d>& pibHat, vector<cv::Vec3d>& xiwHat)
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -841,13 +851,13 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 			meas.features[i].reflection.x = ppbHist.at<Vec3d>(k, i)[0]; // reflection
 			meas.features[i].reflection.y = ppbHist.at<Vec3d>(k, i)[1];
 
-			hmu.at<double>(0, 0) = -mu.X[2];
-			hmu.at<double>(6*i + 1, 0) = pibHat[i][0];
-			hmu.at<double>(6*i + 2, 0) = pibHat[i][1];
-			hmu.at<double>(6*i + 3, 0) = pib0Hat.at<double>(0, i);
-			hmu.at<double>(6*i + 4, 0) = pib0Hat.at<double>(1, i);
-			hmu.at<double>(6*i + 5, 0) = ppbHat.at<double>(0, i);
-			hmu.at<double>(6*i + 6, 0) = ppbHat.at<double>(1, i);
+            hmu.altitude = -mu.X[2];
+            hmu.features[i].current.x = pibHat[i][0];
+			hmu.features[i].current.y = pibHat[i][1];
+			hmu.features[i].initial.x = pib0Hat.at<double>(0, i);
+			hmu.features[i].initial.y = pib0Hat.at<double>(1, i);
+			hmu.features[i].reflection.x = ppbHat.at<double>(0, i);
+			hmu.features[i].reflection.y = ppbHat.at<double>(1, i);
 
 			H.row(0).col(2).setTo(-1);
             // For each feature
