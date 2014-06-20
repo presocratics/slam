@@ -15,8 +15,9 @@ int main()
 	const int stepEnd = 4340;
 	const int stepStart = 1700;
 	const int flagBias = 1;
-	const double d_max = 15;
-	const double d_min = 0.5;
+    const int flagMap = 1;
+	const double d_max = 30;
+	const double d_min = 0.3;
 	const double d_init = 5;
 
     // Initial variables
@@ -215,16 +216,6 @@ int main()
 			xbb0Hat[i] = Rw2b0[i]*(mu.X - xb0wHat[i]);
 			
 			Rb2b0.push_back(Rw2b0[i] * Rb2w);
-
-			// Setting max and min depth
-			if (mu.features[i].X[2] < 1 / d_max)
-			{
-				mu.features[i].X[2] = 1 / d_max;
-			}
-			else if ( mu.features[i].X[2] > 1 / d_min)
-			{
-				mu.features[i].X[2] = 1 / d_min;
-			}
 
 			// Leaving the final estimate of each feature's location
 			if (k < stepEnd - 1 && renewHist.at<double>(i, k + 1) != renewZero2 || k == stepEnd)
