@@ -84,6 +84,7 @@ int main()
 		P.release();
 		P = Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
 		copyMat(temp, P);
+		mu.setb(Vec3d(0,0,0));
         blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6+3*nf,6+3*nf) );
 	}
 
