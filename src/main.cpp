@@ -101,7 +101,7 @@ int main()
 
 	// inside nf loop
     cv::Vec3d r;
-	Mat d0Hist(stepEnd, 5, CV_64F, Scalar(0));
+	Mat d0Hist(stepEnd, nf, CV_64F, Scalar(0));
     vector<cv::Vec3d> xb0wHat(nf);
 	Mat xb0wHatHist(stepEnd, 5, CV_64FC3, Scalar(0));
     vector<cv::Vec3d> xiwHat(nf);
@@ -174,7 +174,6 @@ int main()
 
 			d0 = fmin(d0,d_init);
 
-			//d0Hist.at<double>(k, i) = 1 / mu.at<double>(8 + 3 * i, 0);
             d0Hist.at<double>(k, i) = 1 / mu.features[i].X[2];
 			// Expreiment: renew elements are piecewise constant
 			renewZero = renewHist.at<double>(i, k - 1);
