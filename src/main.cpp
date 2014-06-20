@@ -746,9 +746,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 	Mat S = Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
 	Mat xibHat = Mat::zeros(3, 6, CV_64F);
 	Mat xib0Hat = Mat::zeros(3, 6, CV_64F);
-	Mat pib0Hat = Mat::zeros(2, 6, CV_64F);
 	Mat xpbHat = Mat::zeros(3, 6, CV_64F);
-	Mat ppbHat = Mat::zeros(2, 6, CV_64F);
 
     cv::Matx33d Rb2w, Rw2b;
     Rb2w = qbw.rotation();
@@ -769,8 +767,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 	Mat temp;
 	for (int i = 0; i < nf; i++)
 	{
-
-
+        cv::Vec3d pib0Hat, ppbHat;
 		//pibHat.col(i) = (Mat_<double>(3, 1) <<
 		//	mu.at<double>(6 + 3 * i, 0),
 		//	mu.at<double>(7 + 3 * i, 0),
@@ -799,12 +796,10 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 		//pib0Hat.col(i) = (Mat_<double>(2, 1) <<
 		//	xib0Hat.at<double>(1, i) / xib0Hat.at<double>(0, i),
 		//	xib0Hat.at<double>(2, i) / xib0Hat.at<double>(0, i));
-		H2_R = Rect(i, 0, 1, pib0Hat.rows);
-		H2_A = pib0Hat(H2_R);
-		temp = (Mat_<double>(2, 1) <<
+        pib0Hat = cv::Vec3d(
 				xib0Hat.at<double>(1, i) / xib0Hat.at<double>(0, i),
-				xib0Hat.at<double>(2, i) / xib0Hat.at<double>(0, i));
-		temp.copyTo(H2_A);
+				xib0Hat.at<double>(2, i) / xib0Hat.at<double>(0, i),
+                0);
 
 		//xpbHat.col(i) = Rw2b*(S*Rb2w*xibHat.col(i) * n.t()*mu.rowRange(0, 3));
 		H2_R = Rect(i, 0, 1, xpbHat.rows);
@@ -816,12 +811,10 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 		//	xpbHat.at<double>(1, i) / xpbHat.at<double>(0, i),
 		//	xpbHat.at<double>(2, i) / xpbHat.at<double>(0, i));
 
-		H2_R = Rect(i, 0, 1, ppbHat.rows);
-		H2_A = ppbHat(H2_R);
-		temp = (Mat_<double>(2, 1) <<
+		ppbHat = cv::Vec3d(
 			xpbHat.at<double>(1, i) / xpbHat.at<double>(0, i),
-			xpbHat.at<double>(2, i) / xpbHat.at<double>(0, i));
-		temp.copyTo(H2_A);
+			xpbHat.at<double>(2, i) / xpbHat.at<double>(0, i),
+            0);
 
 		//xiwHat.col(i) = mu.rowRange(0, 3) + Rb2w*xibHat.col(i);
         add(mu.X,(Mat)Rb2w*xibHat.col(i), xiwHat[i] );
@@ -837,11 +830,9 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
                                         pib0[i],
                                         ppbHist.at<Vec3d>(k,i) );
             hmu.altitude = -mu.X[2];
-            Vec3d p0h( pib0Hat.at<double>(0, i),  pib0Hat.at<double>(1, i) );
-            Vec3d pph( ppbHat.at<double>(0, i),  ppbHat.at<double>(1, i) );
             hmu.features[i].set_views( pibHat[i],
-                                       p0h,
-                                       pph );
+                                       pib0Hat,
+                                       ppbHat );
 
 			H.row(0).col(2).setTo(-1);
             // For each feature
