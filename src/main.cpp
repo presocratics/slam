@@ -105,7 +105,7 @@ int main()
     vector<cv::Vec3d> xb0wHat(nf);
 	Mat xb0wHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
     vector<cv::Vec3d> xiwHat(nf);
-	Mat xiwHatHist(stepEnd, 5, CV_64FC3, Scalar(0));
+	Mat xiwHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
     vector<Quaternion> qb0w(nf);
 	vector<int> renewIndex;
 	int renewZero, renewZero2;
