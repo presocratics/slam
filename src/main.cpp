@@ -10,21 +10,49 @@ using std::endl;
 
 int main()
 {
-	// number of timesteps
-	int n = 4391;
-	int flagBias = 1;
+    // Configuration
+	const int nf = 5;                            /* number of features */
+	const int stepEnd = 4340;
+	const int stepStart = 1700;
+	const int flagBias = 1;
+	const double d_max = 15;
+	const double d_min = 0.5;
+	const double d_init = 5;
+
+    // Initial variables
+	double d0 = 1;
+	int j = 1;
+	// Covariance Initialization
+	double P0 = 1;					// 1 for simulation
+	double Q0 = 1;				// 100 for simulation & 1 for experiments
+	double R0 = 10;					// 10 for simulation & 1 for experiments
+
+    // Declarations
+	Mat d0Hist(stepEnd, nf, CV_64F, Scalar(0));
+    vector<cv::Vec3d> xb0wHat(nf);
+	Mat xb0wHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
+    vector<cv::Vec3d> xiwHat(nf);
+	Mat xiwHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
+
+    vector<Quaternion> qb0w(nf);
+    vector<States> muHist;
+
+	vector<int> renewIndex;
+	vector<Matx33d> Rw2b0, Rb2b0;
+
+    vector<cv::Vec3d> pib0(nf);
+    vector<Vec3d> xbb0Hat(nf);
+
     Sensors sense;
     States mu;
+	Mat PHist(mu.rows, stepEnd, CV_64F);
 
-	// Initialize variables
+
+	// Data History variables
 	std::vector<double> pibHist_v;
 	std::vector<double> ppbHist_v;
 	std::vector<double> refFlag_v;
 	std::vector<double> renewHist_v;
-	
-	const int nf = 5;
-	const int stepEnd = 4340;
-	const int stepStart = 1700;
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
 	loadData(pibHist_v, ppbHist_v, refFlag_v, renewHist_v);
@@ -53,21 +81,15 @@ int main()
 	// State initialization
     // mu = [pos vel features bias]
     //    = [X    V  features  b  ]
-    //
 	mu.X[2] = -1 * sense.altitude;
 
-	double d0 = 1;
+
 	for (int i = 0; i < nf; i++)
 	{
         Feature ith_feature(Vec3d(pibHist.at<Vec3d>(stepStart - 1, i)[0],
                     pibHist.at<Vec3d>(stepStart - 1, i)[1], 1/d0), Scalar(0,0,0), 0, 0);
         mu.addFeature(ith_feature);
 	}
-	
-	// Covariance Initialization
-	double P0 = 1;					// 1 for simulation
-	double Q0 = 1;				// 100 for simulation & 1 for experiments
-	double R0 = 10;					// 10 for simulation & 1 for experiments
 	
 	Mat P = Mat::eye(6 + 3 * nf,6 + 3 * nf, CV_64F);
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0) );
@@ -88,65 +110,23 @@ int main()
         blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6+3*nf,6+3*nf) );
 	}
 
-	// %% Line 40
-	int j = 1;
-	double d_init = 5;
-	double time = 0;
-	double dt;
-    double altHat, alt_old;
-    Quaternion qbw;
-    Matx33d Rb2w, Rw2b;
-    cv::Vec3d w;
-    cv::Vec3d a;
-
-	// inside nf loop
-    cv::Vec3d r;
-	Mat d0Hist(stepEnd, nf, CV_64F, Scalar(0));
-    vector<cv::Vec3d> xb0wHat(nf);
-	Mat xb0wHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
-    vector<cv::Vec3d> xiwHat(nf);
-	Mat xiwHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
-    vector<Quaternion> qb0w(nf);
-	vector<int> renewIndex;
-	int renewZero, renewZero2;
-	int renewi = -1;
-	int renewk = -1;
-
-	vector<Matx33d> Rw2b0;
-	vector<Matx33d> Rb2b0;
-    Matx33d tempR;
-    vector<cv::Vec3d> pib0(nf);
-
-    vector<Vec3d> xbb0Hat(nf);
-
-	const double d_max = 15;
-	const double d_min = 0.5;
-
-    vector<States> muHist;
-	Mat PHist(mu.rows, stepEnd, CV_64F);
-
-	Mat pibHat(3, nf, CV_64F, Scalar(0));					// EKF vars
-    States f;
-	Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
-
-	Mat H = Mat::zeros(31, mu.rows, CV_64F);			// Measurement model ouputs
-	Mat meas = Mat::zeros(31, 1, CV_64F);
-	Mat hmu = Mat::zeros(31, 1, CV_64F);
-
-	Mat G;	// Noise Covariance
-	Mat Q;
-	Mat R;
-	Mat K;
-
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
+        int renewk, renewi;
+        Mat pibHat(3, nf, CV_64F, Scalar(0));					// EKF vars
+        Mat G, Q, R, K;	
+        Mat H = Mat::zeros(31, mu.rows, CV_64F);			// Measurement model ouputs
+        Mat meas = Mat::zeros(31, 1, CV_64F);
+        Mat hmu = Mat::zeros(31, 1, CV_64F);
+        double altHat, alt_old;
+        Matx33d Rb2w, Rw2b;
         alt_old = sense.altitude;
+        cv::Vec3d r;
+        States f;
+        Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
 		// Read sensor measurements
         sense.update();
-		renewk = -1;
-		renewi = -1;
-		// Compute time
-		time += sense.dt;
+		renewk = renewi = -1;
 
         //TODO: Do we need this norm?
         //double qbw_norm;
@@ -168,6 +148,7 @@ int main()
 		// line 59
 		for (int i = 0; i < nf; i++)
 		{
+            int renewZero, renewZero2;
             cv::Vec3d pibr;
 			add( atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI, r, pibr );
 			d0 = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
@@ -181,6 +162,7 @@ int main()
 
 			if (k == stepStart-1 || renewHist.at<double>(i, k) != renewZero)
 			{
+                Matx33d tempR;
 				renewIndex = findIndex(renewHist, renewHist.at<double>(i, k));
 
 				// Find max
