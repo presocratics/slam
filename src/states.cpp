@@ -108,7 +108,7 @@ void States::add(States a)
  *--------------------------------------------------------------------------------------
  */
     States
-States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w, cv::Mat pibHat, int nf )
+States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w, vector<cv::Vec3d> pibHat, int nf )
 {
     States predicted_state;
     Matx33d A;
@@ -130,7 +130,7 @@ States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w, cv::Mat pibHat, int 
     for( int i=0; i<nf; ++i )
     {
         Feature fi;
-        Vec3d pib( pibHat.at<double>(0, i), pibHat.at<double>(1, i), pibHat.at<double>(2, i) );
+        Vec3d pib = pibHat[i];
         fi.X = cv::Vec3d( 
                 (-V[1] + pib[0]*V[0])*pib[2] + pib[1]*w[0] - (1 + pib[0]*pib[0])*w[2] + pib[0]*pib[1]*w[1],
                 (-V[2] + pib[1]*V[0])*pib[2] - pib[0]*w[0] + (1 + pib[1]*pib[1])*w[1] - pib[0]*pib[1]*w[2],

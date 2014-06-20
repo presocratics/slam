@@ -38,7 +38,7 @@ class States{
         void addFeature(Feature f);
         void setb(Vec3d bias);
         void add(States a);
-        States dynamics(Quaternion qbw, cv::Vec3d a, cv::Vec3d w, cv::Mat pibHat, int nf );
+        States dynamics(Quaternion qbw, cv::Vec3d a, cv::Vec3d w, vector<cv::Vec3d> pibHat, int nf );
 };
 
 #endif

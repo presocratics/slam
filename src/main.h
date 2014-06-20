@@ -26,11 +26,11 @@ void copyMat(Mat& src, Mat& dst);
 void reshapeMat(vector<double> src, Mat& dst);
 void reshapeMat3D(vector<double> src, Mat& dst);
 void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i, Mat& Hb, Mat& Hi );
-void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat, int nf, double dt, States& f, Mat& F);
+void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, vector<cv::Vec3d> pibH, int nf, double dt, States& f, Mat& F);
 void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
         Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, vector<cv::Vec3d> xbb0Hat,
         vector<Quaternion> qb0w, vector<Matx33d> Rb2b0, Mat refFlag, int flagMeas, Mat& meas,
-        Mat& hmu, Mat& H, Mat& pibHat, vector<Vec3d>& xiwHat);
+        Mat& hmu, Mat& H, vector<cv::Vec3d>& pibH, vector<Vec3d>& xiwHat);
 vector<int> findIndex(const Mat& src, double val);
 
 #endif

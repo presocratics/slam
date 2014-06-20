@@ -113,7 +113,7 @@ int main()
 	{
         vector<int> renewIndex;
         int renewk, renewi;
-        Mat pibHat(3, nf, CV_64F, Scalar(0));					// EKF vars
+        vector<cv::Vec3d> pibHat(nf);
         Mat G, Q, R, K;	
         Mat H = Mat::zeros(31, mu.rows, CV_64F);			// Measurement model ouputs
         Mat meas = Mat::zeros(31, 1, CV_64F);
@@ -251,9 +251,7 @@ int main()
 		// Extended Kalman Filter Prediction
 		for (int i = 0; i < nf; i++)
 		{
-			pibHat.at<double>(0, i) = mu.features[i].X[0];
-			pibHat.at<double>(1, i) = mu.features[i].X[1];
-			pibHat.at<double>(2, i) = mu.features[i].X[2];
+            pibHat[i] = mu.features[i].X;
 		}
 
 		// Motion model
@@ -647,7 +645,7 @@ void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i
 
 }
 
-void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat,
+void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, vector<cv::Vec3d> pibHat,
     int nf, double dt, States& f, Mat& F_out)
 {
 
@@ -681,12 +679,12 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
 
     for (int i = 0; i < nf; i++)
     {
-        Matx13d pib( pibHat.at<double>(0, i),
-                     pibHat.at<double>(1, i),
-                     pibHat.at<double>(2, i) );
-        double pib1 = pibHat.at<double>(0, i);
-        double pib2 = pibHat.at<double>(1, i);
-        double pib3 = pibHat.at<double>(2, i);
+        Matx13d pib( pibHat[i][0],
+                     pibHat[i][1],
+                     pibHat[i][2] );
+        double pib1 = pibHat[i][0];
+        double pib2 = pibHat[i][1];
+        double pib3 = pibHat[i][2];
 
 
         FiTemp = (Mat_<double>(3, 3) <<
@@ -735,7 +733,7 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, Mat pibHat
 void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
     Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, vector<cv::Vec3d> xbb0Hat,
     vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
-    Mat& meas, Mat& hmu, Mat& H, Mat& pibHat, vector<cv::Vec3d>& xiwHat)
+    Mat& meas, Mat& hmu, Mat& H, vector<cv::Vec3d>& pibHat, vector<cv::Vec3d>& xiwHat)
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -772,13 +770,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 		//	mu.at<double>(7 + 3 * i, 0),
 		//	mu.at<double>(8 + 3 * i, 0));
 
-		H2_R = Rect(i, 0, 1, pibHat.rows);
-		H2_A = pibHat(H2_R);
-		temp = (Mat_<double>(3, 1) <<
-			mu.features[i].X[0],
-			mu.features[i].X[1],
-			mu.features[i].X[2]);
-		temp.copyTo(H2_A);
+        pibHat[i] = mu.features[i].X;
 	
 		//xibHat.col(i) = (Mat_<double>(3, 1) <<
 		//	1 / pibHat.at<double>(2, i),
@@ -788,9 +780,9 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 		H2_R = Rect(i, 0, 1, xibHat.rows);
 		H2_A = xibHat(H2_R);
 		temp = (Mat_<double>(3, 1) <<
-				1 / pibHat.at<double>(2, i),
-				pibHat.at<double>(0, i) / pibHat.at<double>(2, i),
-				pibHat.at<double>(1, i) / pibHat.at<double>(2, i));
+				1 / pibHat[i][2],
+				pibHat[i][0] / pibHat[i][2],
+				pibHat[i][1] / pibHat[i][2]);
 		temp.copyTo(H2_A);
 
 		H2_R = Rect(i, 0, 1, xib0Hat.rows);
@@ -844,8 +836,8 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 			meas.at<double>(6*i + 6, 0) = ppbHist.at<Vec3d>(k, i)[1];
 
 			hmu.at<double>(0, 0) = -mu.X[2];
-			hmu.at<double>(6*i + 1, 0) = pibHat.at<double>(0, i);
-			hmu.at<double>(6*i + 2, 0) = pibHat.at<double>(1, i);
+			hmu.at<double>(6*i + 1, 0) = pibHat[i][0];
+			hmu.at<double>(6*i + 2, 0) = pibHat[i][1];
 			hmu.at<double>(6*i + 3, 0) = pib0Hat.at<double>(0, i);
 			hmu.at<double>(6*i + 4, 0) = pib0Hat.at<double>(1, i);
 			hmu.at<double>(6*i + 5, 0) = ppbHat.at<double>(0, i);
