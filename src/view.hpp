@@ -19,6 +19,8 @@ class Vfeat
         /* ====================  MUTATORS      ======================================= */
 
         /* ====================  OPERATORS     ======================================= */
+        void set_views( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl );
+        
 
         /* ====================  DATA MEMBERS  ======================================= */
         cv::Point2d current, initial, reflection;

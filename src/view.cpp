@@ -15,3 +15,15 @@ View::operator-= ( const View& rhs )
     return *this;
 }		/* -----  end of method View::operator+=  ----- */
 
+    void
+Vfeat::set_views ( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl )
+{
+    current.x = cur[0];
+    current.y = cur[1];
+    initial.x = init[0];
+    initial.y = init[1];
+    reflection.x = refl[0];
+    reflection.y = refl[1];
+    return ;
+}		/* -----  end of method View::set_views  ----- */
+

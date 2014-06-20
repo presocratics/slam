@@ -833,21 +833,15 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 		if (flagMeas == 0)
 		{
 			meas.altitude = alt;							// altitude
-            meas.features[i].current.x = pibHist.at<Vec3d>(k, i)[0]; // current view 
-			meas.features[i].current.y = pibHist.at<Vec3d>(k, i)[1];
-			//std::cout << "pibHist(3): " << pibHist.at<Vec3d>(k, i)[1] << std::endl;
-			meas.features[i].initial.x = pib0[i][0];		// initial view
-			meas.features[i].initial.y = pib0[i][1];
-			meas.features[i].reflection.x = ppbHist.at<Vec3d>(k, i)[0]; // reflection
-			meas.features[i].reflection.y = ppbHist.at<Vec3d>(k, i)[1];
-
+            meas.features[i].set_views( pibHist.at<Vec3d>(k,i),
+                                        pib0[i],
+                                        ppbHist.at<Vec3d>(k,i) );
             hmu.altitude = -mu.X[2];
-            hmu.features[i].current.x = pibHat[i][0];
-			hmu.features[i].current.y = pibHat[i][1];
-			hmu.features[i].initial.x = pib0Hat.at<double>(0, i);
-			hmu.features[i].initial.y = pib0Hat.at<double>(1, i);
-			hmu.features[i].reflection.x = ppbHat.at<double>(0, i);
-			hmu.features[i].reflection.y = ppbHat.at<double>(1, i);
+            Vec3d p0h( pib0Hat.at<double>(0, i),  pib0Hat.at<double>(1, i) );
+            Vec3d pph( ppbHat.at<double>(0, i),  ppbHat.at<double>(1, i) );
+            hmu.features[i].set_views( pibHat[i],
+                                       p0h,
+                                       pph );
 
 			H.row(0).col(2).setTo(-1);
             // For each feature
