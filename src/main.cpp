@@ -32,13 +32,10 @@ int main()
 
     // Declarations
 	Mat d0Hist(stepEnd, nf, CV_64F, Scalar(0));
-    vector<cv::Vec3d> xb0wHat(nf);
 	Mat xiwHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
 
-    vector<Quaternion> qb0w(nf);
     vector<States> muHist;
 
-    vector<Matx33d> Rw2b0(nf);
 	vector<Matx33d> Rb2b0(nf);
 
     vector<cv::Vec3d> pib0(nf);
@@ -139,23 +136,24 @@ int main()
 		//std::cout << "sums " << sums << std::endl;
 
 		// line 59
-		for (int i = 0; i < nf; i++)
+        std::vector<Feature>::iterator feat=mu.features.begin();
+		for (int i = 0; feat!=mu.features.end(); ++feat, i++)
 		{
             int renewZero, renewZero2;
             cv::Vec3d pibr;
-			add( atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI, sense.quaternion.euler()*180/M_PI, pibr );
-			d0 = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
+			add( atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI,
+                    sense.quaternion.euler()*180/M_PI, pibr );
 
-			d0 = fmin(d0,d_init);
+			feat->initial.inverse_depth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
+			feat->initial.inverse_depth = fmin(feat->initial.inverse_depth,d_init);
 
-            d0Hist.at<double>(k, i) = 1 / mu.features[i].position.body[2];
+            d0Hist.at<double>(k, i) = 1 / feat->position.body[2];
 			// Expreiment: renew elements are piecewise constant
 			renewZero = renewHist.at<double>(i, k - 1);
 			renewZero2 = renewHist.at<double>(i, k);
 
 			if (k == stepStart-1 || renewHist.at<double>(i, k) != renewZero)
 			{
-                Matx33d tempR;
 				renewIndex = findIndex(renewHist, renewHist.at<double>(i, k));
 
 				// Find max
@@ -175,41 +173,39 @@ int main()
 				// If current signature existed before
 				if (renewk != -1 && k < stepEnd)
 				{
-					d0 = d0Hist.at<double>(renewk, renewi);
+					feat->initial.inverse_depth = d0Hist.at<double>(renewk, renewi);
 				}
 
 
 				// Location and orientation of each anchor
-                xb0wHat[i] = mu.X;
+                feat->initial.anchor = mu.X;
 
 
-                qb0w[i].coord = sense.quaternion.coord;
-                tempR = sense.quaternion.rotation();
-
-				Rw2b0[i]=tempR.t();
+                feat->initial.quaternion = sense.quaternion;
 
                 pib0[i] = pibHist.at<Vec3d>(k, i);
 				++j;
 
 				// Re-initialize the state for a new feature
 
-                mu.features[i].position.body = Vec3d( pibHist.at<Vec3d>(k, i)[0], 
-                        pibHist.at<Vec3d>(k, i)[1] ,   1 / d0);
+                feat->position.body = Vec3d( pibHist.at<Vec3d>(k, i)[0], 
+                        pibHist.at<Vec3d>(k, i)[1] ,   1 / feat->initial.inverse_depth);
 			} // if k
 
 
 			// Position of the feature w.r.t. the anchor
-			xbb0Hat[i] = Rw2b0[i]*(mu.X - xb0wHat[i]);
+			xbb0Hat[i] = feat->initial.quaternion.rotation().t()*(mu.X - feat->initial.anchor);
 			
-			Rb2b0[i] = Rw2b0[i] * sense.quaternion.rotation();
+			Rb2b0[i] = feat->initial.quaternion.rotation().t() * sense.quaternion.rotation();
 
 			// Leaving the final estimate of each feature's location
 			if (k < stepEnd - 1 && renewHist.at<double>(i, k + 1) != renewZero2 || k == stepEnd)
 			{
-				xiwHatHist.at<Vec3d>(j, i) = mu.features[i].position.world;
+				xiwHatHist.at<Vec3d>(j, i) = feat->position.world;
 
 				// Removing bad features
-				if (mu.features[i].position.body[2] < 1. / 10 || mu.features[i].position.body[2] > 1 / d_min)
+				if (feat->position.body[2] < 1. / 10 
+                        || feat->position.body[2] > 1 / d_min)
 				{
 					xiwHatHist.at<Vec3d>(j, i) = cv::Vec3d(0,0,0);
 				}
@@ -256,7 +252,7 @@ int main()
 
 		// Measurement model
 		measurementModel(k, nf, sense.altitude, pibHist, pib0, ppbHist,
-            sense.quaternion, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(),
+            sense.quaternion, xbb0Hat, Rb2b0, refFlag.col(k).t(),
             0, meas, hmu, H, mu );
 
 		if (flagBias == 1)
@@ -712,8 +708,8 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
-    Mat ppbHist, Quaternion qbw, vector<cv::Vec3d> xb0wHat, vector<cv::Vec3d> xbb0Hat,
-    vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
+    Mat ppbHist, Quaternion qbw, vector<cv::Vec3d> xbb0Hat,
+    vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
     View& meas, View& hmu, Mat& H, States& mu )
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
@@ -755,7 +751,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 
         add(mu.X,(Mat)qbw.rotation()*(Mat)xibHat, mu.features[i].position.world );
 
-		jacobianH(mu, qbw, xb0wHat[i], qb0w[i], i, Hb, Hi);
+		jacobianH(mu, qbw, mu.features[i].initial.anchor, mu.features[i].initial.quaternion, i, Hb, Hi);
 
 
 		// 0: all
