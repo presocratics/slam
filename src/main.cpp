@@ -33,7 +33,6 @@ int main()
     // Declarations
 	Mat d0Hist(stepEnd, nf, CV_64F, Scalar(0));
     vector<cv::Vec3d> xb0wHat(nf);
-	Mat xb0wHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
     vector<cv::Vec3d> xiwHat(nf);
 	Mat xiwHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
 
@@ -212,7 +211,6 @@ int main()
                         pibHist.at<Vec3d>(k, i)[1] ,   1 / d0);
 			} // if k
 
-			xb0wHatHist.at<Vec3d>(k, i) = xb0wHat[i];
 
 			// Position of the feature w.r.t. the anchor
 			xbb0Hat[i] = Rw2b0[i]*(mu.X - xb0wHat[i]);
