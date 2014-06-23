@@ -250,7 +250,7 @@ int main()
         mu.add(f);
 
 		// Measurement model
-		measurementModel(k, nf, old_pos, sense.altitude, matches, ppbHist,
+		measurementModel(k, nf, old_pos, sense.altitude, matches,
             sense.quaternion, refFlag.col(k).t(),
             0, meas, hmu, H, mu );
 
@@ -707,8 +707,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<match> matches,
-        Mat ppbHist, Quaternion qbw, Mat refFlag,
-        int flagMeas, View& meas, View& hmu, Mat& H, States& mu )
+        Quaternion qbw, Mat refFlag, int flagMeas, View& meas, View& hmu, Mat& H, States& mu )
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
