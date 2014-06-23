@@ -241,8 +241,9 @@ int main()
 		}
 
 		// Motion model
+        f = mu.dynamics( sense.quaternion, sense.acceleration, sense.angular_velocity );
 		motionModel(mu, sense.quaternion, sense.acceleration, sense.angular_velocity,
-                nf, sense.dt, f, F);
+                nf, sense.dt, F );
 
 		if (flagBias == 1)
 		{
@@ -641,12 +642,9 @@ void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i
 
 }
 
-void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, int nf,
-        double dt, States& f, Mat& F_out)
+void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, int nf,
+        double dt, Mat& F_out )
 {
-
-    f = mu.dynamics( qbw, a, w );
-
     Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, 
             pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
             2 * qbw.coord[0]*qbw.coord[1] - 2 * qbw.coord[2]*qbw.coord[3],
