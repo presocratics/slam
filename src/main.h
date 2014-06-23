@@ -27,7 +27,7 @@ void copyMat(Mat& src, Mat& dst);
 void reshapeMat(vector<double> src, Mat& dst);
 void reshapeMat3D(vector<double> src, Mat& dst);
 void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i, Mat& Hb, Mat& Hi );
-void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, int nf,
+void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
         double dt, Mat& F_out );
 void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
         Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, vector<cv::Vec3d> xbb0Hat,
