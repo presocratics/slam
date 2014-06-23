@@ -242,7 +242,7 @@ int main()
 
 		// Motion model
         f = mu.dynamics( sense.quaternion, sense.acceleration, sense.angular_velocity );
-		motionModel(mu, sense.quaternion, sense.acceleration, sense.angular_velocity,
+		jacobianMotionModel(mu, sense.quaternion, sense.acceleration, sense.angular_velocity,
                 nf, sense.dt, F );
 
 		if (flagBias == 1)
