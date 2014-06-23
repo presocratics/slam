@@ -164,28 +164,19 @@ int main()
 						renewi = tempRow;
 					}
 				}
-
-				//cout << "renewk" << renewk << endl;
 				// If current signature existed before
 				if (renewk != -1 && k < stepEnd)
 				{
 					feat->initial.inverse_depth = d0Hist.at<double>(renewk, renewi);
 				}
-
-
 				// Location and orientation of each anchor
                 feat->initial.anchor = mu.X;
-
-
                 feat->initial.quaternion = sense.quaternion;
-
                 feat->initial.pib = pibHist.at<Vec3d>(k, i);
-				++j;
-
 				// Re-initialize the state for a new feature
-
                 feat->position.body = Vec3d( pibHist.at<Vec3d>(k, i)[0], 
                         pibHist.at<Vec3d>(k, i)[1] ,   1 / feat->initial.inverse_depth);
+				++j;
 			} // if k
 
 			// Leaving the final estimate of each feature's location
@@ -238,7 +229,7 @@ int main()
             f.features[i].position.body*=sense.dt;
         }
 
-        old_pos = mu.X;
+        old_pos = mu.X; // Need this for fromAnchor in measurementModel
         mu.add(f);
 
 		// Measurement model
