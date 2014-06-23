@@ -242,7 +242,7 @@ int main()
 
 		// Motion model
 		motionModel(mu, sense.quaternion, sense.acceleration, sense.angular_velocity,
-                pibHat, nf, sense.dt, f, F);
+                nf, sense.dt, f, F);
 
 		if (flagBias == 1)
 		{
@@ -641,11 +641,11 @@ void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i
 
 }
 
-void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, vector<cv::Vec3d> pibHat,
-    int nf, double dt, States& f, Mat& F_out)
+void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, int nf,
+        double dt, States& f, Mat& F_out)
 {
 
-    f = mu.dynamics( qbw, a, w, pibHat, nf );
+    f = mu.dynamics( qbw, a, w );
 
     Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, 
             pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
@@ -675,12 +675,14 @@ void motionModel(States mu, Quaternion qbw, cv::Vec3d a, cv::Vec3d w, vector<cv:
 
     for (int i = 0; i < nf; i++)
     {
-        Matx13d pib( pibHat[i][0],
-                     pibHat[i][1],
-                     pibHat[i][2] );
-        double pib1 = pibHat[i][0];
-        double pib2 = pibHat[i][1];
-        double pib3 = pibHat[i][2];
+        Matx13d pib( 
+            mu.features[i].X[0],
+            mu.features[i].X[1],
+            mu.features[i].X[2]
+        );
+        double pib1 = mu.features[i].X[0];
+        double pib2 = mu.features[i].X[1];
+        double pib3 = mu.features[i].X[2];
 
 
         FiTemp = (Mat_<double>(3, 3) <<

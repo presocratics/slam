@@ -108,7 +108,7 @@ void States::add(States a)
  *--------------------------------------------------------------------------------------
  */
     States
-States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w, vector<cv::Vec3d> pibHat, int nf )
+States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w )
 {
     States predicted_state;
     Matx33d A;
@@ -127,14 +127,18 @@ States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w, vector<cv::Vec3d> pi
 
     gemm( -A, V, 1, a, 1, predicted_state.V );
     gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
-    for( int i=0; i<nf; ++i )
+    std::vector<Feature>::iterator pib=features.begin();
+    for( int i=0; pib!=features.end(); ++pib,++i )
     {
         Feature fi;
-        Vec3d pib = pibHat[i];
         fi.X = cv::Vec3d( 
-                (-V[1] + pib[0]*V[0])*pib[2] + pib[1]*w[0] - (1 + pib[0]*pib[0])*w[2] + pib[0]*pib[1]*w[1],
-                (-V[2] + pib[1]*V[0])*pib[2] - pib[0]*w[0] + (1 + pib[1]*pib[1])*w[1] - pib[0]*pib[1]*w[2],
-                (-w[2]*pib[0] + w[1]*pib[1])*pib[2] + V[0]*pib[2]*pib[2]);
+                (-V[1] + pib->X[0]*V[0])*pib->X[2] 
+                + pib->X[1]*w[0] - (1 + pib->X[0]*pib->X[0])*w[2] + pib->X[0]*pib->X[1]*w[1],
+
+                (-V[2] + pib->X[1]*V[0])*pib->X[2] 
+                - pib->X[0]*w[0] + (1 + pib->X[1]*pib->X[1])*w[1] - pib->X[0]*pib->X[1]*w[2],
+
+                (-w[2]*pib->X[0] + w[1]*pib->X[1])*pib->X[2] + V[0]*pib->X[2]*pib->X[2]);
         predicted_state.addFeature(fi);
     }
     return predicted_state;
