@@ -63,7 +63,6 @@ int main()
 	Mat ppbHist = Mat::zeros(stepEnd, 5, CV_64FC3);
 	Mat refFlag = Mat::zeros(5, stepEnd, CV_64F);
 	Mat renewHist = Mat::zeros(5, stepEnd, CV_64F);
-	Mat noise = Mat::zeros(1 + 6 * 50, stepEnd, CV_64F);
 	
 	reshapeMat3D(pibHist_v, pibHist);
 	reshapeMat3D(ppbHist_v, ppbHist);
