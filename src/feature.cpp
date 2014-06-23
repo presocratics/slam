@@ -70,3 +70,10 @@ Feature::fromAnchor ( cv::Vec3d pos )
     return initial.quaternion.rotation().t()*(pos - initial.anchor);
 }		/* -----  end of method Feature::fromAnchor  ----- */
 
+
+    cv::Matx33d
+Feature::rb2b ( Quaternion qbw )
+{
+    return initial.quaternion.rotation().t() * qbw.rotation();
+}		/* -----  end of method Feature::rb2b  ----- */
+

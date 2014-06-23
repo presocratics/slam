@@ -39,6 +39,7 @@ class Feature{
 
         // accessor
         cv::Vec3d fromAnchor ( cv::Vec3d pos );
+        cv::Matx33d rb2b ( Quaternion qbw );
 
         Vec3d get_body();
         Scalar getRGB();

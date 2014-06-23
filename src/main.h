@@ -30,8 +30,8 @@ void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i
 void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
         double dt, Mat& F_out );
 void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, Mat pibHist,
-        Mat ppbHist, Quaternion qbw, vector<Matx33d> Rb2b0, Mat refFlag,
-        int flagMeas, View& meas, View& hmu, Mat& H, States& mu );
+        Mat ppbHist, Quaternion qbw, Mat refFlag, int flagMeas, View& meas,
+        View& hmu, Mat& H, States& mu );
 vector<int> findIndex(const Mat& src, double val);
 
 #endif

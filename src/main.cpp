@@ -36,8 +36,6 @@ int main()
 
     vector<States> muHist;
 
-	vector<Matx33d> Rb2b0(nf);
-
     Sensors sense;
     States mu;
 	Mat PHist(mu.rows, stepEnd, CV_64F);
@@ -190,11 +188,6 @@ int main()
                         pibHist.at<Vec3d>(k, i)[1] ,   1 / feat->initial.inverse_depth);
 			} // if k
 
-
-			// Position of the feature w.r.t. the anchor
-			
-			Rb2b0[i] = feat->initial.quaternion.rotation().t() * sense.quaternion.rotation();
-
 			// Leaving the final estimate of each feature's location
 			if (k < stepEnd - 1 && renewHist.at<double>(i, k + 1) != renewZero2 || k == stepEnd)
 			{
@@ -250,7 +243,7 @@ int main()
 
 		// Measurement model
 		measurementModel(k, nf, old_pos, sense.altitude, pibHist, ppbHist,
-            sense.quaternion, Rb2b0, refFlag.col(k).t(),
+            sense.quaternion, refFlag.col(k).t(),
             0, meas, hmu, H, mu );
 
 		if (flagBias == 1)
@@ -706,7 +699,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, Mat pibHist,
-        Mat ppbHist, Quaternion qbw, vector<cv::Matx33d> Rb2b0, Mat refFlag,
+        Mat ppbHist, Quaternion qbw, Mat refFlag,
         int flagMeas, View& meas, View& hmu, Mat& H, States& mu )
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
@@ -729,7 +722,7 @@ void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, Mat pibHist,
 				pibHat[1] / pibHat[2]);
 
         Mat temp;
-        temp =  (Mat)feat->fromAnchor(old_pos) + (cv::Mat)Rb2b0[i] * (cv::Mat)xibHat;
+        temp =  (Mat)feat->fromAnchor(old_pos) + (cv::Mat)feat->rb2b(qbw) * (cv::Mat)xibHat;
         xib0Hat = (cv::Vec3d) temp;
 
         pib0Hat = cv::Vec3d(
