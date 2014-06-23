@@ -18,6 +18,7 @@ struct inits {
     Quaternion quaternion;
     double inverse_depth;
     cv::Vec3d anchor;
+    cv::Vec3d pib;
 };				/* ----------  end of struct inits  ---------- */
 
 typedef struct inits Inits;
@@ -37,6 +38,8 @@ class Feature{
         Feature(Vec3d pos, Scalar color, int n, int ref );
 
         // accessor
+        cv::Vec3d fromAnchor ( cv::Vec3d pos );
+
         Vec3d get_body();
         Scalar getRGB();
         int getID();

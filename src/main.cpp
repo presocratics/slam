@@ -38,9 +38,6 @@ int main()
 
 	vector<Matx33d> Rb2b0(nf);
 
-    vector<cv::Vec3d> pib0(nf);
-    vector<Vec3d> xbb0Hat(nf);
-
     Sensors sense;
     States mu;
 	Mat PHist(mu.rows, stepEnd, CV_64F);
@@ -109,6 +106,7 @@ int main()
 
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
+        cv::Vec3d old_pos;
         vector<int> renewIndex;
         int renewk, renewi;
         Mat G, Q, R, K;	
@@ -183,7 +181,7 @@ int main()
 
                 feat->initial.quaternion = sense.quaternion;
 
-                pib0[i] = pibHist.at<Vec3d>(k, i);
+                feat->initial.pib = pibHist.at<Vec3d>(k, i);
 				++j;
 
 				// Re-initialize the state for a new feature
@@ -194,7 +192,6 @@ int main()
 
 
 			// Position of the feature w.r.t. the anchor
-			xbb0Hat[i] = feat->initial.quaternion.rotation().t()*(mu.X - feat->initial.anchor);
 			
 			Rb2b0[i] = feat->initial.quaternion.rotation().t() * sense.quaternion.rotation();
 
@@ -248,11 +245,12 @@ int main()
             f.features[i].position.body*=sense.dt;
         }
 
+        old_pos = mu.X;
         mu.add(f);
 
 		// Measurement model
-		measurementModel(k, nf, sense.altitude, pibHist, pib0, ppbHist,
-            sense.quaternion, xbb0Hat, Rb2b0, refFlag.col(k).t(),
+		measurementModel(k, nf, old_pos, sense.altitude, pibHist, ppbHist,
+            sense.quaternion, Rb2b0, refFlag.col(k).t(),
             0, meas, hmu, H, mu );
 
 		if (flagBias == 1)
@@ -707,10 +705,9 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 * measurementModel
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
-void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
-    Mat ppbHist, Quaternion qbw, vector<cv::Vec3d> xbb0Hat,
-    vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
-    View& meas, View& hmu, Mat& H, States& mu )
+void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, Mat pibHist,
+        Mat ppbHist, Quaternion qbw, vector<cv::Matx33d> Rb2b0, Mat refFlag,
+        int flagMeas, View& meas, View& hmu, Mat& H, States& mu )
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -718,8 +715,9 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 
 	Mat Hb;
 	Mat Hi;
+    std::vector<Feature>::iterator feat=mu.features.begin();
     std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
-	for (int i = 0; i < nf; i++, ++mi, ++hi)
+	for (int i = 0; i < nf; i++, ++mi, ++hi, ++feat)
 	{
         cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
 
@@ -731,7 +729,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 				pibHat[1] / pibHat[2]);
 
         Mat temp;
-        temp =  (Mat)xbb0Hat[i] + (cv::Mat)Rb2b0[i] * (cv::Mat)xibHat;
+        temp =  (Mat)feat->fromAnchor(old_pos) + (cv::Mat)Rb2b0[i] * (cv::Mat)xibHat;
         xib0Hat = (cv::Vec3d) temp;
 
         pib0Hat = cv::Vec3d(
@@ -758,7 +756,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 		if (flagMeas == 0)
 		{
 			meas.altitude = alt;							// altitude
-            mi->set_views( pibHist.at<Vec3d>(k,i), pib0[i], ppbHist.at<Vec3d>(k,i) );
+            mi->set_views( pibHist.at<Vec3d>(k,i), feat->initial.pib, ppbHist.at<Vec3d>(k,i) );
             hmu.altitude = -mu.X[2];
             hi->set_views( pibHat, pib0Hat, ppbHat );
 

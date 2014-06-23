@@ -63,3 +63,10 @@ void Feature::setRefFlag(int ref)
 {
     refFlag = ref;
 }
+
+    cv::Vec3d
+Feature::fromAnchor ( cv::Vec3d pos )
+{
+    return initial.quaternion.rotation().t()*(pos - initial.anchor);
+}		/* -----  end of method Feature::fromAnchor  ----- */
+
