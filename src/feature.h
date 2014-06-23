@@ -51,7 +51,6 @@ class Feature{
         void setRGB(Scalar color);
         void setID(int n);
         void setRefFlag(int ref);
-
 };
 
 #endif

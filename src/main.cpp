@@ -104,6 +104,7 @@ int main()
 
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
+        std::vector<match> matches;
         cv::Vec3d old_pos;
         vector<int> renewIndex;
         int renewk, renewi;
@@ -118,6 +119,19 @@ int main()
 		// Read sensor measurements
         sense.update();
 		renewk = renewi = -1;
+        
+        // Update matches
+        for ( int i=0; i<nf; ++i)
+        {
+            match m;
+            cv::Vec3d foo;
+            foo = pibHist.at<Vec3d>(k,i);
+            m.source = Point2d( foo[0], foo[1] );
+            foo = ppbHist.at<Vec3d>(k,i);
+            m.reflection = Point2d( foo[0], foo[1] );
+            m.id=0;
+            matches.push_back(m);
+        }
 
         //TODO: Do we need this norm?
         //double qbw_norm;
@@ -132,16 +146,19 @@ int main()
 		//std::cout << "sums " << sums << std::endl;
 
 		// line 59
+        std::vector<match>::iterator mi=matches.begin();
         std::vector<Feature>::iterator feat=mu.features.begin();
-		for (int i = 0; feat!=mu.features.end(); ++feat, i++)
+		for (int i = 0; feat!=mu.features.end(); ++mi, ++feat, i++)
 		{
+            cv::Vec3d cur_pib;
             int renewZero, renewZero2;
             cv::Vec3d pibr;
-			add( atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI,
+
+			add( atan2( mi->source.y, 1) * 180 / M_PI,
                     sense.quaternion.euler()*180/M_PI, pibr );
 
 			feat->initial.inverse_depth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
-			feat->initial.inverse_depth = fmin(feat->initial.inverse_depth,d_init);
+			feat->initial.inverse_depth = fmin( feat->initial.inverse_depth, d_init );
 
             d0Hist.at<double>(k, i) = 1 / feat->position.body[2];
 			// Expreiment: renew elements are piecewise constant
@@ -172,10 +189,10 @@ int main()
 				// Location and orientation of each anchor
                 feat->initial.anchor = mu.X;
                 feat->initial.quaternion = sense.quaternion;
-                feat->initial.pib = pibHist.at<Vec3d>(k, i);
+                feat->initial.pib = Vec3d(mi->source.x, mi->source.y,1);
 				// Re-initialize the state for a new feature
-                feat->position.body = Vec3d( pibHist.at<Vec3d>(k, i)[0], 
-                        pibHist.at<Vec3d>(k, i)[1] ,   1 / feat->initial.inverse_depth);
+                feat->position.body = Vec3d( mi->source.x,
+                        mi->source.y, 1 / feat->initial.inverse_depth);
 				++j;
 			} // if k
 
@@ -233,7 +250,7 @@ int main()
         mu.add(f);
 
 		// Measurement model
-		measurementModel(k, nf, old_pos, sense.altitude, pibHist, ppbHist,
+		measurementModel(k, nf, old_pos, sense.altitude, matches, ppbHist,
             sense.quaternion, refFlag.col(k).t(),
             0, meas, hmu, H, mu );
 
@@ -689,7 +706,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 * measurementModel
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
-void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, Mat pibHist,
+void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<match> matches,
         Mat ppbHist, Quaternion qbw, Mat refFlag,
         int flagMeas, View& meas, View& hmu, Mat& H, States& mu )
 {
@@ -699,9 +716,10 @@ void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, Mat pibHist,
 
 	Mat Hb;
 	Mat Hi;
+    std::vector<match>::iterator match=matches.begin();
     std::vector<Feature>::iterator feat=mu.features.begin();
     std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
-	for (int i = 0; i < nf; i++, ++mi, ++hi, ++feat)
+	for (int i = 0; i < nf; i++, ++mi, ++hi, ++feat, ++match)
 	{
         cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
 
@@ -740,7 +758,7 @@ void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, Mat pibHist,
 		if (flagMeas == 0)
 		{
 			meas.altitude = alt;							// altitude
-            mi->set_views( pibHist.at<Vec3d>(k,i), feat->initial.pib, ppbHist.at<Vec3d>(k,i) );
+            mi->set_views( match->source, feat->initial.pib, match->reflection );
             hmu.altitude = -mu.X[2];
             hi->set_views( pibHat, pib0Hat, ppbHat );
 

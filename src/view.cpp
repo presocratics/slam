@@ -18,12 +18,21 @@ View::operator-= ( const View& rhs )
     void
 Vfeat::set_views ( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl )
 {
-    current.x = cur[0];
-    current.y = cur[1];
-    initial.x = init[0];
-    initial.y = init[1];
-    reflection.x = refl[0];
-    reflection.y = refl[1];
+    cv::Point2d c,r;
+    c=cv::Point2d( cur[0], cur[1] );
+    r=cv::Point2d( refl[0], refl[1] );
+    set_views( c, init, r );
     return ;
 }		/* -----  end of method View::set_views  ----- */
+
+    void
+Vfeat::set_views ( cv::Point2d cur, cv::Vec3d init, cv::Point2d refl )
+{
+    current=cur;
+    reflection=refl;
+    initial.x = init[0];
+    initial.y = init[1];
+    return ;
+}		/* -----  end of method Vfeat::set_views  ----- */
+
 
