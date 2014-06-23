@@ -115,7 +115,6 @@ int main()
 	{
         vector<int> renewIndex;
         int renewk, renewi;
-        vector<cv::Vec3d> pibHat(nf);
         Mat G, Q, R, K;	
         Mat H = Mat::zeros(31, mu.rows, CV_64F);			// Measurement model ouputs
         View meas(nf);
@@ -266,7 +265,7 @@ int main()
 		// Measurement model
 		measurementModel(k, nf, sense.altitude, pibHist, pib0, ppbHist, mu,
             sense.quaternion, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(),
-            0, meas, hmu, H, pibHat, xiwHat);
+            0, meas, hmu, H, xiwHat);
 
 		if (flagBias == 1)
 		{
@@ -723,7 +722,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
     Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, vector<cv::Vec3d> xbb0Hat,
     vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
-    View& meas, View& hmu, Mat& H, vector<cv::Vec3d>& pibHat, vector<cv::Vec3d>& xiwHat)
+    View& meas, View& hmu, Mat& H, vector<cv::Vec3d>& xiwHat)
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -738,14 +737,14 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
     std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
 	for (int i = 0; i < nf; i++, ++mi, ++hi)
 	{
-        cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat;
+        cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
 
-        pibHat[i] = mu.features[i].X;
+        pibHat = mu.features[i].X;
 	
 		xibHat = cv::Vec3d(
-				1 / pibHat[i][2],
-				pibHat[i][0] / pibHat[i][2],
-				pibHat[i][1] / pibHat[i][2]);
+				1 / pibHat[2],
+				pibHat[0] / pibHat[2],
+				pibHat[1] / pibHat[2]);
 
         Mat temp;
         temp =  (Mat)xbb0Hat[i] + (cv::Mat)Rb2b0[i] * (cv::Mat)xibHat;
@@ -777,7 +776,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 			meas.altitude = alt;							// altitude
             mi->set_views( pibHist.at<Vec3d>(k,i), pib0[i], ppbHist.at<Vec3d>(k,i) );
             hmu.altitude = -mu.X[2];
-            hi->set_views( pibHat[i], pib0Hat, ppbHat );
+            hi->set_views( pibHat, pib0Hat, ppbHat );
 
 			H.row(0).col(2).setTo(-1);
             // For each feature
