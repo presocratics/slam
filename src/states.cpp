@@ -108,14 +108,17 @@ void States::add(States a)
  *--------------------------------------------------------------------------------------
  */
     States
-States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w )
+States::dynamics ( Sensors s )
 {
     States predicted_state;
     Matx33d A;
-    
+    cv::Vec3d w;
     Matx33d Rb2w, Rw2b; 
-    Rb2w = qbw.rotation();
+
+    Rb2w = s.quaternion.rotation();
     Rw2b = Rb2w.t();
+
+    w =cv::Vec3d(s.angular_velocity);
 
     Vec3d gw(0,0,-9.80665); // TODO where does this number come from?
     A = Matx33d( 0, -w[2], w[1],
@@ -125,7 +128,7 @@ States::dynamics (Quaternion qbw, cv::Vec3d a, cv::Vec3d w )
     // Generalized matrix multiplication
     gemm( Rb2w, V, 1, Mat(), 0, predicted_state.X );
 
-    gemm( -A, V, 1, a, 1, predicted_state.V );
+    gemm( -A, V, 1, s.acceleration, 1, predicted_state.V );
     gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
     std::vector<Feature>::iterator pib=features.begin();
     for( int i=0; pib!=features.end(); ++pib,++i )

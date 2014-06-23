@@ -241,7 +241,7 @@ int main()
 		}
 
 		// Motion model
-        f = mu.dynamics( sense.quaternion, sense.acceleration, sense.angular_velocity );
+        f = mu.dynamics( sense );
 		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
                 nf, sense.dt, F );
 

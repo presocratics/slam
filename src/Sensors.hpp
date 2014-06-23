@@ -1,4 +1,4 @@
-#ifndef  sensors_INC
+#ifndef  Sensors_INC
 #define  Sensors_INC
 #define MAXLINE 1024            /*  */
 #include <cv.h>

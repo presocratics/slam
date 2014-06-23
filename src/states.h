@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "feature.h"
+#include "Sensors.hpp"
 using namespace cv;
 
 class States{
@@ -38,7 +39,7 @@ class States{
         void addFeature(Feature f);
         void setb(Vec3d bias);
         void add(States a);
-        States dynamics(Quaternion qbw, cv::Vec3d a, cv::Vec3d w );
+        States dynamics( Sensors s );
 };
 
 #endif
