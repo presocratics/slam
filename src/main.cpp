@@ -234,11 +234,6 @@ int main()
 			PHist.at<double>(i, k) = sqrt(P.at<double>(i, i));
 		}
 
-		// Extended Kalman Filter Prediction
-		for (int i = 0; i < nf; i++)
-		{
-            pibHat[i] = mu.features[i].X;
-		}
 
 		// Motion model
         f = mu.dynamics( sense );
