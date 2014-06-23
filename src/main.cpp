@@ -39,7 +39,8 @@ int main()
     vector<Quaternion> qb0w(nf);
     vector<States> muHist;
 
-	vector<Matx33d> Rw2b0, Rb2b0;
+    vector<Matx33d> Rw2b0(nf);
+	vector<Matx33d> Rb2b0(nf);
 
     vector<cv::Vec3d> pib0(nf);
     vector<Vec3d> xbb0Hat(nf);
@@ -87,7 +88,7 @@ int main()
 	for (int i = 0; i < nf; i++)
 	{
         Feature ith_feature(Vec3d(pibHist.at<Vec3d>(stepStart - 1, i)[0],
-                    pibHist.at<Vec3d>(stepStart - 1, i)[1], 1/d0), Scalar(0,0,0), 0, 0);
+            pibHist.at<Vec3d>(stepStart - 1, i)[1], 1/d0), Scalar(0,0,0), 0, 0);
         mu.addFeature(ith_feature);
 	}
 	
@@ -194,12 +195,7 @@ int main()
                 qb0w[i].coord = sense.quaternion.coord;
                 tempR = sense.quaternion.rotation();
 
-				Rw2b0.push_back(tempR.t());
-				if (Rw2b0.size() > 5)
-				{
-					std::swap(Rw2b0[i], Rw2b0[5]);
-					Rw2b0.pop_back();
-				}
+				Rw2b0[i]=tempR.t();
 
                 pib0[i] = pibHist.at<Vec3d>(k, i);
 				++j;
@@ -214,7 +210,7 @@ int main()
 			// Position of the feature w.r.t. the anchor
 			xbb0Hat[i] = Rw2b0[i]*(mu.X - xb0wHat[i]);
 			
-			Rb2b0.push_back(Rw2b0[i] * Rb2w);
+			Rb2b0[i] = Rw2b0[i] * Rb2w;
 
 			// Leaving the final estimate of each feature's location
 			if (k < stepEnd - 1 && renewHist.at<double>(i, k + 1) != renewZero2 || k == stepEnd)
@@ -388,7 +384,7 @@ int main()
         for(int i=0; i < nf; i++)
         {
             Feature tempfeat( Vec3d(  kx.at<double>(6+3*i,0),  kx.at<double>(7+3*i,0),
-                        kx.at<double>(8+3*i,0)), Scalar(0,0,0), 0, 0 );
+                kx.at<double>(8+3*i,0)), Scalar(0,0,0), 0, 0 );
             kmh.addFeature(tempfeat);
         }
         kmh.setb(Vec3d(  kx.at<double>(6+3*nf,0),  kx.at<double>(7+3*nf,0),  kx.at<double>(8+3*nf,0)));
@@ -400,7 +396,6 @@ int main()
 		P = (Mat::eye(mu.rows, mu.rows, CV_64F) - K*H)*P;
 		P = (P.t() + P) / 2;
 
-		Rb2b0.clear();
 
 		if (k%300 == 0)
             cout << k << endl;
