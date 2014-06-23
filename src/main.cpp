@@ -119,9 +119,7 @@ int main()
         View meas(nf);
         View hmu(nf);
         double altHat, alt_old;
-        Matx33d Rb2w, Rw2b;
         alt_old = sense.altitude;
-        cv::Vec3d r;
         States f;
         Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
 		// Read sensor measurements
@@ -140,17 +138,12 @@ int main()
 		//}
 		//std::cout << "sums " << sums << std::endl;
 
-        Rb2w = sense.quaternion.rotation();
-		Rw2b = Rb2w.t();
-        r = sense.quaternion.euler();
-        r *= 180 / M_PI; 
-
 		// line 59
 		for (int i = 0; i < nf; i++)
 		{
             int renewZero, renewZero2;
             cv::Vec3d pibr;
-			add( atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI, r, pibr );
+			add( atan2(pibHist.at<Vec3d>(k, i)[1], 1) * 180 / M_PI, sense.quaternion.euler()*180/M_PI, pibr );
 			d0 = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
 
 			d0 = fmin(d0,d_init);
@@ -208,7 +201,7 @@ int main()
 			// Position of the feature w.r.t. the anchor
 			xbb0Hat[i] = Rw2b0[i]*(mu.X - xb0wHat[i]);
 			
-			Rb2b0[i] = Rw2b0[i] * Rb2w;
+			Rb2b0[i] = Rw2b0[i] * sense.quaternion.rotation();
 
 			// Leaving the final estimate of each feature's location
 			if (k < stepEnd - 1 && renewHist.at<double>(i, k + 1) != renewZero2 || k == stepEnd)
@@ -727,10 +720,6 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
 	Mat S = Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
 
-    cv::Matx33d Rb2w, Rw2b;
-    Rb2w = qbw.rotation();
-	Rw2b = Rb2w.t();
-
 	Mat Hb;
 	Mat Hi;
     std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
@@ -754,9 +743,9 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 				xib0Hat[2] / xib0Hat[0],
                 0);
 
-        temp = S * (Mat)Rb2w*(Mat)xibHat;
+        temp = S * (Mat)qbw.rotation()*(Mat)xibHat;
         temp -= 2*n*n.t()*(Mat)mu.X; 
-        temp = (Mat)Rw2b * temp;
+        temp = (Mat)qbw.rotation().t() * temp;
         xpbHat = (cv::Vec3d) temp;
 
 		ppbHat = cv::Vec3d(
@@ -764,7 +753,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 			xpbHat[2] / xpbHat[0],
             0);
 
-        add(mu.X,(Mat)Rb2w*(Mat)xibHat, mu.features[i].position.world );
+        add(mu.X,(Mat)qbw.rotation()*(Mat)xibHat, mu.features[i].position.world );
 
 		jacobianH(mu, qbw, xb0wHat[i], qb0w[i], i, Hb, Hi);
 
