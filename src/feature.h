@@ -18,7 +18,7 @@ struct inits {
     Quaternion quaternion;
     double inverse_depth;
     cv::Vec3d anchor;
-    cv::Vec3d pib;
+    cv::Point2d pib;
 };				/* ----------  end of struct inits  ---------- */
 
 typedef struct inits Inits;
@@ -51,6 +51,9 @@ class Feature{
         void setRGB(Scalar color);
         void setID(int n);
         void setRefFlag(int ref);
+        void set_initial_pib( cv::Point2d p );
+        void set_initial_pib( cv::Vec3d p );
+        void set_body_position( cv::Point2d, double d );
 };
 
 #endif

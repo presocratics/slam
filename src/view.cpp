@@ -28,11 +28,18 @@ Vfeat::set_views ( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl )
     void
 Vfeat::set_views ( cv::Point2d cur, cv::Vec3d init, cv::Point2d refl )
 {
-    current=cur;
-    reflection=refl;
-    initial.x = init[0];
-    initial.y = init[1];
+    cv::Point2d i;
+    i = cv::Point2d( init[0], init[1] );
+    set_views( cur, i, refl );
     return ;
 }		/* -----  end of method Vfeat::set_views  ----- */
 
+    void
+Vfeat::set_views ( cv::Point2d cur, cv::Point2d init, cv::Point2d refl )
+{
+    current=cur;
+    reflection=refl;
+    initial=init;
+    return ;
+}		/* -----  end of method Vfeat::set_views  ----- */
 

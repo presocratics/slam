@@ -21,6 +21,7 @@ class Vfeat
         /* ====================  OPERATORS     ======================================= */
         void set_views( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl );
         void set_views( cv::Point2d cur, cv::Vec3d init, cv::Point2d refl );
+        void set_views( cv::Point2d cur, cv::Point2d init, cv::Point2d refl );
         
 
         /* ====================  DATA MEMBERS  ======================================= */

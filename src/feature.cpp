@@ -47,6 +47,30 @@ void Feature::set_body(Vec3d pos)
     position.body = pos;
 }
 
+    void
+Feature::set_body_position ( cv::Point2d p, double d )
+{
+    position.body[0] = p.x;
+    position.body[1] = p.y;
+    position.body[2] = d;
+    return ;
+}		/* -----  end of method Feature::set_body_position  ----- */
+
+
+    void
+Feature::set_initial_pib ( cv::Vec3d p )
+{
+    initial.pib = cv::Point2d( p[0], p[1] );
+    return ;
+}		/* -----  end of method Feature::set_initial_pib  ----- */
+
+
+    void
+Feature::set_initial_pib ( cv::Point2d p )
+{
+    initial.pib = p;
+    return ;
+}		/* -----  end of method Feature::set_initial_pib  ----- */
 
 
 void Feature::setRGB(Scalar color)

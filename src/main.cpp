@@ -38,7 +38,6 @@ int main()
 
     Sensors sense;
     States mu;
-	Mat PHist(mu.rows, stepEnd, CV_64F);
 
 
 	// Data History variables
@@ -189,10 +188,9 @@ int main()
 				// Location and orientation of each anchor
                 feat->initial.anchor = mu.X;
                 feat->initial.quaternion = sense.quaternion;
-                feat->initial.pib = Vec3d(mi->source.x, mi->source.y,1);
+                feat->set_initial_pib( mi->source );
 				// Re-initialize the state for a new feature
-                feat->position.body = Vec3d( mi->source.x,
-                        mi->source.y, 1 / feat->initial.inverse_depth);
+                feat->set_body_position( mi->source, 1/feat->initial.inverse_depth );
 				++j;
 			} // if k
 
@@ -214,12 +212,6 @@ int main()
 		// Saving the history of the estimates
         muHist.push_back(mu);
 		
-		for (int i = 0; i < mu.rows; i++)
-		{
-			PHist.at<double>(i, k) = sqrt(P.at<double>(i, i));
-		}
-
-
 		// Motion model
         f = mu.dynamics( sense );
 		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
@@ -250,9 +242,8 @@ int main()
         mu.add(f);
 
 		// Measurement model
-		measurementModel(k, nf, old_pos, sense.altitude, matches,
-            sense.quaternion, refFlag.col(k).t(),
-            0, meas, hmu, H, mu );
+		measurementModel(k, nf, old_pos, sense.altitude, matches, sense.quaternion,
+                refFlag.col(k).t(), 0, meas, hmu, H, mu );
 
 		if (flagBias == 1)
 		{
