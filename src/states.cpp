@@ -93,7 +93,8 @@ void States::add(States a)
         V += a.V;
         for(int i = 0; i < nf; i++ )
         {
-            features[i].X += a.features[i].X;
+            features[i].position.body += a.features[i].position.body;
+            features[i].position.world += a.features[i].position.world;
         }
         b += a.b;
     }
@@ -134,14 +135,14 @@ States::dynamics ( Sensors s )
     for( int i=0; pib!=features.end(); ++pib,++i )
     {
         Feature fi;
-        fi.X = cv::Vec3d( 
-                (-V[1] + pib->X[0]*V[0])*pib->X[2] 
-                + pib->X[1]*w[0] - (1 + pib->X[0]*pib->X[0])*w[2] + pib->X[0]*pib->X[1]*w[1],
+        fi.position.body = cv::Vec3d( 
+                (-V[1] + pib->position.body[0]*V[0])*pib->position.body[2] 
+                + pib->position.body[1]*w[0] - (1 + pib->position.body[0]*pib->position.body[0])*w[2] + pib->position.body[0]*pib->position.body[1]*w[1],
 
-                (-V[2] + pib->X[1]*V[0])*pib->X[2] 
-                - pib->X[0]*w[0] + (1 + pib->X[1]*pib->X[1])*w[1] - pib->X[0]*pib->X[1]*w[2],
+                (-V[2] + pib->position.body[1]*V[0])*pib->position.body[2] 
+                - pib->position.body[0]*w[0] + (1 + pib->position.body[1]*pib->position.body[1])*w[1] - pib->position.body[0]*pib->position.body[1]*w[2],
 
-                (-w[2]*pib->X[0] + w[1]*pib->X[1])*pib->X[2] + V[0]*pib->X[2]*pib->X[2]);
+                (-w[2]*pib->position.body[0] + w[1]*pib->position.body[1])*pib->position.body[2] + V[0]*pib->position.body[2]*pib->position.body[2]);
         predicted_state.addFeature(fi);
     }
     return predicted_state;

@@ -33,7 +33,6 @@ int main()
     // Declarations
 	Mat d0Hist(stepEnd, nf, CV_64F, Scalar(0));
     vector<cv::Vec3d> xb0wHat(nf);
-    vector<cv::Vec3d> xiwHat(nf);
 	Mat xiwHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
 
     vector<Quaternion> qb0w(nf);
@@ -156,7 +155,7 @@ int main()
 
 			d0 = fmin(d0,d_init);
 
-            d0Hist.at<double>(k, i) = 1 / mu.features[i].X[2];
+            d0Hist.at<double>(k, i) = 1 / mu.features[i].position.body[2];
 			// Expreiment: renew elements are piecewise constant
 			renewZero = renewHist.at<double>(i, k - 1);
 			renewZero2 = renewHist.at<double>(i, k);
@@ -201,7 +200,7 @@ int main()
 
 				// Re-initialize the state for a new feature
 
-                mu.features[i].X = Vec3d( pibHist.at<Vec3d>(k, i)[0], 
+                mu.features[i].position.body = Vec3d( pibHist.at<Vec3d>(k, i)[0], 
                         pibHist.at<Vec3d>(k, i)[1] ,   1 / d0);
 			} // if k
 
@@ -214,10 +213,10 @@ int main()
 			// Leaving the final estimate of each feature's location
 			if (k < stepEnd - 1 && renewHist.at<double>(i, k + 1) != renewZero2 || k == stepEnd)
 			{
-				xiwHatHist.at<Vec3d>(j, i) = xiwHat[i];
+				xiwHatHist.at<Vec3d>(j, i) = mu.features[i].position.world;
 
 				// Removing bad features
-				if (mu.features[i].X[2] < 1. / 10 || mu.features[i].X[2] > 1 / d_min)
+				if (mu.features[i].position.body[2] < 1. / 10 || mu.features[i].position.body[2] > 1 / d_min)
 				{
 					xiwHatHist.at<Vec3d>(j, i) = cv::Vec3d(0,0,0);
 				}
@@ -257,15 +256,15 @@ int main()
         
         for(int i=0; i < nf; i++)
         {
-            f.features[i].X*=sense.dt;
+            f.features[i].position.body*=sense.dt;
         }
 
         mu.add(f);
 
 		// Measurement model
-		measurementModel(k, nf, sense.altitude, pibHist, pib0, ppbHist, mu,
+		measurementModel(k, nf, sense.altitude, pibHist, pib0, ppbHist,
             sense.quaternion, xb0wHat, xbb0Hat, qb0w, Rb2b0, refFlag.col(k).t(),
-            0, meas, hmu, H, xiwHat);
+            0, meas, hmu, H, mu );
 
 		if (flagBias == 1)
 		{
@@ -600,9 +599,9 @@ void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i
 	double qbw3 = qbw.coord[2];
 	double qbw4 = qbw.coord[3];
 
-	double pib1 = mu.features[i].X[0];
-	double pib2 = mu.features[i].X[1];
-	double pib3 = mu.features[i].X[2];
+	double pib1 = mu.features[i].position.body[0];
+	double pib2 = mu.features[i].position.body[1];
+	double pib3 = mu.features[i].position.body[2];
 
 	double xb0w1 = xb0w[0];
 	double xb0w2 = xb0w[1];
@@ -667,13 +666,13 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
     for (int i = 0; i < nf; i++)
     {
         Matx13d pib( 
-            mu.features[i].X[0],
-            mu.features[i].X[1],
-            mu.features[i].X[2]
+            mu.features[i].position.body[0],
+            mu.features[i].position.body[1],
+            mu.features[i].position.body[2]
         );
-        double pib1 = mu.features[i].X[0];
-        double pib2 = mu.features[i].X[1];
-        double pib3 = mu.features[i].X[2];
+        double pib1 = mu.features[i].position.body[0];
+        double pib2 = mu.features[i].position.body[1];
+        double pib3 = mu.features[i].position.body[2];
 
 
         FiTemp = (Mat_<double>(3, 3) <<
@@ -720,9 +719,9 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> pib0,
-    Mat ppbHist, States mu, Quaternion qbw, vector<cv::Vec3d> xb0wHat, vector<cv::Vec3d> xbb0Hat,
+    Mat ppbHist, Quaternion qbw, vector<cv::Vec3d> xb0wHat, vector<cv::Vec3d> xbb0Hat,
     vector<Quaternion> qb0w, vector<cv::Matx33d> Rb2b0, Mat refFlag, int flagMeas,
-    View& meas, View& hmu, Mat& H, vector<cv::Vec3d>& xiwHat)
+    View& meas, View& hmu, Mat& H, States& mu )
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -739,7 +738,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 	{
         cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
 
-        pibHat = mu.features[i].X;
+        pibHat = mu.features[i].position.body;
 	
 		xibHat = cv::Vec3d(
 				1 / pibHat[2],
@@ -765,7 +764,7 @@ void measurementModel(int k, int nf, double alt, Mat pibHist, vector<cv::Vec3d> 
 			xpbHat[2] / xpbHat[0],
             0);
 
-        add(mu.X,(Mat)Rb2w*(Mat)xibHat, xiwHat[i] );
+        add(mu.X,(Mat)Rb2w*(Mat)xibHat, mu.features[i].position.world );
 
 		jacobianH(mu, qbw, xb0wHat[i], qb0w[i], i, Hb, Hi);
 

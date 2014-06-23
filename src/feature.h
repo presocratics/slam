@@ -9,12 +9,18 @@
 #include <iostream>
 using namespace cv;
 
+struct frame {
+    cv::Vec3d world,body;
+};				/* ----------  end of struct frame  ---------- */
+
+typedef struct frame Frame;
+
 class Feature{
     public:
-        Vec3d X;
         Scalar RGB;
         int ID;
         int refFlag;
+        frame position;
 
         // constructor
         Feature();
@@ -22,13 +28,13 @@ class Feature{
         Feature(Vec3d pos, Scalar color, int n, int ref );
 
         // accessor
-        Vec3d getX();
+        Vec3d get_body();
         Scalar getRGB();
         int getID();
         int getRefFlag();
        
         // mutator
-        void setX(Vec3d pos);
+        void set_body(Vec3d pos);
         void setRGB(Scalar color);
         void setID(int n);
         void setRefFlag(int ref);

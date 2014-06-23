@@ -4,7 +4,7 @@
 // constructor
 Feature::Feature()
 {
-    X = Vec3d(0,0,0);
+    position.body = Vec3d(0,0,0);
     RGB = Scalar(0,0,0);
     ID = -1;
     refFlag = -1;
@@ -12,7 +12,7 @@ Feature::Feature()
 
 Feature::Feature(Vec3d pos, Scalar color, int n, int ref)
 {
-   X = pos;
+   position.body = pos;
    RGB = color;
    ID = n;
    refFlag = ref;
@@ -21,9 +21,9 @@ Feature::Feature(Vec3d pos, Scalar color, int n, int ref)
 Feature::~Feature(){};
 
 // accessor
-Vec3d Feature::getX()
+Vec3d Feature::get_body()
 {
-    return X;
+    return position.body;
 }
 
 Scalar Feature::getRGB()
@@ -42,9 +42,9 @@ int Feature::getRefFlag()
 }
 
 // mutator
-void Feature::setX(Vec3d pos)
+void Feature::set_body(Vec3d pos)
 {
-    X = pos;
+    position.body = pos;
 }
 
 
