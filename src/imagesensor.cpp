@@ -47,12 +47,12 @@ ImageSensor::open_source ( const char *fn )
     void
 ImageSensor::get_projections ( )
 {
-    char str[4];
-    strcpy( str, (isHex) ? "%lx,%lx,%lx,%lx" : "%lf,%lf,%lf,%lf" );
+    char str[20];
+    strcpy( str, (isHex) ? "%d,%lx,%lx,%lx,%lx" : "%d,%lf,%lf,%lf,%lf" );
     std::vector<projection>::iterator it=matches.begin();
     for( ; it!=matches.end(); ++it )
     {
-        get_val( fp, "image", str, &it->source.x, &it->source.y,
+        get_val( fp, "image", str, &it->id,&it->source.x, &it->source.y,
                 &it->reflection.x, &it->reflection.y );
     }
     return ;

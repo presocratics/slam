@@ -36,7 +36,7 @@ int main()
 
     vector<States> muHist;
 
-    ImageSensor imgsense("../data/bodyHist.hex", true );
+    ImageSensor imgsense("../data/bodyHist2.hex", true );
     Sensors sense;
     States mu;
     mu.features.resize(nf);
@@ -384,6 +384,7 @@ int main()
 		imshow("drawing", plot);
 		waitKey(0);
 	}
+    cout << "numIDs: " << mu.feats.size() <<endl;
 	return 0;
 }
 

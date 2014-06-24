@@ -11,7 +11,7 @@
  */
 struct projection {
     cv::Point2d source, reflection;
-    unsigned int id;
+    int id;
 };				/* ----------  end of struct match  ---------- */
 typedef struct projection Projection;
 
