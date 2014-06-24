@@ -16,6 +16,7 @@
 #include "feature.h"
 #include "states.h"
 #include "view.hpp"
+#include "imagesensor.hpp"
 using namespace cv;
 
 struct match {

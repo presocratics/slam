@@ -36,8 +36,10 @@ int main()
 
     vector<States> muHist;
 
+    ImageSensor imgsense("../data/bodyHist.txt", false );
     Sensors sense;
     States mu;
+    mu.features.resize(nf);
 
 
 	// Data History variables
@@ -74,14 +76,6 @@ int main()
     //    = [X    V  features  b  ]
 	mu.X[2] = -1 * sense.altitude;
 
-
-	for (int i = 0; i < nf; i++)
-	{
-        Feature ith_feature(Vec3d(pibHist.at<Vec3d>(stepStart - 1, i)[0],
-            pibHist.at<Vec3d>(stepStart - 1, i)[1], 1/d0), Scalar(0,0,0), 0, 0);
-        mu.addFeature(ith_feature);
-	}
-	
 	Mat P = Mat::eye(6 + 3 * nf,6 + 3 * nf, CV_64F);
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0) );
 
