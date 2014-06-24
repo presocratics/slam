@@ -97,7 +97,6 @@ int main()
 
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
-        std::vector<match> matches;
         cv::Vec3d old_pos;
         vector<int> renewIndex;
         int renewk, renewi;
@@ -111,21 +110,9 @@ int main()
         Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
 		// Read sensor measurements
         sense.update();
+        imgsense.update();
 		renewk = renewi = -1;
         
-        // Update matches
-        for ( int i=0; i<nf; ++i)
-        {
-            match m;
-            cv::Vec3d foo;
-            foo = pibHist.at<Vec3d>(k,i);
-            m.source = Point2d( foo[0], foo[1] );
-            foo = ppbHist.at<Vec3d>(k,i);
-            m.reflection = Point2d( foo[0], foo[1] );
-            m.id=0;
-            matches.push_back(m);
-        }
-
         //TODO: Do we need this norm?
         //double qbw_norm;
         //qbw_norm = norm(qbw);
@@ -139,7 +126,7 @@ int main()
 		//std::cout << "sums " << sums << std::endl;
 
 		// line 59
-        std::vector<match>::iterator mi=matches.begin();
+        std::vector<projection>::iterator mi=imgsense.matches.begin();
         std::vector<Feature>::iterator feat=mu.features.begin();
 		for (int i = 0; feat!=mu.features.end(); ++mi, ++feat, i++)
 		{
@@ -236,7 +223,7 @@ int main()
         mu.add(f);
 
 		// Measurement model
-		measurementModel(k, nf, old_pos, sense.altitude, matches, sense.quaternion,
+		measurementModel(k, nf, old_pos, sense.altitude, imgsense.matches, sense.quaternion,
                 refFlag.col(k).t(), 0, meas, hmu, H, mu );
 
 		if (flagBias == 1)
@@ -691,7 +678,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 * measurementModel
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
-void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<match> matches,
+void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<projection> matches,
         Quaternion qbw, Mat refFlag, int flagMeas, View& meas, View& hmu, Mat& H, States& mu )
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
@@ -700,7 +687,7 @@ void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<
 
 	Mat Hb;
 	Mat Hi;
-    std::vector<match>::iterator match=matches.begin();
+    std::vector<projection>::iterator match=matches.begin();
     std::vector<Feature>::iterator feat=mu.features.begin();
     std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
 	for (int i = 0; i < nf; i++, ++mi, ++hi, ++feat, ++match)

@@ -1,3 +1,20 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  feature.cpp
+ *
+ *    Description:  A tracked feature used in SLAM.
+ *
+ *        Version:  1.0
+ *        Created:  06/24/2014 11:37:30 AM
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Martin Miller (MHM), miller7@illinois.edu
+ *   Organization:  Aerospace Robotics and Controls Lab (ARC)
+ *
+ * =====================================================================================
+ */
 // feature class cpp
 #include "feature.h"
 
