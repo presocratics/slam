@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "Quaternion.hpp"
+#include "Sensors.hpp"
 using namespace cv;
 
 struct frame {
@@ -36,6 +37,7 @@ class Feature{
         Feature();
         ~Feature(); 
         Feature(Vec3d pos, Scalar color, int n, int ref );
+        Feature( cv::Vec3d anchor, Sensors sense, cv::Point2d pib );
 
         // accessor
         cv::Vec3d fromAnchor ( cv::Vec3d pos );
@@ -54,6 +56,7 @@ class Feature{
         void set_initial_pib( cv::Point2d p );
         void set_initial_pib( cv::Vec3d p );
         void set_body_position( cv::Point2d, double d );
+        void set_inverse_depth ( double id );
 };
 
 #endif

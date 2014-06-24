@@ -1,6 +1,7 @@
 // states class header
 #ifndef STATES_H
 #define STATES_H
+#include <map>
 #include "Quaternion.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -8,6 +9,7 @@
 #include <iostream>
 #include "feature.h"
 #include "Sensors.hpp"
+#include "imagesensor.hpp"
 using namespace cv;
 
 class States{
@@ -16,6 +18,7 @@ class States{
         Vec3d X;
         Vec3d V;
         std::vector<Feature> features;
+        std::map<int,Feature> feats;
         Vec3d b;
         int nf;
         int rows;
@@ -33,6 +36,7 @@ class States{
         Vec3d getb();
 
         // mutator
+        void update_features( ImageSensor imgsense, Sensors sense );
         void setX(Vec3d pos);
         void setV(Vec3d vel);
         void setFeature(int i, Feature f);

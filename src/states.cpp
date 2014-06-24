@@ -100,6 +100,27 @@ void States::add(States a)
     }
 }
 
+    void
+States::update_features ( ImageSensor imgsense, Sensors sense )
+{
+    std::vector<projection>::iterator match=imgsense.matches.begin();
+    for( ; match!=imgsense.matches.end(); ++match )
+    {
+        if( feats.find(match->id)==feats.end() ) // New feature
+        {
+            Feature f;
+            f=Feature( X, sense, match->source );
+            feats.insert( std::pair<int,Feature>(match->id, f) );
+        }
+        else
+        {
+            // TODO: Update feature
+        }
+
+    }
+    return ;
+}		/* -----  end of method States::update_features  ----- */
+
 
 /*
  *--------------------------------------------------------------------------------------

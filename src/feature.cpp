@@ -17,7 +17,7 @@
  */
 // feature class cpp
 #include "feature.h"
-
+#define DINIT 5            /* Max initial depth */
 // constructor
 Feature::Feature()
 {
@@ -34,6 +34,23 @@ Feature::Feature(Vec3d pos, Scalar color, int n, int ref)
    ID = n;
    refFlag = ref;
 }
+
+Feature::Feature( cv::Vec3d anchor, Sensors sense, cv::Point2d pib )
+{
+    double idepth;
+    cv::Vec3d pibr;
+
+    add( atan2( pib.y, 1) * 180 / M_PI,
+        sense.quaternion.euler()*180/M_PI, pibr );
+    idepth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
+
+    initial.anchor=anchor;
+    initial.quaternion=sense.quaternion;
+    initial.pib=pib;
+    set_body_position( pib, 1/idepth );
+    set_inverse_depth( idepth );
+    return ;
+}		/* -----  end of method Feature::Feature  ----- */
 
 Feature::~Feature(){};
 
@@ -117,4 +134,11 @@ Feature::rb2b ( Quaternion qbw )
 {
     return initial.quaternion.rotation().t() * qbw.rotation();
 }		/* -----  end of method Feature::rb2b  ----- */
+
+    void
+Feature::set_inverse_depth ( double id )
+{
+    initial.inverse_depth=fmin( id, DINIT );
+    return ;
+}		/* -----  end of method Feature::set_inverse_depth  ----- */
 

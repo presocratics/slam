@@ -36,7 +36,7 @@ int main()
 
     vector<States> muHist;
 
-    ImageSensor imgsense("../data/bodyHist.txt", false );
+    ImageSensor imgsense("../data/bodyHist.hex", true );
     Sensors sense;
     States mu;
     mu.features.resize(nf);
@@ -102,7 +102,7 @@ int main()
         alt_old = sense.altitude;
         States f;
         Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
-		// Read sensor measurements
+		// Update sensors
         sense.update();
         imgsense.update();
 		renewk = renewi = -1;
@@ -119,6 +119,7 @@ int main()
 		//}
 		//std::cout << "sums " << sums << std::endl;
 
+        mu.update_features( imgsense, sense );
 		// line 59
         std::vector<projection>::iterator mi=imgsense.matches.begin();
         std::vector<Feature>::iterator feat=mu.features.begin();
