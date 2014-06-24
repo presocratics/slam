@@ -43,22 +43,16 @@ int main()
 
 
 	// Data History variables
-	std::vector<double> pibHist_v;
-	std::vector<double> ppbHist_v;
 	std::vector<double> refFlag_v;
 	std::vector<double> renewHist_v;
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
-	loadData(pibHist_v, ppbHist_v, refFlag_v, renewHist_v);
+	loadData(refFlag_v, renewHist_v);
 
 	// Reshape to Matrix
-	Mat pibHist = Mat::zeros(stepEnd, 5, CV_64FC3);
-	Mat ppbHist = Mat::zeros(stepEnd, 5, CV_64FC3);
 	Mat refFlag = Mat::zeros(5, stepEnd, CV_64F);
 	Mat renewHist = Mat::zeros(5, stepEnd, CV_64F);
 	
-	reshapeMat3D(pibHist_v, pibHist);
-	reshapeMat3D(ppbHist_v, ppbHist);
 	reshapeMat(refFlag_v, refFlag);
 	reshapeMat(renewHist_v, renewHist);
 
@@ -477,12 +471,10 @@ void hexToVec ( const char *fn, vector<double>& vec )
 * Reads txt file and outputs vector
 *
 **************************************************************************************************/
-void loadData(vector<double>& pibHist, vector<double>& ppbHist, vector<double>& refFlag, vector<double>& renewHist)
+void loadData( vector<double>& refFlag, vector<double>& renewHist)
 {
 
 	// fill pibHist
-    hexToVec( "../data/pibHist.hex", pibHist );
-    hexToVec( "../data/ppbHist.hex", ppbHist );
     hexToVec( "../data/refFlag.hex", refFlag );
     hexToVec( "../data/renewHist.hex", renewHist );
 }
