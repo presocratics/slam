@@ -17,6 +17,7 @@
 #include "states.h"
 #include "view.hpp"
 #include "imagesensor.hpp"
+#include "config.hpp"
 using namespace cv;
 
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );

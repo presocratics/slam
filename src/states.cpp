@@ -169,3 +169,68 @@ States::dynamics ( Sensors s )
     return predicted_state;
 }		/* -----  end of method States::dynamics  ----- */
 
+    void
+States::compare ( ImageSensor *imgsense, int k, const char *str, int flags )
+{
+    Fiter oldf=features.begin();
+    for( matchIter mi=imgsense->matches.begin();
+            mi!=imgsense->matches.end(); ++mi, ++oldf )
+    {
+        featIter fi;
+        cv::Vec4d oval4, nval4;
+        cv::Vec3d oval, nval;
+        cv::Point2d opib, npib;
+        if( (fi=feats.find(mi->id))==feats.end() )
+        {
+            std::cerr << "compare: feat not found." << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        if( flags & CMP_BODY && 
+            (nval=fi->second.position.body)!=(oval=oldf->position.body) )
+        {
+            std::cerr << "Body mismatch: " << std::endl;
+            std::cerr << nval-oval << std::endl;
+        }
+        else if( flags & CMP_WORLD &&
+            (nval=fi->second.position.world)!=(oval=oldf->position.world) )
+        {
+            std::cerr << "World mismatch: " << std::endl;
+            std::cerr << nval-oval << std::endl;
+        }
+        else if( flags & CMP_ANCHOR &&
+            (nval=fi->second.initial.anchor)!=(oval=oldf->initial.anchor) )
+        {
+            std::cerr << "Anchor mismatch: " << std::endl;
+            std::cerr << nval-oval << std::endl;
+        }
+        else if( flags & CMP_QBW &&
+            (nval4=fi->second.initial.quaternion.coord)!=(oval4=oldf->initial.quaternion.coord) )
+        {
+            std::cerr << "Quaternion mismatch: " << std::endl;
+            std::cerr << nval-oval << std::endl;
+        }
+        else if( flags & CMP_ID &&
+            (mi->id!=oldf->ID) )
+        {
+            std::cerr << "ID mismatch: " << std::endl;
+            std::cerr << "feats: " << mi->id << " " << "features: " << oldf->ID << std::endl;
+        }
+        else if( flags & CMP_PIB &&
+            (npib=fi->second.initial.pib)!=(opib=oldf->initial.pib) )
+        {
+            std::cerr << "Pib mismatch: " << std::endl;
+            std::cerr << npib-opib << std::endl;
+        }
+        else if( flags & CMP_OLD &&
+            (nval=fi->second.position.lastbody)!=(oval=oldf->position.lastbody) )
+        {
+            std::cerr << "Last Body mismatch: " << std::endl;
+            std::cerr << nval-oval << std::endl;
+        }
+        else continue;
+        std::cerr << "timestep " << k << ": " << str << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    return ;
+}		/* -----  end of method States::compare  ----- */
+

@@ -12,7 +12,7 @@
 using namespace cv;
 
 struct frame {
-    cv::Vec3d world,body;
+    cv::Vec3d world,body,lastbody;
 };				/* ----------  end of struct frame  ---------- */
 
 struct inits {

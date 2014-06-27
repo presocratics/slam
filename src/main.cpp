@@ -173,6 +173,7 @@ int main()
 			} // if k
 
 		} // i loop
+        mu.compare( &imgsense, k, "after i loop" );
 		
 		// Saving the history of the estimates
         muHist.push_back(mu);

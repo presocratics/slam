@@ -10,7 +10,14 @@
 #include "feature.h"
 #include "Sensors.hpp"
 #include "imagesensor.hpp"
+#include "config.hpp"
 using namespace cv;
+
+typedef std::map<int,Feature> featMap;
+typedef featMap::iterator featIter;
+typedef std::vector<projection>::iterator matchIter;
+typedef std::vector<Feature>::iterator Fiter;
+
 
 class States{
 
@@ -34,6 +41,7 @@ class States{
         std::vector<Feature> getFeatures();
         Feature getFeature(int i);
         Vec3d getb();
+        void compare( ImageSensor *imgsense, int k, const char *str, int flags=CMP_ANCHOR | CMP_QBW | CMP_ID |CMP_PIB |CMP_OLD );
 
         // mutator
         void update_features( ImageSensor imgsense, Sensors sense );
