@@ -12,7 +12,7 @@
 using namespace cv;
 
 struct frame {
-    cv::Vec3d world,body,lastbody;
+    cv::Vec3d world,body;
 };				/* ----------  end of struct frame  ---------- */
 
 struct inits {
@@ -49,20 +49,133 @@ class Feature{
         int getRefFlag();
        
         // mutator
+        int incNoMatch();
         void set_body(Vec3d pos);
         void setRGB(Scalar color);
         void setID(int n);
         void setRefFlag(int ref);
-        void set_initial_pib( cv::Point2d p );
-        void set_initial_pib( cv::Vec3d p );
+            inline void
+        set_initial_pib ( cv::Vec3d p )
+        {
+            set_initial_pib( cv::Point2d(p[0], p[1]) );
+            return ;
+        }		/* -----  end of method Feature::set_initial_pib  ----- */
 
-        void set_body_position( cv::Point2d, double d );
-        void set_body_position( cv::Vec3d );
-        inline cv::Vec3d get_body_position( ) const;
-        void set_initial_anchor( cv::Vec3d value );
-        inline cv::Vec3d get_initial_anchor (  ) const;
-        void set_initial_quaternion( Quaternion value );
-        inline Quaternion get_initial_quaternion (  ) const;
+            inline void
+        set_initial_pib ( cv::Point2d p )
+        {
+            initial.pib = p;
+            return ;
+        }		/* -----  end of method Feature::set_initial_pib  ----- */
+
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  get_body_position
+         *--------------------------------------------------------------------------------------
+         */
+        inline cv::Vec3d
+        get_body_position (  ) const
+        {
+            return position.body;
+        }		/* -----  end of method Feature::get_body_position  ----- */
+
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  set_body_position
+         *--------------------------------------------------------------------------------------
+         */
+            inline void
+        set_body_position ( cv::Vec3d value )
+        {
+            position.body	= value;
+            return ;
+        }		/* -----  end of method Feature::set_body_position  ----- */
+
+            inline void
+        set_body_position ( cv::Point2d p, double d )
+        {
+            set_body_position( cv::Vec3d(p.x,p.y,d) );
+            return ;
+        }		/* -----  end of method Feature::set_body_position  ----- */
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  get_anchor
+         *--------------------------------------------------------------------------------------
+         */
+        inline cv::Vec3d
+        get_initial_anchor (  ) const
+        {
+            return initial.anchor;
+        }		/* -----  end of method Feature::get_anchor  ----- */
+
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  set_anchor
+         *--------------------------------------------------------------------------------------
+         */
+            inline void
+        set_initial_anchor ( cv::Vec3d value )
+        {
+            initial.anchor	= value;
+            return ;
+        }		/* -----  end of method Feature::set_anchor  ----- */
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  get_initial.quaternion
+         *--------------------------------------------------------------------------------------
+         */
+            inline Quaternion
+        get_initial_quaternion (  ) const
+        {
+            return initial.quaternion;
+        }		/* -----  end of method Feature::get_initial.quaternion  ----- */
+
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  set_initial.quaternion
+         *--------------------------------------------------------------------------------------
+         */
+            inline void
+        set_initial_quaternion ( Quaternion value )
+        {
+            initial.quaternion	= value;
+            return ;
+        }		/* -----  end of method Feature::set_initial.quaternion  ----- */
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  get_noMatch
+         *--------------------------------------------------------------------------------------
+         */
+        inline int
+        get_noMatch (  ) const
+        {
+            return noMatch;
+        }		/* -----  end of method Feature::get_noMatch  ----- */
+
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  set_noMatch
+         *--------------------------------------------------------------------------------------
+         */
+            inline void
+        set_noMatch ( int value )
+        {
+            noMatch	= value;
+            return ;
+        }		/* -----  end of method Feature::set_noMatch  ----- */
+
+
+    private:
+        int noMatch;
+
 };
 
 #endif

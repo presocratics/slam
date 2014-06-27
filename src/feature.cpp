@@ -43,11 +43,13 @@ Feature::Feature( cv::Vec3d anchor, Sensors sense, cv::Point2d pib )
     add( atan2( pib.y, 1) * 180 / M_PI,
         sense.quaternion.euler()*180/M_PI, pibr );
     idepth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
+    idepth = fmin( idepth, DINIT );
 
     set_initial_anchor(anchor);
     set_initial_quaternion(sense.quaternion);
     set_initial_pib(pib);
     set_body_position( pib, 1/idepth );
+    set_noMatch(0);
     return ;
 }		/* -----  end of method Feature::Feature  ----- */
 
@@ -76,55 +78,7 @@ int Feature::getRefFlag()
 
 // mutator
 
-/*
- *--------------------------------------------------------------------------------------
- *       Class:  Feature
- *      Method:  get_initial.quaternion
- *--------------------------------------------------------------------------------------
- */
-    inline Quaternion
-Feature::get_initial_quaternion (  ) const
-{
-    return initial.quaternion;
-}		/* -----  end of method Feature::get_initial.quaternion  ----- */
 
-/*
- *--------------------------------------------------------------------------------------
- *       Class:  Feature
- *      Method:  set_initial.quaternion
- *--------------------------------------------------------------------------------------
- */
-    inline void
-Feature::set_initial_quaternion ( Quaternion value )
-{
-    initial.quaternion	= value;
-    return ;
-}		/* -----  end of method Feature::set_initial.quaternion  ----- */
-
-/*
- *--------------------------------------------------------------------------------------
- *       Class:  Feature
- *      Method:  get_anchor
- *--------------------------------------------------------------------------------------
- */
-inline cv::Vec3d
-Feature::get_initial_anchor (  ) const
-{
-    return initial.anchor;
-}		/* -----  end of method Feature::get_anchor  ----- */
-
-/*
- *--------------------------------------------------------------------------------------
- *       Class:  Feature
- *      Method:  set_anchor
- *--------------------------------------------------------------------------------------
- */
-    inline void
-Feature::set_initial_anchor ( cv::Vec3d value )
-{
-    initial.anchor	= value;
-    return ;
-}		/* -----  end of method Feature::set_anchor  ----- */
 
 void Feature::set_body(Vec3d pos)
 {
@@ -132,55 +86,8 @@ void Feature::set_body(Vec3d pos)
 }
 
 
-/*
- *--------------------------------------------------------------------------------------
- *       Class:  Feature
- *      Method:  get_body_position
- *--------------------------------------------------------------------------------------
- */
-inline cv::Vec3d
-Feature::get_body_position (  ) const
-{
-    return position.body;
-}		/* -----  end of method Feature::get_body_position  ----- */
-
-/*
- *--------------------------------------------------------------------------------------
- *       Class:  Feature
- *      Method:  set_body_position
- *--------------------------------------------------------------------------------------
- */
-    inline void
-Feature::set_body_position ( cv::Vec3d value )
-{
-    position.lastbody = get_body_position();
-    position.body	= value;
-    return ;
-}		/* -----  end of method Feature::set_body_position  ----- */
 
 
-    void
-Feature::set_body_position ( cv::Point2d p, double d )
-{
-    set_body_position( cv::Vec3d(p.x,p.y,d) );
-    return ;
-}		/* -----  end of method Feature::set_body_position  ----- */
-
-
-    void
-Feature::set_initial_pib ( cv::Vec3d p )
-{
-    initial.pib = cv::Point2d( p[0], p[1] );
-    return ;
-}		/* -----  end of method Feature::set_initial_pib  ----- */
-
-
-    void
-Feature::set_initial_pib ( cv::Point2d p )
-{
-    initial.pib = p;
-    return ;
-}		/* -----  end of method Feature::set_initial_pib  ----- */
 
 
 void Feature::setRGB(Scalar color)
@@ -210,3 +117,20 @@ Feature::rb2b ( Quaternion qbw )
 {
     return initial.quaternion.rotation().t() * qbw.rotation();
 }		/* -----  end of method Feature::rb2b  ----- */
+
+
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  Feature
+ *      Method:  Feature :: incNoMatch
+ * Description:  Increments no match by 1.
+ *--------------------------------------------------------------------------------------
+ */
+    int
+Feature::incNoMatch ( )
+{
+    set_noMatch( get_noMatch()+1 );
+    return get_noMatch();
+}		/* -----  end of method Feature::incNoMatch  ----- */
+

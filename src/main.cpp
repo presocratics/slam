@@ -130,21 +130,16 @@ int main()
 		{
             cv::Vec3d cur_pib;
             int renewZero, renewZero2;
-            cv::Vec3d pibr;
 
-			add( atan2( mi->source.y, 1) * 180 / M_PI,
-                    sense.quaternion.euler()*180/M_PI, pibr );
 
-			feat->initial.inverse_depth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
-			feat->initial.inverse_depth = fmin( feat->initial.inverse_depth, d_init );
-
-            d0Hist.at<double>(k, i) = 1 / feat->position.body[2];
+            d0Hist.at<double>(k, i) = feat->position.body[2];
 			// Expreiment: renew elements are piecewise constant
 			renewZero = renewHist.at<double>(i, k - 1);
 			renewZero2 = renewHist.at<double>(i, k);
 
-			if (k == stepStart-1 || renewHist.at<double>(i, k) != renewZero)
+			if (k == stepStart-1 || renewZero2 != renewZero)
 			{
+
 				renewIndex = findIndex(renewHist, renewHist.at<double>(i, k));
 
 				// Find max
@@ -162,19 +157,31 @@ int main()
 				// If current signature existed before
 				if (renewk != -1 && k < stepEnd)
 				{
-					feat->initial.inverse_depth = d0Hist.at<double>(renewk, renewi);
+                    double depth;
+					depth = d0Hist.at<double>(renewk, renewi);
+                    feat->set_body_position( mi->source, depth );
 				}
+                else
+                {
+                    double d0;
+                    cv::Vec3d pibr;
+                    add( atan2( mi->source.y, 1) * 180 / M_PI,
+                            sense.quaternion.euler()*180/M_PI, pibr );
+
+                    d0 = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
+                    d0 = fmin( d0, d_init );
+                    feat->set_body_position( mi->source, 1/d0 );
+                }
 				// Location and orientation of each anchor
                 feat->ID = mi->id;
                 feat->initial.anchor = mu.X;
                 feat->initial.quaternion = sense.quaternion;
                 feat->set_initial_pib( mi->source );
 				// Re-initialize the state for a new feature
-                feat->set_body_position( mi->source, 1/feat->initial.inverse_depth );
 			} // if k
 
 		} // i loop
-        mu.compare( &imgsense, k, "after i loop", CMP_QBW );
+        //mu.compare( &imgsense, k, "after i loop", CMP_QBW );
 		
 		// Saving the history of the estimates
         muHist.push_back(mu);

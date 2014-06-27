@@ -103,18 +103,26 @@ void States::add(States a)
     void
 States::update_features ( ImageSensor *imgsense, Sensors sense )
 {
+    // Age each feature
+    featIter fi=feats.begin(); 
+    for( ; fi!=feats.end(); ++fi )
+    {
+        fi->second.incNoMatch();
+    }
+
     matchIter match=imgsense->matches.begin();
     for( ; match!=imgsense->matches.end(); ++match )
     {
-        if( feats.find(match->id)==feats.end() ) // New feature
+        fi=feats.find(match->id);
+        if( fi==feats.end() ) // New feature
         {
             Feature f;
             f=Feature( X, sense, match->source );
             feats.insert( std::pair<int,Feature>(match->id, f) );
         }
-        else
+        else if( fi->second.get_noMatch()>1 ) // Reinitialize old feature
         {
-            // TODO: Update feature
+            //fi->second.reinitialize( X, sense, match->source );
         }
 
     }
@@ -186,7 +194,7 @@ States::compare ( ImageSensor *imgsense, int k, const char *str, int flags )
             exit(EXIT_FAILURE);
         }
         if( flags & CMP_BODY && 
-            (nval=fi->second.position.body)!=(oval=oldf->position.body) )
+            (nval=fi->second.get_body_position())!=(oval=oldf->get_body_position()) )
         {
             std::cerr << "Body mismatch: " << std::endl;
             std::cerr << nval-oval << std::endl;
@@ -198,13 +206,13 @@ States::compare ( ImageSensor *imgsense, int k, const char *str, int flags )
             std::cerr << nval-oval << std::endl;
         }
         else if( flags & CMP_ANCHOR &&
-            (nval=fi->second.initial.anchor)!=(oval=oldf->initial.anchor) )
+            (nval=fi->second.get_initial_anchor())!=(oval=oldf->get_initial_anchor()) )
         {
             std::cerr << "Anchor mismatch: " << std::endl;
             std::cerr << nval-oval << std::endl;
         }
         else if( flags & CMP_QBW &&
-            (nval4=fi->second.initial.quaternion.coord)!=(oval4=oldf->initial.quaternion.coord) )
+            (nval4=fi->second.get_initial_quaternion().coord)!=(oval4=oldf->get_initial_quaternion().coord) )
         {
             std::cerr << "Quaternion mismatch: " << std::endl;
             std::cerr << nval4-oval4 << std::endl;
@@ -220,12 +228,6 @@ States::compare ( ImageSensor *imgsense, int k, const char *str, int flags )
         {
             std::cerr << "Pib mismatch: " << std::endl;
             std::cerr << npib-opib << std::endl;
-        }
-        else if( flags & CMP_OLD &&
-            (nval=fi->second.position.lastbody)!=(oval=oldf->position.lastbody) )
-        {
-            std::cerr << "Last Body mismatch: " << std::endl;
-            std::cerr << nval-oval << std::endl;
         }
         else continue;
         std::cerr << "timestep " << k << ": " << str << std::endl;
