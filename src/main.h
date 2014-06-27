@@ -20,6 +20,11 @@
 #include "config.hpp"
 using namespace cv;
 
+typedef std::map<int,Feature> featMap;
+typedef featMap::iterator featIter;
+typedef std::vector<projection>::iterator matchIter;
+typedef std::vector<Feature>::iterator Fiter;
+
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );
 void ARC_compare ( cv::Mat cmat, char *fn, double thresh=0 );
 void hexToVec ( const char *fn, vector<double>& vec );

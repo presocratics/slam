@@ -125,14 +125,13 @@ int main()
         mu.update_features( &imgsense, sense );
 		// line 59
         std::vector<projection>::iterator mi=imgsense.matches.begin();
-        std::vector<Feature>::iterator feat=mu.features.begin();
+        Fiter feat=mu.features.begin();
 		for (int i = 0; feat!=mu.features.end(); ++mi, ++feat, i++)
 		{
             cv::Vec3d cur_pib;
             int renewZero, renewZero2;
 
 
-            d0Hist.at<double>(k, i) = feat->position.body[2];
 			// Expreiment: renew elements are piecewise constant
 			renewZero = renewHist.at<double>(i, k - 1);
 			renewZero2 = renewHist.at<double>(i, k);
@@ -346,6 +345,11 @@ int main()
 		if (k%300 == 0)
             cout << k << endl;
 
+        feat=mu.features.begin();
+        for( int i=0; feat!=mu.features.end(); ++feat, ++i )
+        {
+            d0Hist.at<double>(k, i) = feat->position.body[2];
+        }
         // Real time plotting.
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
