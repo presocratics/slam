@@ -122,7 +122,7 @@ int main()
 		//}
 		//std::cout << "sums " << sums << std::endl;
 
-        mu.update_features( imgsense, sense );
+        mu.update_features( &imgsense, sense );
 		// line 59
         std::vector<projection>::iterator mi=imgsense.matches.begin();
         std::vector<Feature>::iterator feat=mu.features.begin();
@@ -165,6 +165,7 @@ int main()
 					feat->initial.inverse_depth = d0Hist.at<double>(renewk, renewi);
 				}
 				// Location and orientation of each anchor
+                feat->ID = mi->id;
                 feat->initial.anchor = mu.X;
                 feat->initial.quaternion = sense.quaternion;
                 feat->set_initial_pib( mi->source );
@@ -173,7 +174,7 @@ int main()
 			} // if k
 
 		} // i loop
-        mu.compare( &imgsense, k, "after i loop" );
+        mu.compare( &imgsense, k, "after i loop", CMP_QBW );
 		
 		// Saving the history of the estimates
         muHist.push_back(mu);

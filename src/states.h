@@ -44,7 +44,7 @@ class States{
         void compare( ImageSensor *imgsense, int k, const char *str, int flags=CMP_ANCHOR | CMP_QBW | CMP_ID |CMP_PIB |CMP_OLD );
 
         // mutator
-        void update_features( ImageSensor imgsense, Sensors sense );
+        void update_features( ImageSensor *imgsense, Sensors sense );
         void setX(Vec3d pos);
         void setV(Vec3d vel);
         void setFeature(int i, Feature f);

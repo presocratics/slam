@@ -44,11 +44,10 @@ Feature::Feature( cv::Vec3d anchor, Sensors sense, cv::Point2d pib )
         sense.quaternion.euler()*180/M_PI, pibr );
     idepth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
 
-    initial.anchor=anchor;
-    initial.quaternion=sense.quaternion;
-    initial.pib=pib;
+    set_initial_anchor(anchor);
+    set_initial_quaternion(sense.quaternion);
+    set_initial_pib(pib);
     set_body_position( pib, 1/idepth );
-    set_inverse_depth( idepth );
     return ;
 }		/* -----  end of method Feature::Feature  ----- */
 
@@ -76,17 +75,94 @@ int Feature::getRefFlag()
 }
 
 // mutator
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  Feature
+ *      Method:  get_initial.quaternion
+ *--------------------------------------------------------------------------------------
+ */
+    inline Quaternion
+Feature::get_initial_quaternion (  ) const
+{
+    return initial.quaternion;
+}		/* -----  end of method Feature::get_initial.quaternion  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  Feature
+ *      Method:  set_initial.quaternion
+ *--------------------------------------------------------------------------------------
+ */
+    inline void
+Feature::set_initial_quaternion ( Quaternion value )
+{
+    initial.quaternion	= value;
+    return ;
+}		/* -----  end of method Feature::set_initial.quaternion  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  Feature
+ *      Method:  get_anchor
+ *--------------------------------------------------------------------------------------
+ */
+inline cv::Vec3d
+Feature::get_initial_anchor (  ) const
+{
+    return initial.anchor;
+}		/* -----  end of method Feature::get_anchor  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  Feature
+ *      Method:  set_anchor
+ *--------------------------------------------------------------------------------------
+ */
+    inline void
+Feature::set_initial_anchor ( cv::Vec3d value )
+{
+    initial.anchor	= value;
+    return ;
+}		/* -----  end of method Feature::set_anchor  ----- */
+
 void Feature::set_body(Vec3d pos)
 {
     position.body = pos;
 }
 
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  Feature
+ *      Method:  get_body_position
+ *--------------------------------------------------------------------------------------
+ */
+inline cv::Vec3d
+Feature::get_body_position (  ) const
+{
+    return position.body;
+}		/* -----  end of method Feature::get_body_position  ----- */
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  Feature
+ *      Method:  set_body_position
+ *--------------------------------------------------------------------------------------
+ */
+    inline void
+Feature::set_body_position ( cv::Vec3d value )
+{
+    position.lastbody = get_body_position();
+    position.body	= value;
+    return ;
+}		/* -----  end of method Feature::set_body_position  ----- */
+
+
     void
 Feature::set_body_position ( cv::Point2d p, double d )
 {
-    position.body[0] = p.x;
-    position.body[1] = p.y;
-    position.body[2] = d;
+    set_body_position( cv::Vec3d(p.x,p.y,d) );
     return ;
 }		/* -----  end of method Feature::set_body_position  ----- */
 
@@ -134,11 +210,3 @@ Feature::rb2b ( Quaternion qbw )
 {
     return initial.quaternion.rotation().t() * qbw.rotation();
 }		/* -----  end of method Feature::rb2b  ----- */
-
-    void
-Feature::set_inverse_depth ( double id )
-{
-    initial.inverse_depth=fmin( id, DINIT );
-    return ;
-}		/* -----  end of method Feature::set_inverse_depth  ----- */
-

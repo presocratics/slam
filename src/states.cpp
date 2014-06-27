@@ -101,10 +101,10 @@ void States::add(States a)
 }
 
     void
-States::update_features ( ImageSensor imgsense, Sensors sense )
+States::update_features ( ImageSensor *imgsense, Sensors sense )
 {
-    std::vector<projection>::iterator match=imgsense.matches.begin();
-    for( ; match!=imgsense.matches.end(); ++match )
+    matchIter match=imgsense->matches.begin();
+    for( ; match!=imgsense->matches.end(); ++match )
     {
         if( feats.find(match->id)==feats.end() ) // New feature
         {
@@ -207,7 +207,7 @@ States::compare ( ImageSensor *imgsense, int k, const char *str, int flags )
             (nval4=fi->second.initial.quaternion.coord)!=(oval4=oldf->initial.quaternion.coord) )
         {
             std::cerr << "Quaternion mismatch: " << std::endl;
-            std::cerr << nval-oval << std::endl;
+            std::cerr << nval4-oval4 << std::endl;
         }
         else if( flags & CMP_ID &&
             (mi->id!=oldf->ID) )

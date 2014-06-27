@@ -55,8 +55,14 @@ class Feature{
         void setRefFlag(int ref);
         void set_initial_pib( cv::Point2d p );
         void set_initial_pib( cv::Vec3d p );
+
         void set_body_position( cv::Point2d, double d );
-        void set_inverse_depth ( double id );
+        void set_body_position( cv::Vec3d );
+        inline cv::Vec3d get_body_position( ) const;
+        void set_initial_anchor( cv::Vec3d value );
+        inline cv::Vec3d get_initial_anchor (  ) const;
+        void set_initial_quaternion( Quaternion value );
+        inline Quaternion get_initial_quaternion (  ) const;
 };
 
 #endif
