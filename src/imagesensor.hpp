@@ -2,18 +2,10 @@
 #define  imagesensor_INC
 #include <cv.h>
 #include "ourerr.hpp"
+#include "featureIO.h"
 
 #define MAXLINE 1024            /*  */
 
-/*
- * Normalized pixel coordinates of the a point feature in the camera *
- * coordinate frame.
- */
-struct projection {
-    cv::Point2d source, reflection;
-    int id;
-};				/* ----------  end of struct match  ---------- */
-typedef struct projection Projection;
 
 /*
  * =====================================================================================
@@ -21,45 +13,23 @@ typedef struct projection Projection;
  *  Description:  Retrieves input from image processing.
  * =====================================================================================
  */
-class ImageSensor
+class ImageSensor : public FeatureIO
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        ImageSensor (){
-            matches.resize(5);
+        ImageSensor ()
+        {
+
         }                             /* constructor */
-        ImageSensor ( const char *fn, bool ih) {
-            matches.resize(5);
-            set_file( fn, ih );
-        }/* constructor */
+        ImageSensor ( int nm, const char *fn, bool ih) : FeatureIO( nm, fn, ih) 
+        {
+
+        }
 
         /* ====================  ACCESSORS     ======================================= */
 
         /* ====================  MUTATORS      ======================================= */
-        void set_file( const char *fn, bool ih ) {
-            isHex = ih;
-            fp=open_source(fn); 
-        }
-        void update();
         void get_projections();
-
-        /* ====================  OPERATORS     ======================================= */
-
-        /* ====================  DATA MEMBERS  ======================================= */
-        std::vector<projection> matches;
-    protected:
-        /* ====================  METHODS       ======================================= */
-
-        /* ====================  DATA MEMBERS  ======================================= */
-
-    private:
-        /* ====================  METHODS       ======================================= */
-        FILE* open_source ( const char *fn );
-        void get_val ( FILE* fp, const char *str, const char *fmt, ... );
-
-        /* ====================  DATA MEMBERS  ======================================= */
-        FILE *fp;
-        bool isHex;
 
 }; /* -----  end of class ImageSensor  ----- */
 

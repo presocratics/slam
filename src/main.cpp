@@ -36,7 +36,7 @@ int main()
 
     vector<States> muHist;
 
-    ImageSensor imgsense("../data/bodyHist2.hex", true );
+    ImageSensor imgsense(nf ,"../data/bodyHist2.hex", true );
     Sensors sense;
     States mu;
     mu.features.resize(nf);
