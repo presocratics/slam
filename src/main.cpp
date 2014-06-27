@@ -24,7 +24,6 @@ int main()
 
     // Initial variables
 	double d0 = 1;
-	int j = 1;
 	// Covariance Initialization
 	double P0 = 1;					// 1 for simulation
 	double Q0 = 1;				// 100 for simulation & 1 for experiments
@@ -32,7 +31,6 @@ int main()
 
     // Declarations
 	Mat d0Hist(stepEnd, nf, CV_64F, Scalar(0));
-	Mat xiwHatHist(stepEnd, nf, CV_64FC3, Scalar(0));
 
     vector<States> muHist;
 
@@ -89,6 +87,11 @@ int main()
         blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6+3*nf,6+3*nf) );
 	}
 
+    double scaleW = 10;
+    double scaleH = 10;
+    int width=800;
+    int height=1200;
+    Mat rtplot = Mat::zeros(width, height, CV_8UC3);
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
         cv::Vec3d old_pos;
@@ -167,21 +170,7 @@ int main()
                 feat->set_initial_pib( mi->source );
 				// Re-initialize the state for a new feature
                 feat->set_body_position( mi->source, 1/feat->initial.inverse_depth );
-				++j;
 			} // if k
-
-			// Leaving the final estimate of each feature's location
-			if (k < stepEnd - 1 && renewHist.at<double>(i, k + 1) != renewZero2 || k == stepEnd)
-			{
-				xiwHatHist.at<Vec3d>(j, i) = feat->position.world;
-
-				// Removing bad features
-				if (feat->position.body[2] < 1. / 10 
-                        || feat->position.body[2] > 1 / d_min)
-				{
-					xiwHatHist.at<Vec3d>(j, i) = cv::Vec3d(0,0,0);
-				}
-			}
 
 		} // i loop
 		
@@ -348,42 +337,37 @@ int main()
 		if (k%300 == 0)
             cout << k << endl;
 
+        // Real time plotting.
+        circle(rtplot, Point(mu.X[1]*scaleW+width/2,
+            height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
+        for( int i=0; i<nf; ++i )
+        {
+            int renewZero2;
+			renewZero2 = renewHist.at<double>(i, k);
+			if( k<stepEnd-1 && renewHist.at<double>(i, k+1)!=renewZero2 || k==stepEnd )
+			{
+				//xiwHatHist.at<Vec3d>(j, i) = feat->position.world;
+				// Removing bad features
+				if ( mu.features[i].position.body[2] > 1./10 && 
+                        mu.features[i].position.body[2]<1/d_min )
+				{
+					circle( rtplot, Point(mu.features[i].position.world[1] * scaleW + width/2,
+                                height/2 - (mu.features[i].position.world[0] * scaleH + height/4  )),
+                            3, Scalar(0, 120, 0));
+				}
+			}
+
+        }
+
+        imshow("drawing", rtplot);
+        waitKey(3);
+
 	} //  k loop
 
 	cout << double(clock() - startTime) / (double)CLOCKS_PER_SEC << " seconds." << endl;
 
-
-	int plotFlag = 1;
-
-	if (plotFlag == 1)
-	{
-		int w = 800;
-		int h = 1200;
-		double scaleW = 10;
-		double scaleH = 10;
-		Mat plot = Mat::zeros(w, h, CV_8UC3);
-		for (int i = stepStart - 1; i < stepEnd; i++)
-		{
-			circle(plot, Point(muHist[i-stepStart+1].X[1]*scaleW+w/2,
-                        h/2-(muHist[i-stepStart+1].X[0]*scaleH + h/4 )), 3, Scalar(0, 10, 220));
-		}
-		for (int i = 0; i < stepEnd; i++)
-		{
-			for (int j = 0; j < 5; j++)
-			{
-				//Point(xiwHatHist.at<Vec3d>(i, j)[0], xiwHatHist.at<Vec3d>(i, j)[0])
-				if (xiwHatHist.at<Vec3d>(i, j)[0] + xiwHatHist.at<Vec3d>(i, j)[1] != 0.)
-				{
-					circle(plot, Point(xiwHatHist.at<Vec3d>(i, j)[1] * scaleW + w/2,
-                                h/2 - (xiwHatHist.at<Vec3d>(i , j)[0] * scaleH + h/4  )),
-                            2, Scalar(220, 120, 0));
-				}
-			}
-		}
-		//line(plot, Point(15, 20), Point(70, 50), Scalar(110, 220, 0), 2, 8);
-		imshow("drawing", plot);
-		waitKey(0);
-	}
+    imshow("drawing", rtplot);
+    waitKey(0);
     cout << "numIDs: " << mu.feats.size() <<endl;
 	return 0;
 }
