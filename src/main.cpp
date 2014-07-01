@@ -123,10 +123,26 @@ int main()
 		//std::cout << "sums " << sums << std::endl;
 
         mu.update_features( &imgsense, sense );
+        /*
+        // Create sets of previous and current IDs used.
+        std::set<int> cur, prev, ren;
+        for( int i=0; i<nf; ++i )
+        {
+            cur.insert( (int)renewHist.at<double>(i,k) );
+            prev.insert( (int)renewHist.at<double>(i,k-1) );
+        }
+        // Create a set of only new IDs.
+        for( std::set<int>::iterator it=cur.begin();
+                it!=cur.end(); ++it )
+        {
+            if( prev.count(*it)==0 )
+            {
+                ren.insert(*it);
+            }
+        }
 
-        std::vector<projection>::iterator mi=imgsense.matches.begin();
         Fiter feat=mu.features.begin();
-		for (int i = 0; feat!=mu.features.end(); ++mi, ++feat, i++)
+		for (int i = 0; feat!=mu.features.end(); ++feat, i++)
 		{
             cv::Vec3d cur_pib;
             int renewZero, renewZero2;
@@ -135,8 +151,14 @@ int main()
 			renewZero = renewHist.at<double>(i, k - 1);
 			renewZero2 = renewHist.at<double>(i, k);
 
-			if (k == stepStart-1 || renewZero2 != renewZero)
+			if (k == stepStart-1 || cur.count(feat->ID)==0 )
 			{
+                matchIter mi=imgsense.matches.begin();
+                while( ren.count(mi->id)==0 )
+                {
+                    ++mi;
+                }
+                ren.erase(mi->id);
 
 				renewIndex = findIndex(renewHist, renewHist.at<double>(i, k));
 
@@ -179,6 +201,7 @@ int main()
 			} // if k
 
 		} // i loop
+    */
         mu.compare( k, "after i loop" );
 		
 		// Saving the history of the estimates
@@ -345,7 +368,7 @@ int main()
 		if (k%300 == 0)
             cout << k << endl;
 
-        feat=mu.features.begin();
+        Fiter feat=mu.features.begin();
         for( int i=0; feat!=mu.features.end(); ++feat, ++i )
         {
             d0Hist.at<double>(k, i) = feat->position.body[2];
@@ -374,6 +397,7 @@ int main()
 
         imshow("drawing", rtplot);
         waitKey(3);
+        mu.end_loop();
 
 	} //  k loop
 

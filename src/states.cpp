@@ -104,6 +104,7 @@ void States::add(States a)
 States::update_features ( ImageSensor *imgsense, Sensors sense )
 {
     active.clear();
+    features.clear();
     // Age each feature
     featIter fi=feats.begin(); 
     for( ; fi!=feats.end(); ++fi )
@@ -112,7 +113,7 @@ States::update_features ( ImageSensor *imgsense, Sensors sense )
     }
 
     matchIter match=imgsense->matches.begin();
-    for( int i=0; match!=imgsense->matches.end(); ++match, ++i )
+    for( ; match!=imgsense->matches.end(); ++match )
     {
         Feature f;
         fi=feats.find(match->id);
@@ -123,18 +124,44 @@ States::update_features ( ImageSensor *imgsense, Sensors sense )
         }
         else if( fi->second.get_noMatch()>1 ) // Reinitialize old feature
         {
-            f=fi->second;
             fi->second.initialize( X, sense, match, true );
+            f=fi->second;
         }
         else
         {
-            f=fi->second;
             fi->second.set_noMatch(0);
+            f=fi->second;
         }
+        features.push_back(f);
         active.push_back(f);
     }
     return ;
 }		/* -----  end of method States::update_features  ----- */
+
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  States
+ *      Method:  States :: end_loop
+ * Description:  Terrible hack copying vector into map.
+ *--------------------------------------------------------------------------------------
+ */
+    void
+States::end_loop (  )
+{
+    for( Fiter vf=features.begin(); vf!=features.end(); ++vf )
+    {
+        featIter fi;
+        if( (fi=feats.find(vf->ID))==feats.end() )
+        {
+            std::cerr << "end_loop: feat not found." <<std::endl;
+            exit(EXIT_FAILURE);
+        }
+        fi->second=*vf;
+    }
+
+    return ;
+}		/* -----  end of method States::end_loop  ----- */
 
 
 /*

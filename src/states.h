@@ -46,6 +46,7 @@ class States{
 
         // mutator
         void update_features( ImageSensor *imgsense, Sensors sense );
+        void end_loop (  );
         void setX(Vec3d pos);
         void setV(Vec3d vel);
         void setFeature(int i, Feature f);
