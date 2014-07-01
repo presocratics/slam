@@ -123,14 +123,13 @@ int main()
 		//std::cout << "sums " << sums << std::endl;
 
         mu.update_features( &imgsense, sense );
-		// line 59
+
         std::vector<projection>::iterator mi=imgsense.matches.begin();
         Fiter feat=mu.features.begin();
 		for (int i = 0; feat!=mu.features.end(); ++mi, ++feat, i++)
 		{
             cv::Vec3d cur_pib;
             int renewZero, renewZero2;
-
 
 			// Expreiment: renew elements are piecewise constant
 			renewZero = renewHist.at<double>(i, k - 1);

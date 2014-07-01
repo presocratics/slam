@@ -33,6 +33,7 @@ class Feature{
         frame position;
         inits initial;
 
+
         // constructor
         Feature();
         ~Feature(); 
@@ -49,6 +50,8 @@ class Feature{
         int getRefFlag();
        
         // mutator
+        void initialize ( cv::Vec3d anchor, Sensors sense, cv::Point2d pib, bool extant );
+
         int incNoMatch();
         void set_body(Vec3d pos);
         void setRGB(Scalar color);

@@ -111,7 +111,8 @@ States::update_features ( ImageSensor *imgsense, Sensors sense )
     }
 
     matchIter match=imgsense->matches.begin();
-    for( ; match!=imgsense->matches.end(); ++match )
+    int i=0;
+    for( ; match!=imgsense->matches.end(); ++match, ++i )
     {
         fi=feats.find(match->id);
         if( fi==feats.end() ) // New feature
@@ -122,9 +123,12 @@ States::update_features ( ImageSensor *imgsense, Sensors sense )
         }
         else if( fi->second.get_noMatch()>1 ) // Reinitialize old feature
         {
-            //fi->second.reinitialize( X, sense, match->source );
+            fi->second.initialize( X, sense, match->source, true );
         }
-
+        else
+        {
+            fi->second.set_noMatch(0);
+        }
     }
     return ;
 }		/* -----  end of method States::update_features  ----- */
