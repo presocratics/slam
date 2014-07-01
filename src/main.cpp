@@ -179,13 +179,14 @@ int main()
 			} // if k
 
 		} // i loop
-        //mu.compare( &imgsense, k, "after i loop", CMP_QBW );
+        mu.compare( k, "after i loop" );
 		
 		// Saving the history of the estimates
         muHist.push_back(mu);
 		
 		// Motion model
         f = mu.dynamics( sense );
+        //f.compare( k, "f dynamics" );
 		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
                 nf, sense.dt, F );
 

@@ -35,9 +35,9 @@ Feature::Feature(Vec3d pos, Scalar color, int n, int ref)
    refFlag = ref;
 }
 
-Feature::Feature( cv::Vec3d anchor, Sensors sense, cv::Point2d pib )
+Feature::Feature( cv::Vec3d anchor, Sensors sense, matchIter match )
 {
-    initialize( anchor, sense, pib, false );
+    initialize( anchor, sense, match, false );
 
     return ;
 }		/* -----  end of method Feature::Feature  ----- */
@@ -45,26 +45,27 @@ Feature::Feature( cv::Vec3d anchor, Sensors sense, cv::Point2d pib )
 Feature::~Feature(){};
 
     void
-Feature::initialize ( cv::Vec3d anchor, Sensors sense, cv::Point2d pib, bool extant )
+Feature::initialize ( cv::Vec3d anchor, Sensors sense, matchIter match, bool extant )
 {
     if( !extant )
     {
         double idepth;
         cv::Vec3d pibr;
 
-        add( atan2( pib.y, 1) * 180 / M_PI,
+        add( atan2( match->source.y, 1) * 180 / M_PI,
             sense.quaternion.euler()*180/M_PI, pibr );
         idepth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
         idepth = fmin( idepth, DINIT );
-        set_body_position( pib, 1/idepth );
+        set_body_position( match->source, 1/idepth );
     }
     else
     {
-        set_body_position( pib, get_body_position()[2] );
+        set_body_position( match->source, get_body_position()[2] );
     }
+    setID( match->id );
     set_initial_anchor(anchor);
     set_initial_quaternion(sense.quaternion);
-    set_initial_pib(pib);
+    set_initial_pib(match->source);
     set_noMatch(0);
     return ;
 }		/* -----  end of method Feature::initialize  ----- */

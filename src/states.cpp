@@ -103,6 +103,7 @@ void States::add(States a)
     void
 States::update_features ( ImageSensor *imgsense, Sensors sense )
 {
+    active.clear();
     // Age each feature
     featIter fi=feats.begin(); 
     for( ; fi!=feats.end(); ++fi )
@@ -111,24 +112,26 @@ States::update_features ( ImageSensor *imgsense, Sensors sense )
     }
 
     matchIter match=imgsense->matches.begin();
-    int i=0;
-    for( ; match!=imgsense->matches.end(); ++match, ++i )
+    for( int i=0; match!=imgsense->matches.end(); ++match, ++i )
     {
+        Feature f;
         fi=feats.find(match->id);
         if( fi==feats.end() ) // New feature
         {
-            Feature f;
-            f=Feature( X, sense, match->source );
+            f=Feature( X, sense, match);
             feats.insert( std::pair<int,Feature>(match->id, f) );
         }
         else if( fi->second.get_noMatch()>1 ) // Reinitialize old feature
         {
-            fi->second.initialize( X, sense, match->source, true );
+            f=fi->second;
+            fi->second.initialize( X, sense, match, true );
         }
         else
         {
+            f=fi->second;
             fi->second.set_noMatch(0);
         }
+        active.push_back(f);
     }
     return ;
 }		/* -----  end of method States::update_features  ----- */
@@ -182,53 +185,47 @@ States::dynamics ( Sensors s )
 }		/* -----  end of method States::dynamics  ----- */
 
     void
-States::compare ( ImageSensor *imgsense, int k, const char *str, int flags )
+States::compare ( int k, const char *str, int flags )
 {
     Fiter oldf=features.begin();
-    for( matchIter mi=imgsense->matches.begin();
-            mi!=imgsense->matches.end(); ++mi, ++oldf )
+    Fiter newf=active.begin();
+    for( ; oldf!=features.end(); ++oldf, ++newf )
     {
-        featIter fi;
         cv::Vec4d oval4, nval4;
         cv::Vec3d oval, nval;
         cv::Point2d opib, npib;
-        if( (fi=feats.find(mi->id))==feats.end() )
+        if( flags & CMP_ID &&
+            (newf->ID!=oldf->ID) )
         {
-            std::cerr << "compare: feat not found." << std::endl;
-            exit(EXIT_FAILURE);
+            std::cerr << "ID mismatch: " << std::endl;
+            std::cerr << "feats: " << newf->ID << " " << "features: " << oldf->ID << std::endl;
         }
-        if( flags & CMP_BODY && 
-            (nval=fi->second.get_body_position())!=(oval=oldf->get_body_position()) )
+        else if( flags & CMP_BODY && 
+            (nval=newf->get_body_position())!=(oval=oldf->get_body_position()) )
         {
             std::cerr << "Body mismatch: " << std::endl;
             std::cerr << nval-oval << std::endl;
         }
         else if( flags & CMP_WORLD &&
-            (nval=fi->second.position.world)!=(oval=oldf->position.world) )
+            (nval=newf->position.world)!=(oval=oldf->position.world) )
         {
             std::cerr << "World mismatch: " << std::endl;
             std::cerr << nval-oval << std::endl;
         }
         else if( flags & CMP_ANCHOR &&
-            (nval=fi->second.get_initial_anchor())!=(oval=oldf->get_initial_anchor()) )
+            (nval=newf->get_initial_anchor())!=(oval=oldf->get_initial_anchor()) )
         {
             std::cerr << "Anchor mismatch: " << std::endl;
             std::cerr << nval-oval << std::endl;
         }
         else if( flags & CMP_QBW &&
-            (nval4=fi->second.get_initial_quaternion().coord)!=(oval4=oldf->get_initial_quaternion().coord) )
+            (nval4=newf->get_initial_quaternion().coord)!=(oval4=oldf->get_initial_quaternion().coord) )
         {
             std::cerr << "Quaternion mismatch: " << std::endl;
             std::cerr << nval4-oval4 << std::endl;
         }
-        else if( flags & CMP_ID &&
-            (mi->id!=oldf->ID) )
-        {
-            std::cerr << "ID mismatch: " << std::endl;
-            std::cerr << "feats: " << mi->id << " " << "features: " << oldf->ID << std::endl;
-        }
         else if( flags & CMP_PIB &&
-            (npib=fi->second.initial.pib)!=(opib=oldf->initial.pib) )
+            (npib=newf->initial.pib)!=(opib=oldf->initial.pib) )
         {
             std::cerr << "Pib mismatch: " << std::endl;
             std::cerr << npib-opib << std::endl;

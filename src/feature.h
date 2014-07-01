@@ -9,6 +9,7 @@
 #include <iostream>
 #include "Quaternion.hpp"
 #include "Sensors.hpp"
+#include "imagesensor.hpp"
 using namespace cv;
 
 struct frame {
@@ -21,6 +22,8 @@ struct inits {
     cv::Vec3d anchor;
     cv::Point2d pib;
 };				/* ----------  end of struct inits  ---------- */
+
+typedef std::vector<projection>::iterator matchIter;
 
 typedef struct inits Inits;
 typedef struct frame Frame;
@@ -38,7 +41,7 @@ class Feature{
         Feature();
         ~Feature(); 
         Feature(Vec3d pos, Scalar color, int n, int ref );
-        Feature( cv::Vec3d anchor, Sensors sense, cv::Point2d pib );
+        Feature( cv::Vec3d anchor, Sensors sense, matchIter match );
 
         // accessor
         cv::Vec3d fromAnchor ( cv::Vec3d pos );
@@ -50,7 +53,7 @@ class Feature{
         int getRefFlag();
        
         // mutator
-        void initialize ( cv::Vec3d anchor, Sensors sense, cv::Point2d pib, bool extant );
+        void initialize ( cv::Vec3d anchor, Sensors sense, matchIter match, bool extant );
 
         int incNoMatch();
         void set_body(Vec3d pos);
@@ -180,5 +183,8 @@ class Feature{
         int noMatch;
 
 };
+typedef std::map<int,Feature> featMap;
+typedef featMap::iterator featIter;
+typedef std::vector<Feature>::iterator Fiter;
 
 #endif
