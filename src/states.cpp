@@ -103,7 +103,6 @@ void States::add(States a)
     void
 States::update_features ( ImageSensor *imgsense, Sensors sense )
 {
-    active.clear();
     features.clear();
     // Age each feature
     featIter fi=feats.begin(); 
@@ -133,7 +132,6 @@ States::update_features ( ImageSensor *imgsense, Sensors sense )
             f=fi->second;
         }
         features.push_back(f);
-        active.push_back(f);
     }
     return ;
 }		/* -----  end of method States::update_features  ----- */

@@ -123,93 +123,12 @@ int main()
 		//std::cout << "sums " << sums << std::endl;
 
         mu.update_features( &imgsense, sense );
-        /*
-        // Create sets of previous and current IDs used.
-        std::set<int> cur, prev, ren;
-        for( int i=0; i<nf; ++i )
-        {
-            cur.insert( (int)renewHist.at<double>(i,k) );
-            prev.insert( (int)renewHist.at<double>(i,k-1) );
-        }
-        // Create a set of only new IDs.
-        for( std::set<int>::iterator it=cur.begin();
-                it!=cur.end(); ++it )
-        {
-            if( prev.count(*it)==0 )
-            {
-                ren.insert(*it);
-            }
-        }
-
-        Fiter feat=mu.features.begin();
-		for (int i = 0; feat!=mu.features.end(); ++feat, i++)
-		{
-            cv::Vec3d cur_pib;
-            int renewZero, renewZero2;
-
-			// Expreiment: renew elements are piecewise constant
-			renewZero = renewHist.at<double>(i, k - 1);
-			renewZero2 = renewHist.at<double>(i, k);
-
-			if (k == stepStart-1 || cur.count(feat->ID)==0 )
-			{
-                matchIter mi=imgsense.matches.begin();
-                while( ren.count(mi->id)==0 )
-                {
-                    ++mi;
-                }
-                ren.erase(mi->id);
-
-				renewIndex = findIndex(renewHist, renewHist.at<double>(i, k));
-
-				// Find max
-				int tempCol, tempRow;
-				for (int q = 0; q < renewIndex.size(); q++)
-				{
-					tempRow = renewIndex[q] / stepEnd;
-					tempCol = renewIndex[q] % stepEnd;
-					if (tempCol < k && tempCol > renewk)
-					{
-						renewk = tempCol;
-						renewi = tempRow;
-					}
-				}
-				// If current signature existed before
-				if (renewk != -1 && k < stepEnd)
-				{
-                    double depth;
-					depth = d0Hist.at<double>(renewk, renewi);
-                    feat->set_body_position( mi->source, depth );
-				}
-                else
-                {
-                    double d0;
-                    cv::Vec3d pibr;
-                    add( atan2( mi->source.y, 1) * 180 / M_PI,
-                            sense.quaternion.euler()*180/M_PI, pibr );
-
-                    d0 = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
-                    d0 = fmin( d0, d_init );
-                    feat->set_body_position( mi->source, 1/d0 );
-                }
-				// Location and orientation of each anchor
-                feat->ID = mi->id;
-                feat->initial.anchor = mu.X;
-                feat->initial.quaternion = sense.quaternion;
-                feat->set_initial_pib( mi->source );
-				// Re-initialize the state for a new feature
-			} // if k
-
-		} // i loop
-    */
-        mu.compare( k, "after i loop" );
 		
 		// Saving the history of the estimates
         muHist.push_back(mu);
 		
 		// Motion model
         f = mu.dynamics( sense );
-        //f.compare( k, "f dynamics" );
 		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
                 nf, sense.dt, F );
 
