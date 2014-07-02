@@ -14,8 +14,7 @@ int main()
 {
     // Configuration
 	const int nf = 5;                            /* number of features */
-	const int stepEnd = 4340;
-	const int stepStart = 1700;
+	const int stepEnd = 2640;
 	const int flagBias = 1;
     const bool fb=true;
     const int flagMap = 1;
@@ -40,8 +39,6 @@ int main()
 
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
-
-	
     sense.set_acceleration( "../data/aHistF.hex", true );
     sense.set_altitude( "../data/altHist.hex", true );
     sense.set_dt( "../data/dtHist.hex", true );
@@ -80,7 +77,7 @@ int main()
     int width=800;
     int height=800;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
-	for (int k = stepStart; k < stepEnd; k++)
+	for( int i=0; i<stepEnd; ++i )
 	{
         cv::Vec3d old_pos;
         Mat G, Q, R, K, H;	
@@ -110,7 +107,7 @@ int main()
 		altHat = meas.altitude;
 
         initG( G, nf, sense.dt, fb);
-        if( k>stepStart && altHat-alt_old<-0.6 )
+        if( i>0 && altHat-alt_old<-0.6 )
         {
             Q0 = 20;
         }
@@ -129,7 +126,7 @@ int main()
         kmh = States(kx);
         mu+=kmh;
 
-		if (k%300 == 0) cout << k << endl;
+		if (i%300 == 0) cout << i << endl;
 
         // Real time plotting.
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
