@@ -53,7 +53,7 @@ class States{
         void addFeature(Feature f);
         void setb(Vec3d bias);
         void add(States a);
-        States dynamics( Sensors s );
+        States dynamics( Sensors s, bool flagbias );
 };
 
 #endif

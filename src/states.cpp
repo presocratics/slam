@@ -170,7 +170,7 @@ States::end_loop (  )
  *--------------------------------------------------------------------------------------
  */
     States
-States::dynamics ( Sensors s )
+States::dynamics ( Sensors s, bool flagbias )
 {
     States predicted_state;
     Matx33d A;
@@ -192,6 +192,12 @@ States::dynamics ( Sensors s )
 
     gemm( -A, V, 1, s.acceleration, 1, predicted_state.V );
     gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
+
+    if( flagbias==true ) 
+    {
+        V-=b;
+        b=cv::Vec3d(0,0,0);
+    }
     std::vector<Feature>::iterator pib=features.begin();
     for( int i=0; pib!=features.end(); ++pib,++i )
     {

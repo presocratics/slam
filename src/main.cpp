@@ -123,12 +123,10 @@ int main()
 		//std::cout << "sums " << sums << std::endl;
 
         mu.update_features( &imgsense, sense );
-		
 		// Saving the history of the estimates
         muHist.push_back(mu);
-		
 		// Motion model
-        f = mu.dynamics( sense );
+        f = mu.dynamics( sense, true );
 		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
                 nf, sense.dt, F );
 
@@ -140,8 +138,6 @@ int main()
 			F.at<double>(3, 6 + 3 * nf) = -1*sense.dt;
 			F.at<double>(4, 7 + 3 * nf) = -1 * sense.dt;
 			F.at<double>(5, 8 + 3 * nf) = -1 * sense.dt;
-            f.V -= mu.b;
-            f.b = cv::Vec3d(0,0,0);
 		}
 
         // TODO: Encapsulate this in a * operator?
