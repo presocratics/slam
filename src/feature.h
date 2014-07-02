@@ -32,7 +32,6 @@ class Feature{
     public:
         Scalar RGB;
         int ID;
-        int refFlag;
         frame position;
         inits initial;
 
@@ -40,7 +39,7 @@ class Feature{
         // constructor
         Feature();
         ~Feature(); 
-        Feature(Vec3d pos, Scalar color, int n, int ref );
+        Feature(Vec3d pos, Scalar color, int n );
         Feature( cv::Vec3d anchor, Sensors sense, matchIter match );
 
         // accessor
@@ -50,7 +49,6 @@ class Feature{
         Vec3d get_body();
         Scalar getRGB();
         int getID();
-        int getRefFlag();
        
         // mutator
         void initialize ( cv::Vec3d anchor, Sensors sense, matchIter match, bool extant );
@@ -59,7 +57,6 @@ class Feature{
         void set_body(Vec3d pos);
         void setRGB(Scalar color);
         void setID(int n);
-        void setRefFlag(int ref);
             inline void
         set_initial_pib ( cv::Vec3d p )
         {
