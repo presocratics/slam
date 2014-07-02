@@ -34,7 +34,6 @@ int main()
     ImageSensor imgsense("../data/bodyHist2.hex", true );
     Sensors sense;
     States mu;
-    mu.features.resize(nf);
 
 
 
@@ -88,7 +87,6 @@ int main()
         States f, kmh;
 
         alt_old = sense.altitude;
-        Mat F = Mat::zeros(mu.getRows(), mu.getRows(), CV_64F);
 		// Update sensors
         sense.update();
         imgsense.update();
@@ -98,6 +96,7 @@ int main()
 
         f = mu.dynamics( sense, fb );           // Motion model
         f*=sense.dt;
+        Mat F = Mat::zeros(mu.getRows(), mu.getRows(), CV_64F);
 		jacobianMotionModel(mu, sense, F, fb );
         mu+=f;
 
