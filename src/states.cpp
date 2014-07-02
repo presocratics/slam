@@ -228,11 +228,6 @@ States::dynamics ( Sensors s, bool flagbias )
     gemm( -A, V, 1, s.acceleration, 1, predicted_state.V );
     gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
 
-    if( flagbias==true ) 
-    {
-        V-=b;
-        b=cv::Vec3d(0,0,0);
-    }
     std::vector<Feature>::iterator pib=features.begin();
     for( int i=0; pib!=features.end(); ++pib,++i )
     {
@@ -246,6 +241,11 @@ States::dynamics ( Sensors s, bool flagbias )
 
                 (-w[2]*pib->position.body[0] + w[1]*pib->position.body[1])*pib->position.body[2] + V[0]*pib->position.body[2]*pib->position.body[2]);
         predicted_state.addFeature(fi);
+    }
+    if( flagbias==true ) 
+    {
+        V-=b;
+        b=cv::Vec3d(0,0,0);
     }
     return predicted_state;
 }		/* -----  end of method States::dynamics  ----- */
