@@ -111,18 +111,6 @@ int main()
         imgsense.update();
 		renewk = renewi = -1;
         
-        //TODO: Do we need this norm?
-        //double qbw_norm;
-        //qbw_norm = norm(qbw);
-        //qbw*=(1/qbw_norm);
-		//normalize qbw  -(!) NEED FIX ==================================================
-		//for (int i = 0; i < 4; i++)
-		//{
-		//	sums = pow(sums, 0.5);
-		//	qbw.at<double>(i, 0) = qbw.at<double>(i, 0)/sums;
-		//}
-		//std::cout << "sums " << sums << std::endl;
-
         mu.update_features( &imgsense, sense );
 		// Saving the history of the estimates
         muHist.push_back(mu);
@@ -131,7 +119,6 @@ int main()
 		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
                 nf, sense.dt, F, fb );
 
-        // TODO: Encapsulate this in a * operator?
         f*=sense.dt;
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
@@ -139,16 +126,7 @@ int main()
 
 		// Measurement model
 		measurementModel(k, nf, old_pos, sense.altitude, imgsense.matches, sense.quaternion,
-                refFlag.col(k).t(), 0, meas, hmu, H, mu );
-
-		if (flagBias == 1)
-		{
-            cv::Rect tempRect;
-            Mat tempMat1;
-			tempRect = Rect(6+3*nf, 0, 3, H.rows);
-			tempMat1 = H(tempRect);
-			tempMat1.setTo(0);
-		}
+                refFlag.col(k).t(), 0, fb, meas, hmu, H, mu );
 
 		altHat = meas.altitude;
 
@@ -603,7 +581,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<projection> matches,
-        Quaternion qbw, Mat refFlag, int flagMeas, View& meas, View& hmu, Mat& H, States& mu )
+        Quaternion qbw, Mat refFlag, int flagMeas, bool flagbias, View& meas, View& hmu, Mat& H, States& mu )
 {
     H=cv::Mat::zeros(H.size(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -673,6 +651,14 @@ void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<
 			}
 		}
     } // end for loop
+    if (flagbias==true)
+    {
+        cv::Rect tempRect;
+        Mat tempMat1;
+        tempRect = Rect(6+3*nf, 0, 3, H.rows);
+        tempMat1 = H(tempRect);
+        tempMat1.setTo(0);
+    }
 
 	/*Remove Unavailable reflection measurements */
 
