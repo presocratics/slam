@@ -143,19 +143,8 @@ int main()
         estimateError.toMat(eeMat);
         Mat kx = K*eeMat;
 
-        States kmh;
-        kmh.setX(Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) );
-        kmh.setV(Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) );
-        for(int i=0; i < nf; i++)
-        {
-            Feature tempfeat( Vec3d(  kx.at<double>(6+3*i,0),  kx.at<double>(7+3*i,0),
-                kx.at<double>(8+3*i,0)), Scalar(0,0,0), 0, 0 );
-            kmh.addFeature(tempfeat);
-        }
-        kmh.setb(Vec3d(  kx.at<double>(6+3*nf,0),  kx.at<double>(7+3*nf,0),  kx.at<double>(8+3*nf,0)));
-
-        mu.add(kmh);
-
+        States kmh(kx);
+        mu+=kmh;
 
 		//mu = mu + K*(meas - hmu);
 		P = (Mat::eye(mu.rows, mu.rows, CV_64F) - K*H)*P;

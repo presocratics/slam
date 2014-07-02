@@ -35,6 +35,22 @@ States::~States()
     features.clear();
 }
 
+States::States ( cv::Mat kx )
+{
+    int nf;
+    nf = (kx.rows-9)/3;
+    setX( cv::Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) );
+    setV( cv::Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) );
+    for( int i=0; i<nf; ++i )
+    {
+        Feature ft( cv::Vec3d( kx.at<double>(6+3*i,0), kx.at<double>(7+3*i,0), kx.at<double>(8+3*i,0) ),
+                cv::Scalar(0,0,0), 0, 0 );
+        addFeature(ft);
+    }
+    setb( cv::Vec3d( kx.at<double>(6+3*nf,0), kx.at<double>(7+3*nf,0), kx.at<double>(8+3*nf,0) ) );
+    return ;
+}		/* -----  end of method States::States  ----- */
+
 States::States(Vec3d pos, Vec3d vel, std::vector<Feature> feat, Vec3d bias, int n)
 {
     X = pos;

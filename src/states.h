@@ -35,6 +35,7 @@ class States{
         States();
         ~States();
         States(Vec3d pos, Vec3d vel, std::vector<Feature> feat, Vec3d bias, int n);
+        States(cv::Mat kx);
 
         // accessor
         Vec3d getX();
