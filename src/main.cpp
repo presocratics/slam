@@ -600,7 +600,7 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
     matchIter match=matches.begin();
     Fiter feat=mu.features.begin();
     std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
-	for (int i = 0; i < nf; i++, ++mi, ++hi, ++feat, ++match)
+	for (int i=0; feat!=mu.features.end(); ++i, ++mi, ++hi, ++feat, ++match)
 	{
         cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
 
@@ -633,7 +633,6 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
         add(mu.X,(Mat)qbw.rotation()*(Mat)xibHat, feat->position.world );
 
 		jacobianH(mu.X, qbw, *feat, Hb, Hi);
-
 
         meas.altitude = alt;							// altitude
         mi->set_views( match->source, feat->initial.pib, match->reflection );
