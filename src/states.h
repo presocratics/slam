@@ -25,7 +25,6 @@ class States{
         Vec3d X;
         Vec3d V;
         std::vector<Feature> features;
-        std::vector<Feature> active;
         std::map<int,Feature> feats;
         Vec3d b;
         int nf;
@@ -43,7 +42,6 @@ class States{
         std::vector<Feature> getFeatures();
         Feature getFeature(int i);
         Vec3d getb();
-        void compare( int k, const char *str, int flags=CMP_ANCHOR | CMP_QBW | CMP_ID |CMP_PIB |CMP_OLD );
 
         // mutator
         void update_features( ImageSensor *imgsense, Sensors sense );
