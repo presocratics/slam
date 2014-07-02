@@ -96,10 +96,7 @@ int main()
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
         cv::Vec3d old_pos;
-        vector<int> renewIndex;
-        int renewk, renewi;
-        Mat G, Q, R, K;	
-        Mat H = Mat::zeros(31, mu.rows, CV_64F);			// Measurement model ouputs
+        Mat G, Q, R, K, H;	
         View meas(nf);
         View hmu(nf);
         double altHat, alt_old;
@@ -109,7 +106,6 @@ int main()
 		// Update sensors
         sense.update();
         imgsense.update();
-		renewk = renewi = -1;
         
         mu.update_features( &imgsense, sense );
         muHist.push_back(mu);                   // Saving the history of the estimates
@@ -602,7 +598,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<projection> matches,
         Quaternion qbw, Mat refFlag, int flagMeas, bool flagbias, View& meas, View& hmu, Mat& H, States& mu )
 {
-    H=cv::Mat::zeros(H.size(),CV_64F);
+    H=cv::Mat::zeros(6*nf+1,6+3*nf+3,CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
 	Mat S = Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
 
