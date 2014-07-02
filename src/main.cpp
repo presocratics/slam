@@ -135,7 +135,7 @@ int main()
         f*=sense.dt;
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
-        mu.add(f);
+        mu+=f;
 
 		// Measurement model
 		measurementModel(k, nf, old_pos, sense.altitude, imgsense.matches, sense.quaternion,

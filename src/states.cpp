@@ -13,6 +13,13 @@ States::operator*= ( const double& rhs )
     return *this;
 }
 // constructor
+
+    States&
+States::operator+= ( const States& rhs )
+{
+    this->add(rhs);
+    return *this;
+}
 States::States()
 {
     X = Vec3d(0,0,0);

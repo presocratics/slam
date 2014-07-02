@@ -56,10 +56,17 @@ class States{
         States dynamics( Sensors s, bool flagbias );
         //Operator
         States& operator*= ( const double& rhs );
+        States& operator+= ( const States& rhs );
 };
 inline States operator*(States lhs, const double& rhs)
 {
     lhs*=rhs;
+    return lhs;
+}
+
+inline States operator+(States lhs, const States& rhs)
+{
+    lhs+=rhs;
     return lhs;
 }
 
