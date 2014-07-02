@@ -48,9 +48,6 @@ Sensors::open_source ( const char *fn )
     char line[MAXLINE];
     if( (fp=fopen(fn,"r"))==NULL )
         err_sys("fopen altitude");
-    //TODO: Bogus hack to skip first 1700
-    for( int i=0; i<1698; ++i )
-        fgets( line, MAXLINE, fp );
     return fp ;
 }		/* -----  end of method Sensors::open_source  ----- */
 
@@ -135,7 +132,7 @@ Sensors::get_angular_velocity ( )
 Sensors::get_quaternion ( )
 {
     cv::Vec4d q;
-    char str[15];
+    char str[16];
     strcpy( str, (quaternionIsHex) ? "%lx,%lx,%lx,%lx" : "%lf,%lf,%lf,%lf" );
     get_val( quaternion_fp, "quat", str, &q[0], &q[1], &q[2], &q[3] );
     return q;
