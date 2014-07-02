@@ -28,15 +28,14 @@ typedef std::vector<Feature>::iterator Fiter;
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );
 void ARC_compare ( cv::Mat cmat, char *fn, double thresh=0 );
 void hexToVec ( const char *fn, vector<double>& vec );
-void loadData(vector<double>& refFlag, vector<double>& renewHist);
 void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dtHist, vector<double>& qbwHist, vector<double>& wHist);
 void copyMat(Mat& src, Mat& dst);
 void reshapeMat(vector<double> src, Mat& dst);
 void reshapeMat3D(vector<double> src, Mat& dst);
 void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i, Mat& Hb, Mat& Hi );
 void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias );
-void measurementModel(int nf, cv::Vec3d old_pos, double alt, std::vector<projection> matches,
-        Quaternion qbw, Mat refFlag, int flagMeas, bool flagbias, View& meas, View& hmu, Mat& H, States& mu );
+void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
+        Quaternion qbw, int flagMeas, bool flagbias, View& meas, View& hmu, Mat& H, States& mu );
 vector<int> findIndex(const Mat& src, double val);
 void initG ( cv::Mat& G, int nf, double dt, bool flagbias );
 void initQ ( cv::Mat& Q, int nf, double Q0, bool flagbias );

@@ -40,19 +40,11 @@ int main()
 
 
 	// Data History variables
-	std::vector<double> refFlag_v;
-	std::vector<double> renewHist_v;
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
-	loadData(refFlag_v, renewHist_v);
 
 	// Reshape to Matrix
-	Mat refFlag = Mat::zeros(5, stepEnd, CV_64F);
-	Mat renewHist = Mat::zeros(5, stepEnd, CV_64F);
 	
-	reshapeMat(refFlag_v, refFlag);
-	reshapeMat(renewHist_v, renewHist);
-
     sense.set_acceleration( "../data/aHistF.hex", true );
     sense.set_altitude( "../data/altHist.hex", true );
     sense.set_dt( "../data/dtHist.hex", true );
@@ -115,8 +107,8 @@ int main()
 		jacobianMotionModel(mu, sense, F, fb );
         mu+=f;
 
-		measurementModel( nf, old_pos, sense.altitude, imgsense.matches, sense.quaternion,
-                refFlag.col(k).t(), 0, fb, meas, hmu, H, mu );
+		measurementModel( old_pos, sense.altitude, imgsense.matches, 
+                sense.quaternion, 0, fb, meas, hmu, H, mu );
 
 		altHat = meas.altitude;
 
@@ -153,29 +145,20 @@ int main()
         // Real time plotting.
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
-        for( int i=0; i<nf; ++i )
-        {
-            int renewZero2;
-			renewZero2 = renewHist.at<double>(i, k);
-			if( k<stepEnd-1 && renewHist.at<double>(i, k+1)!=renewZero2 || k==stepEnd )
-			{
-				// Removing bad features
-				if ( mu.features[i].position.body[2] > 1./10 && 
-                        mu.features[i].position.body[2]<1/d_min )
-				{
-					circle( rtplot, Point(mu.features[i].position.world[1] * scaleW + width/2,
-                                height/2 - (mu.features[i].position.world[0] * scaleH + height/4  )),
-                            3, Scalar(0, 120, 0));
-				}
-			}
-
-        }
-
-        //imshow("drawing", rtplot);
-        //waitKey(1);
         mu.end_loop();
 
 	} //  k loop
+    for( featIter fi=mu.feats.begin(); fi!=mu.feats.end(); ++fi )
+    {
+        if( fi->second.position.body[2]>1./10 &&
+            fi->second.position.body[2]<1/d_min )
+        {
+            circle( rtplot, Point(fi->second.position.world[1] * scaleW + width/2,
+                        height/2 - (fi->second.position.world[0] * scaleH + height/4  )),
+                    3, Scalar(0, 120, 0));
+        }
+
+    }
 
 	cout << double(clock() - startTime) / (double)CLOCKS_PER_SEC << " seconds." << endl;
 
@@ -396,13 +379,6 @@ void hexToVec ( const char *fn, vector<double>& vec )
 * Reads txt file and outputs vector
 *
 **************************************************************************************************/
-void loadData( vector<double>& refFlag, vector<double>& renewHist)
-{
-
-	// fill pibHist
-    hexToVec( "../data/refFlag.hex", refFlag );
-    hexToVec( "../data/renewHist.hex", renewHist );
-}
 
 void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dtHist, vector<double>& qbwHist, vector<double>& wHist)
 {
@@ -613,15 +589,19 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
 * measurementModel
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
-void measurementModel( int nf, cv::Vec3d old_pos, double alt, std::vector<projection> matches,
-        Quaternion qbw, Mat refFlag, int flagMeas, bool flagbias, View& meas, View& hmu, Mat& H, States& mu )
+void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
+        Quaternion qbw, int flagMeas, bool flagbias, View& meas, View& hmu, Mat& H, States& mu )
 {
-    H=cv::Mat::zeros(6*nf+1,6+3*nf+3,CV_64F);
+    int nf;
+    nf=mu.getNumFeatures();
+
+    H=cv::Mat::zeros(6*nf+1,mu.getRows(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
 	Mat S = Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
 
 	Mat Hb;
 	Mat Hi;
+
     std::vector<projection>::iterator match=matches.begin();
     std::vector<Feature>::iterator feat=mu.features.begin();
     std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
@@ -676,12 +656,6 @@ void measurementModel( int nf, cv::Vec3d old_pos, double alt, std::vector<projec
             blockAssign( Hfeat, Hi, Point(6+3*i,2) );
             
             blockAssign( H, Hfeat, Point(0,1+6*i) );
-
-			// features without reflection
-			if (refFlag.at<double>(0, i) == 0)
-			{
-				meas.features[i].reflection = cv::Point2d(0,0);
-			}
 		}
     } // end for loop
     if (flagbias==true)

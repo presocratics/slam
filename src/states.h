@@ -26,6 +26,7 @@ class States{
         Vec3d V;
         Vec3d b;
         std::vector<Feature> features;
+        std::map<int,Feature> feats;
 
         // constructor
         States();
@@ -56,7 +57,6 @@ class States{
         States& operator*= ( const double& rhs );
         States& operator+= ( const States& rhs );
     private:
-        std::map<int,Feature> feats;
         int nf;
         int rows;
 };
