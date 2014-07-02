@@ -79,7 +79,7 @@ int main()
 	for( int i=0; i<stepEnd; ++i )
 	{
         cv::Vec3d old_pos;
-        Mat G, Q, R, K, H;	
+        Mat G, Q, R, K, H, F;	
         Mat kx, eeMat;
         View meas(nf), hmu(nf);
         View estimateError(nf);
@@ -96,7 +96,6 @@ int main()
 
         f = mu.dynamics( sense, fb );           // Motion model
         f*=sense.dt;
-        Mat F = Mat::zeros(mu.getRows(), mu.getRows(), CV_64F);
 		jacobianMotionModel(mu, sense, F, fb );
         mu+=f;
 
@@ -480,6 +479,7 @@ void jacobianH(cv::Vec3d X, Quaternion qbw, Feature feat, Mat& Hb, Mat& Hi )
 
 void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
 {
+    F_out = Mat::zeros(mu.getRows(), mu.getRows(), CV_64F);
     int nf;
     Quaternion qbw;
     double dt;
