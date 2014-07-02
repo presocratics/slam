@@ -16,25 +16,18 @@ int main()
 	const int nf = 5;                            /* number of features */
 	const int stepEnd = 2640;
     const bool flagBias=true;
-    const int flagMap = 1;
-	const double d_max = 30;
 	const double d_min = 0.3;
-	const double d_init = 5;
 
     // Initial variables
-	double d0 = 1;
 	// Covariance Initialization
 	double P0 = 1;					// 1 for simulation
 	double Q0 = 1;				// 100 for simulation & 1 for experiments
 	double R0 = 10;					// 10 for simulation & 1 for experiments
 
     // Declarations
-
     ImageSensor imgsense("../data/bodyHist2.hex", true );
     Sensors sense;
     States mu;
-
-
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
     sense.set_acceleration( "../data/aHistF.hex", true );
