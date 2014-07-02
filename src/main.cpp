@@ -97,26 +97,28 @@ int main()
 	{
         cv::Vec3d old_pos;
         Mat G, Q, R, K, H;	
-        View meas(nf);
-        View hmu(nf);
+        Mat kx, eeMat;
+        View meas(nf), hmu(nf);
+        View estimateError(nf);
         double altHat, alt_old;
+        States f, kmh;
+
         alt_old = sense.altitude;
-        States f;
         Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
 		// Update sensors
         sense.update();
         imgsense.update();
-        
         mu.update_features( &imgsense, sense );
+
         muHist.push_back(mu);                   // Saving the history of the estimates
+        old_pos = mu.X; // Need this for fromAnchor in measurementModel
+
         f = mu.dynamics( sense, fb );           // Motion model
         f*=sense.dt;
 		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
                 nf, sense.dt, F, fb );
         mu+=f;
-        old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
-		// Measurement model
 		measurementModel(k, nf, old_pos, sense.altitude, imgsense.matches, sense.quaternion,
                 refFlag.col(k).t(), 0, fb, meas, hmu, H, mu );
 
@@ -133,17 +135,15 @@ int main()
 		// EKF measurement update
         calcP( P, F, G, Q );
         calcK( K, H, P, R );
+        updateP( P, K, H );
 
-        View estimateError = meas-hmu;
-        Mat eeMat;
+        estimateError = meas-hmu;
         estimateError.toMat(eeMat);
-        Mat kx = K*eeMat;
+        kx = K*eeMat;
 
-        States kmh(kx);
+        kmh = States(kx);
         mu+=kmh;
 
-		P = (Mat::eye(mu.rows, mu.rows, CV_64F) - K*H)*P;
-		P = (P.t() + P) / 2;
 
 
 		if (k%300 == 0)
@@ -192,6 +192,20 @@ int main()
 
 /*************************** FUNCTIONS ********************************************/
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  updateP
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+updateP ( cv::Mat& P, cv::Mat K, cv::Mat H )
+{
+    Mat kh = K*H;
+    P = (Mat::eye(kh.size(), CV_64F) - K*H)*P;
+    P = (P.t() + P) / 2;
+    return;
+}		/* -----  end of function updateP  ----- */
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  calcK
