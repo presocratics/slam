@@ -33,8 +33,6 @@ int main()
     // Declarations
 	Mat d0Hist(stepEnd, nf, CV_64F, Scalar(0));
 
-    vector<States> muHist;
-
     ImageSensor imgsense("../data/bodyHist2.hex", true );
     Sensors sense;
     States mu;
@@ -93,7 +91,7 @@ int main()
     int width=800;
     int height=800;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
-	for (int k = stepStart-1; k < stepEnd; k++)
+	for (int k = stepStart; k < stepEnd; k++)
 	{
         cv::Vec3d old_pos;
         Mat G, Q, R, K, H;	
@@ -110,7 +108,6 @@ int main()
         imgsense.update();
         mu.update_features( &imgsense, sense );
 
-        muHist.push_back(mu);                   // Saving the history of the estimates
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
         f = mu.dynamics( sense, fb );           // Motion model
@@ -125,7 +122,7 @@ int main()
 		altHat = meas.altitude;
 
         initG( G, nf, sense.dt, fb);
-        if( k>stepStart-1 && altHat-alt_old<-0.6 )
+        if( k>stepStart && altHat-alt_old<-0.6 )
         {
             Q0 = 20;
         }
@@ -185,7 +182,6 @@ int main()
 
     imshow("drawing", rtplot);
     waitKey(0);
-    cout << "numIDs: " << mu.feats.size() <<endl;
 	return 0;
 }
 
