@@ -12,7 +12,7 @@
 #include "imagesensor.hpp"
 #include "config.hpp"
 using namespace cv;
-
+#define GRAVITY -9.80665            /* Standard acceleration due to free fall m/s^2 */
 typedef std::map<int,Feature> featMap;
 typedef featMap::iterator featIter;
 typedef std::vector<projection>::iterator matchIter;
@@ -26,7 +26,6 @@ class States{
         Vec3d V;
         Vec3d b;
         std::vector<Feature> features;
-        std::map<int,Feature> feats;
 
         // constructor
         States();
@@ -57,6 +56,7 @@ class States{
         States& operator*= ( const double& rhs );
         States& operator+= ( const States& rhs );
     private:
+        std::map<int,Feature> feats;
         int nf;
         int rows;
 };

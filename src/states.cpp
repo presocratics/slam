@@ -217,7 +217,7 @@ States::dynamics ( Sensors s, bool flagbias )
 
     w =cv::Vec3d(s.angular_velocity);
 
-    Vec3d gw(0,0,-9.80665); // TODO where does this number come from?
+    Vec3d gw(0,0,GRAVITY); // TODO where does this number come from?
     A = Matx33d( 0, -w[2], w[1],
             w[2], 0, -w[0],
             -w[1], w[0], 0 );
