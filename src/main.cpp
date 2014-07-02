@@ -91,7 +91,7 @@ int main()
     double scaleW = 10;
     double scaleH = 10;
     int width=800;
-    int height=1200;
+    int height=800;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
 	for (int k = stepStart-1; k < stepEnd; k++)
 	{
@@ -146,7 +146,6 @@ int main()
         States kmh(kx);
         mu+=kmh;
 
-		//mu = mu + K*(meas - hmu);
 		P = (Mat::eye(mu.rows, mu.rows, CV_64F) - K*H)*P;
 		P = (P.t() + P) / 2;
 
@@ -168,7 +167,6 @@ int main()
 			renewZero2 = renewHist.at<double>(i, k);
 			if( k<stepEnd-1 && renewHist.at<double>(i, k+1)!=renewZero2 || k==stepEnd )
 			{
-				//xiwHatHist.at<Vec3d>(j, i) = feat->position.world;
 				// Removing bad features
 				if ( mu.features[i].position.body[2] > 1./10 && 
                         mu.features[i].position.body[2]<1/d_min )
