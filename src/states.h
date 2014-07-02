@@ -24,11 +24,9 @@ class States{
     public:
         Vec3d X;
         Vec3d V;
+        Vec3d b;
         std::vector<Feature> features;
         std::map<int,Feature> feats;
-        Vec3d b;
-        int nf;
-        int rows;
 
         // constructor
         States();
@@ -42,6 +40,8 @@ class States{
         std::vector<Feature> getFeatures();
         Feature getFeature(int i);
         Vec3d getb();
+        int getRows();
+        int getNumFeatures();
 
         // mutator
         void update_features( ImageSensor *imgsense, Sensors sense );
@@ -56,6 +56,9 @@ class States{
         //Operator
         States& operator*= ( const double& rhs );
         States& operator+= ( const States& rhs );
+    private:
+        int nf;
+        int rows;
 };
 inline States operator*(States lhs, const double& rhs)
 {

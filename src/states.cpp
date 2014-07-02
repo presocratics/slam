@@ -44,7 +44,7 @@ States::States ( cv::Mat kx )
     for( int i=0; i<nf; ++i )
     {
         Feature ft( cv::Vec3d( kx.at<double>(6+3*i,0), kx.at<double>(7+3*i,0), kx.at<double>(8+3*i,0) ),
-                cv::Scalar(0,0,0), 0, 0 );
+                cv::Scalar(0,0,0), 0 );
         addFeature(ft);
     }
     setb( cv::Vec3d( kx.at<double>(6+3*nf,0), kx.at<double>(7+3*nf,0), kx.at<double>(8+3*nf,0) ) );
@@ -249,3 +249,18 @@ States::dynamics ( Sensors s, bool flagbias )
     }
     return predicted_state;
 }		/* -----  end of method States::dynamics  ----- */
+
+
+    int
+States::getRows ( )
+{
+    return 6+3*getNumFeatures()+3 ;
+}		/* -----  end of method States::getRows  ----- */
+
+
+    int
+States::getNumFeatures ( )
+{
+    return features.size();
+}		/* -----  end of method States::getNumFeatures  ----- */
+

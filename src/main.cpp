@@ -104,7 +104,7 @@ int main()
         States f, kmh;
 
         alt_old = sense.altitude;
-        Mat F = Mat::zeros(mu.rows, mu.rows, CV_64F);
+        Mat F = Mat::zeros(mu.getRows(), mu.getRows(), CV_64F);
 		// Update sensors
         sense.update();
         imgsense.update();
@@ -588,7 +588,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
         Point(Fi_ith_1.cols+FiTemp.cols,0));
         blockAssign(Fi, Fi_ith, Point(0,3*i));
     }
-    Mat temp1 = Mat::eye(mu.rows, mu.rows, CV_64F);
+    Mat temp1 = Mat::eye(6+3*nf+3, 6+3*nf+3, CV_64F);
     F_out.setTo(0);
     blockAssign(F_out, Fb, Point(0,0));
     blockAssign(F_out, Fib, Point(0,Fb.rows));
