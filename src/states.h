@@ -54,6 +54,13 @@ class States{
         void setb(Vec3d bias);
         void add(States a);
         States dynamics( Sensors s, bool flagbias );
+        //Operator
+        States& operator*= ( const double& rhs );
 };
+inline States operator*(States lhs, const double& rhs)
+{
+    lhs*=rhs;
+    return lhs;
+}
 
 #endif

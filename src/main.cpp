@@ -17,6 +17,7 @@ int main()
 	const int stepEnd = 4340;
 	const int stepStart = 1700;
 	const int flagBias = 1;
+    const bool fb=true;
     const int flagMap = 1;
 	const double d_max = 30;
 	const double d_min = 0.3;
@@ -126,28 +127,12 @@ int main()
 		// Saving the history of the estimates
         muHist.push_back(mu);
 		// Motion model
-        f = mu.dynamics( sense, true );
+        f = mu.dynamics( sense, fb );
 		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
-                nf, sense.dt, F );
-
-		if (flagBias == 1)
-		{
-			F.at<double>(6 + 3 * nf, 6 + 3 * nf) = 1;
-			F.at<double>(7 + 3 * nf, 7 + 3 * nf) = 1;
-			F.at<double>(8 + 3 * nf, 8 + 3 * nf) = 1;
-			F.at<double>(3, 6 + 3 * nf) = -1*sense.dt;
-			F.at<double>(4, 7 + 3 * nf) = -1 * sense.dt;
-			F.at<double>(5, 8 + 3 * nf) = -1 * sense.dt;
-		}
+                nf, sense.dt, F, fb );
 
         // TODO: Encapsulate this in a * operator?
-        f.X*=sense.dt;
-        f.V*=sense.dt;
-        
-        for(int i=0; i < nf; i++)
-        {
-            f.features[i].position.body*=sense.dt;
-        }
+        f*=sense.dt;
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
         mu.add(f);
@@ -311,7 +296,7 @@ int main()
         }
 
         imshow("drawing", rtplot);
-        waitKey(3);
+        waitKey(1);
         mu.end_loop();
 
 	} //  k loop
@@ -525,7 +510,7 @@ void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i
 }
 
 void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
-        double dt, Mat& F_out )
+        double dt, Mat& F_out, bool flagbias )
 {
     Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, 
             pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
@@ -602,6 +587,15 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
     blockAssign(F_out, Fib, Point(0,Fb.rows));
     blockAssign(F_out, Fi,Point(Fib.cols,Fb.rows));
     F_out = dt*F_out + temp1;
+    if( flagbias==true )
+    {
+        F_out.at<double>(6 + 3 * nf, 6 + 3 * nf) = 1;
+        F_out.at<double>(7 + 3 * nf, 7 + 3 * nf) = 1;
+        F_out.at<double>(8 + 3 * nf, 8 + 3 * nf) = 1;
+        F_out.at<double>(3, 6 + 3 * nf) = -1*dt;
+        F_out.at<double>(4, 7 + 3 * nf) = -1 * dt;
+        F_out.at<double>(5, 8 + 3 * nf) = -1 * dt;
+    }
 }
 
 /************************************************************************************************

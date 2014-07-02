@@ -1,5 +1,17 @@
 #include "states.h"
 
+    States&
+States::operator*= ( const double& rhs )
+{
+    this->X*=rhs;
+    this->V*=rhs;
+    for( Fiter fi=this->features.begin();
+            fi!=this->features.end(); ++fi )
+    {
+        fi->position.body*=rhs;
+    }
+    return *this;
+}
 // constructor
 States::States()
 {
