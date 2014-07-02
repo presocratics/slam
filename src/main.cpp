@@ -130,36 +130,14 @@ int main()
 
 		altHat = meas.altitude;
 
-		G = sense.dt*Mat::eye(6 + 3 * nf, 6 + 3 * nf, CV_64F);
-		G.at<double>(0, 0) = 0.5*pow(sense.dt, 2);
-		G.at<double>(1, 1) = 0.5*pow(sense.dt, 2);
-		G.at<double>(2, 2) = 0.5*pow(sense.dt, 2);
-
-		if (flagBias == 1)
-		{
-			G = sense.dt*Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
-			G.at<double>(0, 0) = 0.5*pow(sense.dt, 2);
-			G.at<double>(1, 1) = 0.5*pow(sense.dt, 2);
-			G.at<double>(2, 2) = 0.5*pow(sense.dt, 2);
-			G.at<double>(6 + 3 * nf, 6 + 3 * nf) = 0.5*pow(sense.dt, 2);
-			G.at<double>(7 + 3 * nf, 7 + 3 * nf) = 0.5*pow(sense.dt, 2);
-			G.at<double>(8 + 3 * nf, 8 + 3 * nf) = 0.5*pow(sense.dt, 2);
-		}
+        initG( G, nf, sense.dt, fb);
+        if (k > stepStart - 1 && altHat - alt_old < -0.6)
+        {
+            Q0 = 20;
+        }
+        initQ( Q, nf, Q0, fb );
 
 		// for 2nd street data set
-		if (k > stepStart - 1 && altHat - alt_old < -0.6)
-		{
-			Q0 = 20;
-		}
-
-		Q = Q0*Mat::eye(mu.rows, mu.rows, CV_64F);
-
-		if (flagBias == 1)
-		{
-			Q.at<double>(6 + 3 * nf, 6 + 3 * nf) = 0.002;
-			Q.at<double>(7 + 3 * nf, 7 + 3 * nf) = 0.002;
-			Q.at<double>(8 + 3 * nf, 8 + 3 * nf) = 0.002;
-		}
 
 		R = 0.1 / 770 * R0*Mat::eye(1+6*nf, 1+6*nf, CV_64F);
 
@@ -290,6 +268,49 @@ int main()
 
 /*************************** FUNCTIONS ********************************************/
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  initQ
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+initQ ( cv::Mat& Q, int nf, double Q0, bool flagbias )
+{
+    Q = Q0*Mat::eye(6+3*nf+3, 6+3*nf+3, CV_64F);
+    if( flagbias==true )
+    {
+        Q.at<double>(6 + 3 * nf, 6 + 3 * nf) = 0.002;
+        Q.at<double>(7 + 3 * nf, 7 + 3 * nf) = 0.002;
+        Q.at<double>(8 + 3 * nf, 8 + 3 * nf) = 0.002;
+    }
+    return;
+}		/* -----  end of function initq  ----- */
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  initG
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+initG ( cv::Mat& G, int nf, double dt, bool flagbias )
+{
+    G = dt*Mat::eye(6 + 3 * nf, 6 + 3 * nf, CV_64F);
+    G.at<double>(0, 0) = 0.5*dt*dt;
+    G.at<double>(1, 1) = 0.5*dt*dt;
+    G.at<double>(2, 2) = 0.5*dt*dt;
+    if (flagbias == true)
+    {
+        G = dt*Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
+        G.at<double>(0, 0) = 0.5*dt*dt;
+        G.at<double>(1, 1) = 0.5*dt*dt;
+        G.at<double>(2, 2) = 0.5*dt*dt;
+        G.at<double>(6 + 3 * nf, 6 + 3 * nf) = 0.5*dt*dt;
+        G.at<double>(7 + 3 * nf, 7 + 3 * nf) = 0.5*dt*dt;
+        G.at<double>(8 + 3 * nf, 8 + 3 * nf) = 0.5*dt*dt;
+    }
+    return;
+}		/* -----  end of function initG  ----- */
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  blockAssign

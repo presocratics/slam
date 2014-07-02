@@ -39,5 +39,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
 void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<projection> matches,
         Quaternion qbw, Mat refFlag, int flagMeas, bool flagbias, View& meas, View& hmu, Mat& H, States& mu );
 vector<int> findIndex(const Mat& src, double val);
+void initG ( cv::Mat& G, int nf, double dt, bool flagbias );
+void initQ ( cv::Mat& Q, int nf, double Q0, bool flagbias );
 
 #endif
