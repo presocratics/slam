@@ -31,7 +31,6 @@ int main()
 	double R0 = 10;					// 10 for simulation & 1 for experiments
 
     // Declarations
-	Mat d0Hist(stepEnd, nf, CV_64F, Scalar(0));
 
     ImageSensor imgsense("../data/bodyHist2.hex", true );
     Sensors sense;
@@ -39,11 +38,9 @@ int main()
     mu.features.resize(nf);
 
 
-	// Data History variables
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
 
-	// Reshape to Matrix
 	
     sense.set_acceleration( "../data/aHistF.hex", true );
     sense.set_altitude( "../data/altHist.hex", true );
@@ -108,7 +105,7 @@ int main()
         mu+=f;
 
 		measurementModel( old_pos, sense.altitude, imgsense.matches, 
-                sense.quaternion, 0, fb, meas, hmu, H, mu );
+                sense.quaternion, fb, meas, hmu, H, mu );
 
 		altHat = meas.altitude;
 
@@ -132,16 +129,8 @@ int main()
         kmh = States(kx);
         mu+=kmh;
 
+		if (k%300 == 0) cout << k << endl;
 
-
-		if (k%300 == 0)
-            cout << k << endl;
-
-        Fiter feat=mu.features.begin();
-        for( int i=0; feat!=mu.features.end(); ++feat, ++i )
-        {
-            d0Hist.at<double>(k, i) = feat->position.body[2];
-        }
         // Real time plotting.
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
@@ -442,19 +431,25 @@ void reshapeMat3D(vector<double> src, Mat& dst)
 /************************************************************************************************
 * JacobianH. Note: 'i' here should be 1 less 'i' in matlab
 **************************************************************************************************/
-void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i, Mat& Hb, Mat& Hi )
+void jacobianH(cv::Vec3d X, Quaternion qbw, Feature feat, Mat& Hb, Mat& Hi )
 {
-	double xbw1 = mu.X[0];
-	double xbw2 = mu.X[1];
-	double xbw3 = mu.X[2];
+    cv::Vec3d xb0w;
+    Quaternion qb0w;
+
+    xb0w=feat.get_initial_anchor();
+    qb0w=feat.get_initial_quaternion();
+
+	double xbw1 = X[0];
+	double xbw2 = X[1];
+	double xbw3 = X[2];
 	double qbw1 = qbw.coord[0];
 	double qbw2 = qbw.coord[1];
 	double qbw3 = qbw.coord[2];
 	double qbw4 = qbw.coord[3];
 
-	double pib1 = mu.features[i].position.body[0];
-	double pib2 = mu.features[i].position.body[1];
-	double pib3 = mu.features[i].position.body[2];
+	double pib1 = feat.get_body_position()[0];
+	double pib2 = feat.get_body_position()[1];
+	double pib3 = feat.get_body_position()[2];
 
 	double xb0w1 = xb0w[0];
 	double xb0w2 = xb0w[1];
@@ -590,7 +585,7 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
-        Quaternion qbw, int flagMeas, bool flagbias, View& meas, View& hmu, Mat& H, States& mu )
+        Quaternion qbw, bool flagbias, View& meas, View& hmu, Mat& H, States& mu )
 {
     int nf;
     nf=mu.getNumFeatures();
@@ -602,14 +597,14 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
 	Mat Hb;
 	Mat Hi;
 
-    std::vector<projection>::iterator match=matches.begin();
-    std::vector<Feature>::iterator feat=mu.features.begin();
+    matchIter match=matches.begin();
+    Fiter feat=mu.features.begin();
     std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
 	for (int i = 0; i < nf; i++, ++mi, ++hi, ++feat, ++match)
 	{
         cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
 
-        pibHat = mu.features[i].position.body;
+        pibHat = feat->get_body_position();
 	
 		xibHat = cv::Vec3d(
 				1 / pibHat[2],
@@ -635,28 +630,24 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
 			xpbHat[2] / xpbHat[0],
             0);
 
-        add(mu.X,(Mat)qbw.rotation()*(Mat)xibHat, mu.features[i].position.world );
+        add(mu.X,(Mat)qbw.rotation()*(Mat)xibHat, feat->position.world );
 
-		jacobianH(mu, qbw, mu.features[i].initial.anchor, mu.features[i].initial.quaternion, i, Hb, Hi);
+		jacobianH(mu.X, qbw, *feat, Hb, Hi);
 
 
-		// 0: all
-		if (flagMeas == 0)
-		{
-			meas.altitude = alt;							// altitude
-            mi->set_views( match->source, feat->initial.pib, match->reflection );
-            hmu.altitude = -mu.X[2];
-            hi->set_views( pibHat, pib0Hat, ppbHat );
+        meas.altitude = alt;							// altitude
+        mi->set_views( match->source, feat->initial.pib, match->reflection );
+        hmu.altitude = -mu.X[2];
+        hi->set_views( pibHat, pib0Hat, ppbHat );
 
-			H.row(0).col(2).setTo(-1);
-            // For each feature
-            Mat Hfeat = Mat::zeros(6,24,CV_64F);
-            blockAssign( Hfeat, Mat::eye(2,2,CV_64F), Point(6+3*i,0) );
-            blockAssign( Hfeat, Hb, Point(0,2) );
-            blockAssign( Hfeat, Hi, Point(6+3*i,2) );
+        H.row(0).col(2).setTo(-1);
+        // For each feature
+        Mat Hfeat = Mat::zeros(6,24,CV_64F);
+        blockAssign( Hfeat, Mat::eye(2,2,CV_64F), Point(6+3*i,0) );
+        blockAssign( Hfeat, Hb, Point(0,2) );
+        blockAssign( Hfeat, Hi, Point(6+3*i,2) );
             
-            blockAssign( H, Hfeat, Point(0,1+6*i) );
-		}
+        blockAssign( H, Hfeat, Point(0,1+6*i) );
     } // end for loop
     if (flagbias==true)
     {
