@@ -15,8 +15,7 @@ int main()
     // Configuration
 	const int nf = 5;                            /* number of features */
 	const int stepEnd = 2640;
-	const int flagBias = 1;
-    const bool fb=true;
+    const bool flagBias=true;
     const int flagMap = 1;
 	const double d_max = 30;
 	const double d_min = 0.3;
@@ -61,7 +60,7 @@ int main()
 		P.at<double>(5 + 3*(i+1), 5 + 3*(i+1)) = P0;
 	}
 
-	if (flagBias == 1)
+	if (flagBias == true)
 	{
 		Mat temp = P.clone();
 		P.release();
@@ -94,22 +93,22 @@ int main()
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
-        f = mu.dynamics( sense, fb );           // Motion model
+        f = mu.dynamics( sense, flagBias );           // Motion model
         f*=sense.dt;
-		jacobianMotionModel(mu, sense, F, fb );
+		jacobianMotionModel(mu, sense, F, flagBias );
         mu+=f;
 
 		measurementModel( old_pos, sense.altitude, imgsense.matches, 
-                sense.quaternion, fb, meas, hmu, H, mu );
+                sense.quaternion, flagBias, meas, hmu, H, mu );
 
 		altHat = meas.altitude;
 
-        initG( G, nf, sense.dt, fb);
+        initG( G, nf, sense.dt, flagBias);
         if( i>0 && altHat-alt_old<-0.6 )
         {
             Q0 = 20;
         }
-        initQ( Q, nf, Q0, fb );
+        initQ( Q, nf, Q0, flagBias );
         initR( R, nf, R0 );
 
 		// EKF measurement update
