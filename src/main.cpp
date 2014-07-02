@@ -112,8 +112,7 @@ int main()
 
         f = mu.dynamics( sense, fb );           // Motion model
         f*=sense.dt;
-		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
-                nf, sense.dt, F, fb );
+		jacobianMotionModel(mu, sense, F, fb );
         mu+=f;
 
 		measurementModel(k, nf, old_pos, sense.altitude, imgsense.matches, sense.quaternion,
@@ -512,9 +511,18 @@ void jacobianH(States mu, Quaternion qbw, cv::Vec3d xb0w, Quaternion qb0w, int i
 
 }
 
-void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
-        double dt, Mat& F_out, bool flagbias )
+void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
 {
+    int nf;
+    Quaternion qbw;
+    double dt;
+    cv::Vec3d w;
+
+    qbw = sense.quaternion;
+    dt = sense.dt;
+    w=sense.angular_velocity;
+    nf=mu.getNumFeatures();
+
     Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, 
             pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
             2 * qbw.coord[0]*qbw.coord[1] - 2 * qbw.coord[2]*qbw.coord[3],
@@ -541,7 +549,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
     Mat Fi_ith_2;
     Mat Fi_ith_3;
 
-    for (int i = 0; i < nf; i++)
+    for (int i = 0; i<nf; i++)
     {
         Matx13d pib( 
             mu.features[i].position.body[0],
@@ -584,7 +592,7 @@ void jacobianMotionModel(States mu, Quaternion qbw, cv::Vec3d w, int nf,
         Point(Fi_ith_1.cols+FiTemp.cols,0));
         blockAssign(Fi, Fi_ith, Point(0,3*i));
     }
-    Mat temp1 = Mat::eye(6+3*nf+3, 6+3*nf+3, CV_64F);
+    Mat temp1 = Mat::eye(mu.getRows(), mu.getRows(), CV_64F);
     F_out.setTo(0);
     blockAssign(F_out, Fb, Point(0,0));
     blockAssign(F_out, Fib, Point(0,Fb.rows));

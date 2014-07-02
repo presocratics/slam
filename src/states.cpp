@@ -5,11 +5,7 @@ States::operator*= ( const double& rhs )
 {
     this->X*=rhs;
     this->V*=rhs;
-    for( Fiter fi=this->features.begin();
-            fi!=this->features.end(); ++fi )
-    {
-        fi->position.body*=rhs;
-    }
+    for( Fiter fi=this->features.begin(); fi!=this->features.end(); ++fi ) fi->position.body*=rhs;
     return *this;
 }
 // constructor
@@ -232,14 +228,13 @@ States::dynamics ( Sensors s, bool flagbias )
     for( int i=0; pib!=features.end(); ++pib,++i )
     {
         Feature fi;
+        cv::Vec3d bp;
+        bp = pib->get_body_position();
         fi.position.body = cv::Vec3d( 
-                (-V[1] + pib->position.body[0]*V[0])*pib->position.body[2] 
-                + pib->position.body[1]*w[0] - (1 + pib->position.body[0]*pib->position.body[0])*w[2] + pib->position.body[0]*pib->position.body[1]*w[1],
-
-                (-V[2] + pib->position.body[1]*V[0])*pib->position.body[2] 
-                - pib->position.body[0]*w[0] + (1 + pib->position.body[1]*pib->position.body[1])*w[1] - pib->position.body[0]*pib->position.body[1]*w[2],
-
-                (-w[2]*pib->position.body[0] + w[1]*pib->position.body[1])*pib->position.body[2] + V[0]*pib->position.body[2]*pib->position.body[2]);
+            (-V[1] + bp[0]*V[0])*bp[2] + bp[1]*w[0] - (1 + bp[0]*bp[0])*w[2] + bp[0]*bp[1]*w[1],
+            (-V[2] + bp[1]*V[0])*bp[2] - bp[0]*w[0] + (1 + bp[1]*bp[1])*w[1] - bp[0]*bp[1]*w[2],
+            (-w[2] * bp[0]+w[1] *bp[1])* bp[2]+V[0] *      bp[2]*bp[2]
+        );
         predicted_state.addFeature(fi);
     }
     if( flagbias==true ) 
