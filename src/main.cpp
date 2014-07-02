@@ -112,17 +112,13 @@ int main()
 		renewk = renewi = -1;
         
         mu.update_features( &imgsense, sense );
-		// Saving the history of the estimates
-        muHist.push_back(mu);
-		// Motion model
-        f = mu.dynamics( sense, fb );
+        muHist.push_back(mu);                   // Saving the history of the estimates
+        f = mu.dynamics( sense, fb );           // Motion model
+        f*=sense.dt;
 		jacobianMotionModel(mu, sense.quaternion, sense.angular_velocity,
                 nf, sense.dt, F, fb );
-
-        f*=sense.dt;
-
-        old_pos = mu.X; // Need this for fromAnchor in measurementModel
         mu+=f;
+        old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
 		// Measurement model
 		measurementModel(k, nf, old_pos, sense.altitude, imgsense.matches, sense.quaternion,
@@ -131,78 +127,23 @@ int main()
 		altHat = meas.altitude;
 
         initG( G, nf, sense.dt, fb);
-        if (k > stepStart - 1 && altHat - alt_old < -0.6)
+        if( k>stepStart-1 && altHat-alt_old<-0.6 )
         {
             Q0 = 20;
         }
         initQ( Q, nf, Q0, fb );
-
-		// for 2nd street data set
-
-		R = 0.1 / 770 * R0*Mat::eye(1+6*nf, 1+6*nf, CV_64F);
-
-		// altimeter noise covariance
-		R.at<double>(0, 0) = 0.0001*R0;
-
-		for (int i = 0; i < nf; i++)
-		{
-			// current view measurement noise covariance
-			R.at<double>(1 + 6 * i, 1 + 6 * i) = 0.1 / 770 * R0;
-			R.at<double>(2 + 6 * i, 2 + 6 * i) = 0.1 / 770 * R0;
-
-			// initial view measurement noise covariance
-			R.at<double>(3 + 6 * i, 3 + 6 * i) = 10. / 770 * R0;
-			R.at<double>(4 + 6 * i, 4 + 6 * i) = 10. / 770 * R0;
-
-			// reflection measurment noise covariance
-			R.at<double>(5 + 6 * i, 5 + 6 * i) = 10. / 770 * R0;
-			R.at<double>(6 + 6 * i, 6 + 6 * i) = 10. / 770 * R0;
-		}
+        initR( R, nf, R0 );
 
 		// EKF measurement update
+        calcP( P, F, G, Q );
+        calcK( K, H, P, R );
 
-        cv::Mat tmp1, tmp2;
-        cv::Mat Pcopy = P.clone();
-        
-        /* Put multiplication on multiple lines for less error */
-        tmp1 = F*P;
-        tmp1 *= F.t();
-        tmp2 = G*Q;
-        tmp2 *= G.t();
+        View estimateError = meas-hmu;
+        Mat eeMat;
+        estimateError.toMat(eeMat);
+        Mat kx = K*eeMat;
 
-		P = tmp1 + tmp2;
-
-        cv::Mat temppp=H*P;
-        temppp *= H.t();
-        temppp += R;
-
-        K = P*H.t();
-        cv::Mat K2= K*temppp.inv();
-
-        K=K.t();
-        temppp=temppp.t();
-        solve(temppp, K, K);
-        K=K.t();
-
-        //K *= temppp.inv();
-		// error Check Passed: P, F, Q, H, G, temppp, K
-        View foo = meas-hmu;
-        vector<double> bar;
-        bar.push_back(foo.altitude);
-        vector<Vfeat>::iterator it=foo.features.begin();
-        for( ; it!=foo.features.end(); ++it )
-        {
-            bar.push_back(it->current.x);
-            bar.push_back(it->current.y);
-            bar.push_back(it->initial.x);
-            bar.push_back(it->initial.y);
-            bar.push_back(it->reflection.x);
-            bar.push_back(it->reflection.y);
-        }
-        Mat baz(bar);
-        Mat kx = K*baz;
         States kmh;
-        
         kmh.setX(Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) );
         kmh.setV(Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) );
         for(int i=0; i < nf; i++)
@@ -251,8 +192,8 @@ int main()
 
         }
 
-        imshow("drawing", rtplot);
-        waitKey(1);
+        //imshow("drawing", rtplot);
+        //waitKey(1);
         mu.end_loop();
 
 	} //  k loop
@@ -268,6 +209,76 @@ int main()
 
 /*************************** FUNCTIONS ********************************************/
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  calcK
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+calcK ( cv::Mat& K, cv::Mat H, cv::Mat P, cv::Mat R )
+{
+    cv::Mat tmp=H*P;
+    tmp *= H.t();
+    tmp += R;
+
+    K = P*H.t();
+    cv::Mat K2= K*tmp.inv();
+
+    K=K.t();
+    tmp=tmp.t();
+    solve(tmp, K, K);
+    K=K.t();
+    return;
+}		/* -----  end of function calcK  ----- */
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  calcP
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+calcP ( cv::Mat& P, cv::Mat F, cv::Mat G, cv::Mat Q )
+{
+    cv::Mat tmp1, tmp2;
+    /* Put multiplication on multiple lines for less error */
+    tmp1 = F*P;
+    tmp1 *= F.t();
+    tmp2 = G*Q;
+    tmp2 *= G.t();
+    P = tmp1 + tmp2;
+    return;
+}		/* -----  end of function calcP  ----- */
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  initR
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+initR ( cv::Mat& R, int nf, double R0 )
+{
+    // for 2nd street data set
+    R = 0.1 / 770 * R0*Mat::eye(1+6*nf, 1+6*nf, CV_64F);
+    // altimeter noise covariance
+    R.at<double>(0, 0) = 0.0001*R0;
+    for (int i = 0; i < nf; i++)
+    {
+        // current view measurement noise covariance
+        R.at<double>(1 + 6 * i, 1 + 6 * i) = 0.1 / 770 * R0;
+        R.at<double>(2 + 6 * i, 2 + 6 * i) = 0.1 / 770 * R0;
+
+        // initial view measurement noise covariance
+        R.at<double>(3 + 6 * i, 3 + 6 * i) = 10. / 770 * R0;
+        R.at<double>(4 + 6 * i, 4 + 6 * i) = 10. / 770 * R0;
+
+        // reflection measurment noise covariance
+        R.at<double>(5 + 6 * i, 5 + 6 * i) = 10. / 770 * R0;
+        R.at<double>(6 + 6 * i, 6 + 6 * i) = 10. / 770 * R0;
+    }
+    return;
+}		/* -----  end of function initR  ----- */
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  initQ

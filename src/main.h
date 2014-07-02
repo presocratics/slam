@@ -41,5 +41,8 @@ void measurementModel(int k, int nf, cv::Vec3d old_pos, double alt, std::vector<
 vector<int> findIndex(const Mat& src, double val);
 void initG ( cv::Mat& G, int nf, double dt, bool flagbias );
 void initQ ( cv::Mat& Q, int nf, double Q0, bool flagbias );
+void initR ( cv::Mat& R, int nf, double R0 );
+void calcP ( cv::Mat& P, cv::Mat F, cv::Mat G, cv::Mat Q );
+void calcK ( cv::Mat& K, cv::Mat H, cv::Mat P, cv::Mat R );
 
 #endif

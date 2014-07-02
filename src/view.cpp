@@ -15,6 +15,28 @@ View::operator-= ( const View& rhs )
     return *this;
 }		/* -----  end of method View::operator+=  ----- */
 
+
+    void
+View::toMat ( cv::Mat& R )
+{
+    R.create(31,1,CV_64F);
+    std::vector<double> bar;
+    bar.push_back(altitude);
+    std::vector<Vfeat>::iterator it=features.begin();
+    for( ; it!=features.end(); ++it )
+    {
+        bar.push_back(it->current.x);
+        bar.push_back(it->current.y);
+        bar.push_back(it->initial.x);
+        bar.push_back(it->initial.y);
+        bar.push_back(it->reflection.x);
+        bar.push_back(it->reflection.y);
+    }
+    R = cv::Mat(bar);
+    return ;
+}		/* -----  end of method View::toMat  ----- */
+
+
     void
 Vfeat::set_views ( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl )
 {
