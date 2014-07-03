@@ -70,6 +70,7 @@ int main()
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
 	for( int i=0; i<stepEnd; ++i )
 	{
+        int nf;
         cv::Vec3d old_pos;
         Mat G, Q, R, K, H, F;	
         Mat kx, eeMat;
@@ -83,6 +84,7 @@ int main()
         sense.update();
         imgsense.update();
         mu.update_features( &imgsense, sense );
+        nf=mu.getNumFeatures();
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
