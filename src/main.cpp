@@ -84,7 +84,7 @@ int main()
         mu+=f;
 
 		measurementModel( old_pos, sense.altitude, imgsense.matches, 
-                sense.quaternion, flagBias, meas, hmu, H, mu );
+                sense.quaternion, meas, hmu, H, mu );
 
 		altHat = meas.altitude;
 
@@ -474,21 +474,28 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
     w=sense.angular_velocity;
     nf=mu.getNumFeatures();
 
-    Mat Fb = (Mat_<double>(6, 6) << 0, 0, 0, 
+    Mat Fb = Mat::zeros(9,9,CV_64F);
+    Mat Fb1 = (Mat_<double>(6, 6) << 0, 0, 0, 
             pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
             2 * qbw.coord[0]*qbw.coord[1] - 2 * qbw.coord[2]*qbw.coord[3],
             2 * qbw.coord[0]*qbw.coord[2] + 2 * qbw.coord[1]*qbw.coord[3],
+
             0, 0, 0,
             2 * qbw.coord[0]*qbw.coord[1] + 2 * qbw.coord[2]*qbw.coord[3],
             - pow(qbw.coord[0] , 2) + pow(qbw.coord[1] , 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
             2 * qbw.coord[1]*qbw.coord[2] - 2 * qbw.coord[0]*qbw.coord[3],
+
             0, 0, 0,
             2 * qbw.coord[0]*qbw.coord[2] - 2 * qbw.coord[1]*qbw.coord[3],
             2 * qbw.coord[0]*qbw.coord[3] + 2 * qbw.coord[1]*qbw.coord[2],
             -pow(qbw.coord[0] , 2) - pow(qbw.coord[1] , 2) + pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
+
             0, 0, 0, 0, w[2], -w[1],
             0, 0, 0, -w[2], 0, w[0],
             0, 0, 0, w[1], -w[0], 0);
+    blockAssign(Fb,Fb1,Point(0,0));
+    blockAssign(Fb,Mat::eye(3,3, CV_64F),Point(6,6));
+    blockAssign(Fb,-dt*Mat::eye(3,3, CV_64F),Point(6,3));
 
 
     Mat Fi = Mat::zeros(nf*3, nf*3, CV_64F);
@@ -549,15 +556,6 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
     blockAssign(F_out, Fib, Point(0,Fb.rows));
     blockAssign(F_out, Fi,Point(Fib.cols,Fb.rows));
     F_out = dt*F_out + temp1;
-    if( flagbias==true )
-    {
-        F_out.at<double>(6 + 3 * nf, 6 + 3 * nf) = 1;
-        F_out.at<double>(7 + 3 * nf, 7 + 3 * nf) = 1;
-        F_out.at<double>(8 + 3 * nf, 8 + 3 * nf) = 1;
-        F_out.at<double>(3, 6 + 3 * nf) = -1*dt;
-        F_out.at<double>(4, 7 + 3 * nf) = -1 * dt;
-        F_out.at<double>(5, 8 + 3 * nf) = -1 * dt;
-    }
 }
 
 /************************************************************************************************
@@ -565,7 +563,7 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
-        Quaternion qbw, bool flagbias, View& meas, View& hmu, Mat& H, States& mu )
+        Quaternion qbw, View& meas, View& hmu, Mat& H, States& mu )
 {
     int nf;
     nf=mu.getNumFeatures();
@@ -627,12 +625,6 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
             
         blockAssign( H, Hfeat, Point(0,1+6*i) );
     } // end for loop
-    if (flagbias==true)
-    {
-        cv::Mat Hbias;
-        Hbias=cv::Mat::zeros(H.rows,3, CV_64F);
-        blockAssign(H, Hbias, cv::Point(6+3*nf,0));
-    }
 
 	/*Remove Unavailable reflection measurements */
 

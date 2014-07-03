@@ -35,7 +35,7 @@ void reshapeMat3D(vector<double> src, Mat& dst);
 void jacobianH(cv::Vec3d X, Quaternion qbw, Feature feat, Mat& Hb, Mat& Hi );
 void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias );
 void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
-        Quaternion qbw, bool flagbias, View& meas, View& hmu, Mat& H, States& mu );
+        Quaternion qbw, View& meas, View& hmu, Mat& H, States& mu );
 vector<int> findIndex(const Mat& src, double val);
 void initG ( cv::Mat& G, int nf, double dt, bool flagbias );
 void initQ ( cv::Mat& Q, int nf, double Q0, bool flagbias );
