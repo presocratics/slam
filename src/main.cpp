@@ -577,6 +577,8 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
 {
     int nf;
     nf=mu.getNumFeatures();
+    meas.altitude = alt;							// altitude
+    hmu.altitude = -mu.X[2];
 
     H=cv::Mat::zeros(6*nf+1,mu.getRows(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -622,9 +624,7 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
 
 		jacobianH(mu.X, qbw, *feat, Hb, Hi);
 
-        meas.altitude = alt;							// altitude
         mi->set_views( match->source, feat->initial.pib, match->reflection );
-        hmu.altitude = -mu.X[2];
         hi->set_views( pibHat, pib0Hat, ppbHat );
 
         H.row(0).col(2).setTo(-1);
