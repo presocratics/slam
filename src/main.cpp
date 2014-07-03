@@ -638,11 +638,9 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
     } // end for loop
     if (flagbias==true)
     {
-        cv::Rect tempRect;
-        Mat tempMat1;
-        tempRect = Rect(6+3*nf, 0, 3, H.rows);
-        tempMat1 = H(tempRect);
-        tempMat1.setTo(0);
+        cv::Mat Hbias;
+        Hbias=cv::Mat::zeros(H.rows,3, CV_64F);
+        blockAssign(H, Hbias, cv::Point(6+3*nf,0));
     }
 
 	/*Remove Unavailable reflection measurements */
