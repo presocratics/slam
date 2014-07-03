@@ -44,24 +44,14 @@ int main()
     //    = [X    V  features  b  ]
 	mu.X[2] = -1 * sense.altitude;
 
-	Mat P = Mat::eye(6 + 3 * nf,6 + 3 * nf, CV_64F);
+    Mat P = Mat::eye(9 + 3*nf, 9 + 3*nf, CV_64F);
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0) );
-
 	// Inverse depth
-	for (int i = 0; i < nf; i++)
+	for (int i = 0; i<nf; i++)
 	{
 		P.at<double>(5 + 3*(i+1), 5 + 3*(i+1)) = P0;
 	}
-
-	if (flagBias == true)
-	{
-		Mat temp = P.clone();
-		P.release();
-		P = Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
-		copyMat(temp, P);
-		mu.setb(Vec3d(0,0,0));
-        blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6+3*nf,6+3*nf) );
-	}
+    mu.setb(Vec3d(0,0,0));
 
     double scaleW = 10;
     double scaleH = 10;
