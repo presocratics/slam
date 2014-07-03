@@ -73,8 +73,8 @@ int main()
         cv::Vec3d old_pos;
         Mat G, Q, R, K, H, F;	
         Mat kx, eeMat;
-        View meas(nf), hmu(nf);
-        View estimateError(nf);
+        View meas, hmu;
+        View estimateError;
         double altHat, alt_old;
         States f, kmh;
 
@@ -109,7 +109,14 @@ int main()
         calcK( K, H, P, R );
         updateP( P, K, H );
 
-        estimateError = meas-hmu;
+        estimateError.altitude=meas.altitude-hmu.altitude;
+        std::vector<Vfeat>::iterator mt=meas.features.begin();
+        std::vector<Vfeat>::const_iterator ht=hmu.features.begin();
+        for( ; mt!=meas.features.end(); ++mt, ++ht )
+        {
+            Vfeat vf( mt->current-ht->current, mt->initial-ht->initial, mt->reflection-ht->reflection );
+            estimateError.features.push_back(vf);
+        } 
         estimateError.toMat(eeMat);
         kx = K*eeMat;
 
@@ -589,8 +596,7 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
 
     matchIter match=matches.begin();
     Fiter feat=mu.features.begin();
-    std::vector<Vfeat>::iterator mi=meas.features.begin(), hi=hmu.features.begin();
-	for (int i=0; feat!=mu.features.end(); ++i, ++mi, ++hi, ++feat, ++match)
+	for (int i=0; feat!=mu.features.end(); ++i,  ++feat, ++match)
 	{
         cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
 
@@ -624,8 +630,8 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
 
 		jacobianH(mu.X, qbw, *feat, Hb, Hi);
 
-        mi->set_views( match->source, feat->initial.pib, match->reflection );
-        hi->set_views( pibHat, pib0Hat, ppbHat );
+        meas.features.push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
+        hmu.features.push_back(Vfeat( pibHat, pib0Hat, ppbHat ));
 
         H.row(0).col(2).setTo(-1);
         // For each feature
