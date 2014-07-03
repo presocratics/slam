@@ -109,14 +109,7 @@ int main()
         calcK( K, H, P, R );
         updateP( P, K, H );
 
-        estimateError.altitude=meas.altitude-hmu.altitude;
-        std::vector<Vfeat>::iterator mt=meas.features.begin();
-        std::vector<Vfeat>::const_iterator ht=hmu.features.begin();
-        for( ; mt!=meas.features.end(); ++mt, ++ht )
-        {
-            Vfeat vf( mt->current-ht->current, mt->initial-ht->initial, mt->reflection-ht->reflection );
-            estimateError.features.push_back(vf);
-        } 
+        subtract(meas,hmu,estimateError);
         estimateError.toMat(eeMat);
         kx = K*eeMat;
 

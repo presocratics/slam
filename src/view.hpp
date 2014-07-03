@@ -13,6 +13,12 @@ class Vfeat
     public:
         /* ====================  LIFECYCLE     ======================================= */
         Vfeat (){;}                             /* constructor */
+        Vfeat ( cv::Point2d cur, cv::Point2d init, cv::Point2d refl ) {
+            set_views( cur, init, refl );
+        }
+        Vfeat ( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl ) {
+            set_views( cur, init, refl );
+        }
 
         /* ====================  ACCESSORS     ======================================= */
 
@@ -52,22 +58,13 @@ class View
     public:
         /* ====================  LIFECYCLE     ======================================= */
         View (){;}                             /* constructor */
-        View ( int nf )
-        {
-            set_num_features(nf);
-        }
 
         /* ====================  ACCESSORS     ======================================= */
         void toMat(cv::Mat& R);
 
         /* ====================  MUTATORS      ======================================= */
-        void set_num_features( int nf )
-        {
-            features.resize(nf);
-        }
 
         /* ====================  OPERATORS     ======================================= */
-        View& operator-=(const View& rhs );
 
         /* ====================  DATA MEMBERS  ======================================= */
         double altitude;
@@ -84,10 +81,5 @@ class View
         /* ====================  DATA MEMBERS  ======================================= */
 
 }; /* -----  end of class View  ----- */
-inline View operator-(View lhs, const View& rhs)
-{
-    lhs-=rhs;
-    return lhs;
-}
-
+void subtract ( const View& lhs, const View& rhs, View& dst );
 #endif   /* ----- #ifndef view_INC  ----- */

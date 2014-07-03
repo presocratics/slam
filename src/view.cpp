@@ -1,21 +1,5 @@
 #include "view.hpp"
 
-    View&
-View::operator-= ( const View& rhs )
-{
-    this->altitude -= rhs.altitude;
-    std::vector<Vfeat>::iterator it=this->features.begin();
-    std::vector<Vfeat>::const_iterator rt=rhs.features.begin();
-    for( ; it!=this->features.end(); ++it, ++rt )
-    {
-        it->current-=rt->current;
-        it->initial-=rt->initial;
-        it->reflection-=rt->reflection;
-    } 
-    return *this;
-}		/* -----  end of method View::operator+=  ----- */
-
-
     void
 View::toMat ( cv::Mat& R )
 {
@@ -64,4 +48,19 @@ Vfeat::set_views ( cv::Point2d cur, cv::Point2d init, cv::Point2d refl )
     initial=init;
     return ;
 }		/* -----  end of method Vfeat::set_views  ----- */
+
+
+    void
+subtract ( const View& lhs, const View& rhs, View& dst )
+{
+    dst.altitude=lhs.altitude-rhs.altitude;
+    std::vector<Vfeat>::const_iterator lt=lhs.features.begin();
+    std::vector<Vfeat>::const_iterator rt=rhs.features.begin();
+    for( ; lt!=lhs.features.end(); ++lt, ++rt )
+    {
+        Vfeat vf( lt->current-rt->current, lt->initial-rt->initial, lt->reflection-rt->reflection );
+        dst.features.push_back(vf);
+    } 
+    return ;
+}		/* -----  end of method View::subtract  ----- */
 
