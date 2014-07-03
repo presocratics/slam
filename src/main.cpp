@@ -80,7 +80,7 @@ int main()
 
         f = mu.dynamics( sense, flagBias );           // Motion model
         f*=sense.dt;
-		jacobianMotionModel(mu, sense, F, flagBias );
+		jacobianMotionModel(mu, sense, F );
         mu+=f;
 
 		measurementModel( old_pos, sense.altitude, imgsense.matches, 
@@ -461,7 +461,7 @@ void jacobianH(cv::Vec3d X, Quaternion qbw, Feature feat, Mat& Hb, Mat& Hi )
 
 }
 
-void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
+void jacobianMotionModel(States mu, Sensors sense, Mat& F_out )
 {
     F_out = Mat::zeros(mu.getRows(), mu.getRows(), CV_64F);
     int nf;
@@ -625,12 +625,6 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
             
         blockAssign( H, Hfeat, Point(0,1+6*i) );
     } // end for loop
-    if (flagbias==true)
-    {
-        cv::Mat Hbias;
-        Hbias=cv::Mat::zeros(H.rows,3, CV_64F);
-        blockAssign(H, Hbias, cv::Point(6+3*nf,0));
-    }
 
 	/*Remove Unavailable reflection measurements */
 
