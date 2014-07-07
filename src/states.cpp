@@ -201,7 +201,7 @@ States::end_loop (  )
  *--------------------------------------------------------------------------------------
  */
     States
-States::dynamics ( Sensors s, bool flagbias )
+States::dynamics ( Sensors s )
 {
     States predicted_state;
     Matx33d A;
@@ -237,11 +237,8 @@ States::dynamics ( Sensors s, bool flagbias )
         );
         predicted_state.addFeature(fi);
     }
-    if( flagbias==true ) 
-    {
-        V-=b;
-        b=cv::Vec3d(0,0,0);
-    }
+    V-=b;
+    b=cv::Vec3d(0,0,0);
     return predicted_state;
 }		/* -----  end of method States::dynamics  ----- */
 

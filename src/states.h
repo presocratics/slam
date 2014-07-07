@@ -52,7 +52,7 @@ class States{
         void addFeature(Feature f);
         void setb(Vec3d bias);
         void add(States a);
-        States dynamics( Sensors s, bool flagbias );
+        States dynamics( Sensors s );
         //Operator
         States& operator*= ( const double& rhs );
         States& operator+= ( const States& rhs );
