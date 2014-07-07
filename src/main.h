@@ -21,6 +21,7 @@
 
 #define QBIAS 0.002            /*  */
 #define P0 1            /*  */
+#define DMIN 0.3            /*  */
 using namespace cv;
 
 typedef std::map<int,Feature> featMap;

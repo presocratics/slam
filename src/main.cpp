@@ -14,7 +14,6 @@ int main()
 {
     // Configuration
 	const int stepEnd = 2640;
-	const double d_min = 0.3;
 
     // Initial variables
 	// Covariance Initialization
@@ -91,7 +90,7 @@ int main()
         initR( R, nf, R0 );
 
 		// EKF measurement update
-        resizeP(P, nf);
+        resizeP( P, nf );
         calcP( P, F, G, Q );
         calcK( K, H, P, R );
         updateP( P, K, H );
@@ -114,7 +113,7 @@ int main()
     for( featIter fi=mu.feats.begin(); fi!=mu.feats.end(); ++fi )
     {
         if( fi->second.position.body[2]>1./10 &&
-            fi->second.position.body[2]<1/d_min )
+            fi->second.position.body[2]<1/DMIN )
         {
             circle( rtplot, Point(fi->second.position.world[1] * scaleW + width/2,
                         height/2 - (fi->second.position.world[0] * scaleH + height/4  )),
@@ -254,7 +253,7 @@ initR ( cv::Mat& R, int nf, double R0 )
     void
 initQ ( cv::Mat& Q, int nf, double Q0 )
 {
-    Q = Q0*Mat::eye(6+3*nf+3, 6+3*nf+3, CV_64F);
+    Q = Q0*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
     blockAssign(Q, QBIAS*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
     return;
 }		/* -----  end of function initq  ----- */
@@ -267,7 +266,7 @@ initQ ( cv::Mat& Q, int nf, double Q0 )
     void
 initG ( cv::Mat& G, int nf, double dt )
 {
-    G = dt*Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
+    G = dt*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
     G.at<double>(0, 0) = 0.5*dt*dt;
     G.at<double>(1, 1) = 0.5*dt*dt;
     G.at<double>(2, 2) = 0.5*dt*dt;
