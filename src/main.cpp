@@ -81,7 +81,7 @@ int main()
 
         f = mu.dynamics( sense );           // Motion model
         f*=sense.dt;
-		jacobianMotionModel(mu, sense, F, flagBias );
+		jacobianMotionModel(mu, sense, F );
         mu+=f;
 
 		measurementModel( old_pos, sense.altitude, imgsense.matches, 
@@ -454,7 +454,7 @@ void jacobianH(cv::Vec3d X, Quaternion qbw, Feature feat, Mat& Hb, Mat& Hi )
 
 }
 
-void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
+void jacobianMotionModel(States mu, Sensors sense, Mat& F_out )
 {
     F_out = Mat::zeros(mu.getRows(), mu.getRows(), CV_64F);
     int nf;
@@ -543,15 +543,11 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out, bool flagbias )
     blockAssign(F_out, Fib, Point(0,Fb.rows));
     blockAssign(F_out, Fi,Point(Fib.cols,Fb.rows));
     F_out = dt*F_out + temp1;
-    if( flagbias==true )
-    {
-        F_out.at<double>(6, 6) = 1;
-        F_out.at<double>(7, 7) = 1;
-        F_out.at<double>(8, 8) = 1;
-        F_out.at<double>(3, 6) = -1*dt;
-        F_out.at<double>(4, 7) = -1 * dt;
-        F_out.at<double>(5, 8) = -1 * dt;
-    }
+
+    blockAssign(F_out, cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
+    F_out.at<double>(3, 6) = -1*dt;
+    F_out.at<double>(4, 7) = -1 * dt;
+    F_out.at<double>(5, 8) = -1 * dt;
 }
 
 /************************************************************************************************
