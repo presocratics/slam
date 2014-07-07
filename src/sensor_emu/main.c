@@ -26,7 +26,7 @@
 #include "ourerr.h"
 #define MAXLINE 128            /*  */
 typedef struct imudata_t {
-    int t;
+    double t;
     double x,y,z;
 } imudata;
 
@@ -65,16 +65,16 @@ main ( int argc, char *argv[] )
         err_sys("fgets");
     if( (fgets( line, sz, fp ))==NULL ) // Get first line
         err_sys("fgets");
-    sscanf( line, "%d, %lf, %lf, %lf", &next.t, &next.x, &next.y, &next.z );
+    sscanf( line, "%lf", &next.t );
     while( fgets( line, sz, fp )!=NULL )
     {
         fflush(stdout);
         cur = next;
-        printf("%lf,%lf,%lf\n", cur.x, cur.y, cur.z);
-        sscanf( line, "%d, %lf, %lf, %lf", &next.t, &next.x, &next.y, &next.z );
+        printf("%lf\n", cur.t );
+        sscanf( line, "%lf", &next.t );
         del = next.t-cur.t;
         req.tv_sec=0;
-        req.tv_nsec=1000*del; /* convert microseconds to nanoseconds */
+        req.tv_nsec=(int)1e9*next.t; /* convert microseconds to nanoseconds */
         if( nanosleep(&req,&rem)==-1 )
             err_sys("nanosleep");
     }
