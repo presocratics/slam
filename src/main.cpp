@@ -13,7 +13,6 @@ using std::endl;
 int main()
 {
     // Configuration
-	const int nf = 5;                            /* number of features */
 	const int stepEnd = 2640;
 	const double d_min = 0.3;
 
@@ -42,7 +41,7 @@ int main()
     //    = [X    V  features  b  ]
 	mu.X[2] = -1 * sense.altitude;
 
-    Mat P = Mat::eye(9+3*nf, 9+3*nf, CV_64F);
+    Mat P = Mat::eye(9, 9, CV_64F);
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0) );
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6) );
 	// Inverse depth
