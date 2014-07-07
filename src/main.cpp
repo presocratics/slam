@@ -19,7 +19,6 @@ int main()
 
     // Initial variables
 	// Covariance Initialization
-	double P0 = 1;					// 1 for simulation
 	double Q0 = 1;				// 100 for simulation & 1 for experiments
 	double R0 = 10;					// 10 for simulation & 1 for experiments
 
@@ -47,10 +46,6 @@ int main()
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0) );
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6) );
 	// Inverse depth
-	for( int i = 0; i<nf; ++i )
-	{
-		P.at<double>( 8+3*(i+1), 8+3*(i+1) ) = P0;
-	}
     mu.setb(Vec3d(0,0,0));
 
     double scaleW = 10;
@@ -97,6 +92,7 @@ int main()
         initR( R, nf, R0 );
 
 		// EKF measurement update
+        resizeP(P, nf);
         calcP( P, F, G, Q );
         calcK( K, H, P, R );
         updateP( P, K, H );
@@ -138,6 +134,35 @@ int main()
 
 /*************************** FUNCTIONS ********************************************/
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  resizeP
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+resizeP ( cv::Mat& P, int nf )
+{
+    int nf_old;
+    // Determine previous nf
+    nf_old=(P.rows-9)/3;
+    if( nf<nf_old ) // Select a smaller ROI
+    {
+        P=P( cv::Rect(0,0, 9+3*nf, 9+3*nf) );
+    }
+    else if( nf>nf_old ) // Increase size and initialize new features.
+    {
+        cv::Mat bigP;
+        bigP = cv::Mat::zeros(9+3*nf, 9+3*nf, CV_64F);
+        blockAssign(bigP, P, cv::Point(0,0));
+        for( int i=9+3*nf_old; i<9+3*nf; i+=3 )
+        {
+            bigP.at<double>( i+2, i+2 ) = P0;
+        }
+        P=bigP;
+    }
+    return;
+}		/* -----  end of function resizeP  ----- */
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  updateP
