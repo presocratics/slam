@@ -8,7 +8,6 @@ project (slam)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
 # set build directory
 set(CMAKE_CURRENT_BINARY_DIR ${PROJECT_SOURCE_DIR}/build)
 
@@ -29,7 +28,7 @@ set(CMAKE_CURRENT_BINARY_DIR ${PROJECT_SOURCE_DIR}/build)
 # -------------------------------------------------------------------- #
 
 	SET ( APPLICATION_NAME slam )
-    FILE( GLOB_RECURSE PROJECT_SOURCES src/*.cpp )
+    FILE( GLOB_RECURSE PROJECT_SOURCES src/slam/*.cpp )
 
 # -------------------------------------------------------------------- #
 # Change with caution!

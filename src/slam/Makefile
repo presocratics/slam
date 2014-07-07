@@ -3,16 +3,15 @@ objects = feature.o featureIO.o \
 		  ourerr.o Quaternion.o\
 		  Sensors.o states.o \
 		  view.o 
-VPATH = src/slam
 CXXFLAGS= -g
 CXXFLAGS += $(shell pkg-config --cflags opencv)
 LIBS += $(shell pkg-config --libs opencv)
 
 slam: $(objects)
-	$(CXX) -o bin/slam $(objects) $(CXXFLAGS) $(LIBS)
+	$(CXX) -o ../../bin/slam $(objects) $(CXXFLAGS) $(LIBS)
 %.o: %cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<  $(LIBS)
 .PHONY: clean
 clean:
-	rm -f bin/slam *.o
+	rm -f ../../bin/slam *.o
 
