@@ -85,7 +85,7 @@ int main()
         mu+=f;
 
 		measurementModel( old_pos, sense.altitude, imgsense.matches, 
-                sense.quaternion, flagBias, meas, hmu, H, mu );
+                sense.quaternion, meas, hmu, H, mu );
 
 		altHat = meas.altitude;
 
@@ -555,7 +555,7 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out )
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
-        Quaternion qbw, bool flagbias, View& meas, View& hmu, Mat& H, States& mu )
+        Quaternion qbw, View& meas, View& hmu, Mat& H, States& mu )
 {
     int nf;
     nf=mu.getNumFeatures();
