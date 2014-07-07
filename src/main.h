@@ -18,6 +18,8 @@
 #include "view.hpp"
 #include "imagesensor.hpp"
 #include "config.hpp"
+
+#define QBIAS 0.002            /*  */
 using namespace cv;
 
 typedef std::map<int,Feature> featMap;
@@ -37,8 +39,8 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out );
 void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
         Quaternion qbw, View& meas, View& hmu, Mat& H, States& mu );
 vector<int> findIndex(const Mat& src, double val);
-void initG ( cv::Mat& G, int nf, double dt, bool flagbias );
-void initQ ( cv::Mat& Q, int nf, double Q0, bool flagbias );
+void initG ( cv::Mat& G, int nf, double dt );
+void initQ ( cv::Mat& Q, int nf, double Q0 );
 void initR ( cv::Mat& R, int nf, double R0 );
 void calcP ( cv::Mat& P, cv::Mat F, cv::Mat G, cv::Mat Q );
 void calcK ( cv::Mat& K, cv::Mat H, cv::Mat P, cv::Mat R );

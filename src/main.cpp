@@ -94,7 +94,7 @@ int main()
         {
             Q0 = 20;
         }
-        initQ( Q, nf, Q0, flagBias );
+        initQ( Q, nf, Q0 );
         initR( R, nf, R0 );
 
 		// EKF measurement update
@@ -229,15 +229,10 @@ initR ( cv::Mat& R, int nf, double R0 )
  * =====================================================================================
  */
     void
-initQ ( cv::Mat& Q, int nf, double Q0, bool flagbias )
+initQ ( cv::Mat& Q, int nf, double Q0 )
 {
     Q = Q0*Mat::eye(6+3*nf+3, 6+3*nf+3, CV_64F);
-    if( flagbias==true )
-    {
-        Q.at<double>(6, 6) = 0.002;
-        Q.at<double>(7, 7) = 0.002;
-        Q.at<double>(8, 8) = 0.002;
-    }
+    blockAssign(Q, QBIAS*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
     return;
 }		/* -----  end of function initq  ----- */
 /* 
