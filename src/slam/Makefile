@@ -13,5 +13,5 @@ slam: $(objects)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<  $(LIBS)
 .PHONY: clean
 clean:
-	rm -f ../../bin/slam *.o
+	rm -f *.o
 
