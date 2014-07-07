@@ -39,11 +39,11 @@ States::States ( cv::Mat kx )
     setV( cv::Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) );
     for( int i=0; i<nf; ++i )
     {
-        Feature ft( cv::Vec3d( kx.at<double>(6+3*i,0), kx.at<double>(7+3*i,0), kx.at<double>(8+3*i,0) ),
+        Feature ft( cv::Vec3d( kx.at<double>(9+3*i,0), kx.at<double>(10+3*i,0), kx.at<double>(11+3*i,0) ),
                 cv::Scalar(0,0,0), 0 );
         addFeature(ft);
     }
-    setb( cv::Vec3d( kx.at<double>(6+3*nf,0), kx.at<double>(7+3*nf,0), kx.at<double>(8+3*nf,0) ) );
+    setb( cv::Vec3d( kx.at<double>(6,0), kx.at<double>(7,0), kx.at<double>(8,0) ) );
     return ;
 }		/* -----  end of method States::States  ----- */
 
