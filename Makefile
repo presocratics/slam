@@ -1,3 +1,4 @@
+all: slam sensor-emu multitap
 slam:
 	$(MAKE) -C src/slam $(MFLAGS)
 sensor-emu:
