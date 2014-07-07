@@ -19,6 +19,7 @@
  *          \n (end of timestep denoted by newline)
  *
  *          Output to STDOUT:
+ *          X,V
  *          ID1,X,Y,Z
  *          ...
  *          IDN,X,Y,Z
@@ -146,6 +147,13 @@ int main( int argc, char **argv )
 		if (i%300 == 0) cout << i << endl;
 
         // Real time plotting.
+        printf("%lf,%lf,%lf,%lf,%lf,%lf\n", mu.X[0], mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
+        for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
+        {
+            printf("%d,%lf,%lf,%lf\n", fi->ID, fi->position.world[0],
+                    fi->position.world[1], fi->position.world[2] );
+        }
+        printf("\n");
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
         mu.end_loop();
