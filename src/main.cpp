@@ -15,7 +15,6 @@ int main()
     // Configuration
 	const int nf = 5;                            /* number of features */
 	const int stepEnd = 2640;
-    const bool flagBias=true;
 	const double d_min = 0.3;
 
     // Initial variables
