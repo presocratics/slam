@@ -21,7 +21,7 @@ int main()
 	double R0 = 10;					// 10 for simulation & 1 for experiments
 
     // Declarations
-    ImageSensor imgsense("../data/bodyHist2.hex", true );
+    ImageSensor imgsense(5 ,"../data/bodyHist2.hex", true );
     Sensors sense;
     States mu;
 
