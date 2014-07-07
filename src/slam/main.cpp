@@ -1,4 +1,42 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  main.cpp
+ *
+ *    Description:  SLAM algorithm for reflection code.
+ *          Input should be files/FIFO in the following format:
+ *          SENSORS:
+ *                  altitude: float
+ *              acceleration: float,float,float
+ *                        dt: float
+ *                quaternion: float,float,float,float
+ *          angular velocity: float,float,float
+ *
+ *          IMAGE:
+ *          ID1,X1,Y1,X2,Y2
+ *          ...
+ *          IDN,X1,Y1,X2,Y2
+ *          \n (end of timestep denoted by newline)
+ *
+ *          Output to STDOUT:
+ *          ID1,X,Y,Z
+ *          ...
+ *          IDN,X,Y,Z
+ *          \n (end of timestep denoted by newline)
+ *
+ *        Version:  1.0
+ *        Created:  07/07/2014 05:45:59 PM
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Martin Miller (MHM), miller7@illinois.edu
+ *   Organization:  Aerospace Robotics and Controls Lab (ARC)
+ *
+ * =====================================================================================
+ */
+
 #include "main.h"
+
 
 
 //#include "ourerr.hpp"
@@ -8,10 +46,13 @@ using std::cout;
 using std::cerr; 
 using std::endl;
 
-
-
-int main()
+int main( int argc, char **argv )
 {
+    if( argc<7 )
+    {
+        printf("Usage: %s body altitude acceleration dt quaternion angular-velocity\n", argv[0] );
+        exit(EXIT_FAILURE);
+    }
     // Configuration
 	const int stepEnd = 2640;
 
@@ -21,16 +62,16 @@ int main()
 	double R0 = 10;					// 10 for simulation & 1 for experiments
 
     // Declarations
-    ImageSensor imgsense(5 ,"../data/bodyHist2.hex", true );
+    ImageSensor imgsense(5 ,argv[1], true );
     Sensors sense;
     States mu;
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
-    sense.set_acceleration( "../data/aHistF.hex", true );
-    sense.set_altitude( "../data/altHist.hex", true );
-    sense.set_dt( "../data/dtHist.hex", true );
-    sense.set_quaternion( "../data/qbwHistF.hex", true );
-    sense.set_angular_velocity( "../data/wHistF.hex", true );
+    sense.set_altitude( argv[2], true );
+    sense.set_acceleration( argv[3], true );
+    sense.set_dt( argv[4], true );
+    sense.set_quaternion( argv[5], true );
+    sense.set_angular_velocity( argv[6], true );
     sense.update();
 
 	clock_t startTime = clock();
