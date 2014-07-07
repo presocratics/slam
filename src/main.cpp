@@ -89,7 +89,7 @@ int main()
 
 		altHat = meas.altitude;
 
-        initG( G, nf, sense.dt, flagBias);
+        initG( G, nf, sense.dt );
         if( i>0 && altHat-alt_old<-0.6 )
         {
             Q0 = 20;
@@ -247,7 +247,7 @@ initQ ( cv::Mat& Q, int nf, double Q0, bool flagbias )
  * =====================================================================================
  */
     void
-initG ( cv::Mat& G, int nf, double dt, bool flagbias )
+initG ( cv::Mat& G, int nf, double dt )
 {
     G = dt*Mat::eye(6 + 3 * nf + 3, 6 + 3 * nf + 3, CV_64F);
     G.at<double>(0, 0) = 0.5*dt*dt;
