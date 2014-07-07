@@ -1,3 +1,4 @@
+*.o
 hb/
 data/
 output/
