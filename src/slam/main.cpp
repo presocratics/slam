@@ -676,7 +676,7 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
 
         H.row(0).col(2).setTo(-1);
         // For each feature
-        Mat Hfeat = Mat::zeros(6,24,CV_64F);
+        Mat Hfeat = Mat::zeros(6,mu.getRows(),CV_64F);
         blockAssign( Hfeat, Mat::eye(2,2,CV_64F), Point(9+3*i,0) );
         blockAssign( Hfeat, Hb, Point(0,2) );
         blockAssign( Hfeat, Hi, Point(9+3*i,2) );

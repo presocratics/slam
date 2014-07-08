@@ -246,7 +246,7 @@ States::dynamics ( Sensors s )
     int
 States::getRows ( )
 {
-    return 6+3*getNumFeatures()+3 ;
+    return 9+3*getNumFeatures() ;
 }		/* -----  end of method States::getRows  ----- */
 
 
