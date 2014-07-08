@@ -31,13 +31,14 @@
     void
 ImageSensor::get_projections ( )
 {
+    matches.clear();
+    projection pj;
     char str[20];
     strcpy( str, (isHex) ? "%d,%lx,%lx,%lx,%lx" : "%d,%lf,%lf,%lf,%lf" );
-    std::vector<projection>::iterator it=matches.begin();
-    for( ; it!=matches.end(); ++it )
+    while( get_val( fp, "image", str, &pj.id,&pj.source.x, &pj.source.y, 
+                &pj.reflection.x, &pj.reflection.y )!=-1 )
     {
-        get_val( fp, "image", str, &it->id,&it->source.x, &it->source.y,
-                &it->reflection.x, &it->reflection.y );
+        matches.push_back(pj);
     }
     return ;
 }		/* -----  end of method imageSensor::get_projections  ----- */

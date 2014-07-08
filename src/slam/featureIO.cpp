@@ -78,17 +78,18 @@ FeatureIO::get_projections ( )
  *
  *--------------------------------------------------------------------------------------
  */
-    void
+    int
 FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
 {
+    int rv;
     char *line = new char[MAXLINE];
     va_list ap;
     va_start(ap,fmt);
 
     if( (fgets(line,MAXLINE,fp ))==NULL )
         err_sys("fgets %s", str);
-    vsscanf( line, fmt, ap );
+    rv=vsscanf( line, fmt, ap );
     va_end(ap);
 
-    return ;
+    return rv ;
 }		/* -----  end of method ImageSensor::get_val  ----- */

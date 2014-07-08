@@ -43,11 +43,8 @@ class FeatureIO
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        FeatureIO(){
-            matches.resize(5);
-        }                             /* constructor */
-        FeatureIO (int nm, const char *fn, bool ih) {
-            matches.resize(nm);
+        FeatureIO(){ }                             /* constructor */
+        FeatureIO ( const char *fn, bool ih) {
             set_file( fn, ih );
         }/* constructor */
 
@@ -69,7 +66,7 @@ class FeatureIO
 
         /* ====================  METHODS       ======================================= */
         FILE* open_source ( const char *fn );
-        void get_val ( FILE* fp, const char *str, const char *fmt, ... );
+        int get_val ( FILE* fp, const char *str, const char *fmt, ... );
 
         /* ====================  DATA MEMBERS  ======================================= */
         FILE *fp;

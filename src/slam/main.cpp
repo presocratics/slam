@@ -63,7 +63,7 @@ int main( int argc, char **argv )
 	double R0 = 10;					// 10 for simulation & 1 for experiments
 
     // Declarations
-    ImageSensor imgsense(5 ,argv[1], true );
+    ImageSensor imgsense( argv[1], true );
     Sensors sense;
     States mu;
 
