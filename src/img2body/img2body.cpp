@@ -3,7 +3,8 @@
  *
  *       Filename:  img2body.cpp
  *
- *    Description:  takes in img frame coords and outputs body frame coords
+ *    Description:  Reads in img frame coords from STDIN and writes body frame
+ *    coords to STDOUT.
  *
  *        Version:  1.0
  *        Created:  06/24/2014 03:38:49 PM
@@ -43,6 +44,13 @@
     int
 main ( int argc, char *argv[] )
 {
+    if( argc>1 )
+    {
+        printf("Usage: %s\n\
+Reads image frame coordinates from STDIN in format:\n\
+    id,x1,y1,x2,y2\n", argv[0] );
+        exit(EXIT_FAILURE);
+    }
     char* line;
     ssize_t rs;
 
@@ -61,10 +69,10 @@ main ( int argc, char *argv[] )
         exit (EXIT_FAILURE);
     }
 
-        while( fgets( line, MAXLINE, stdin )!=NULL )
+    while( fgets( line, MAXLINE, stdin )!=NULL )
     {
-    int ref, ID;
-    float xp, yp, xpp, ypp;
+        int ID;
+        float xp, yp, xpp, ypp;
 
         if( line[0] == '\n' )
         {
@@ -72,7 +80,7 @@ main ( int argc, char *argv[] )
 
             continue;
         }
-        sscanf( line, "%d, %d,%f,%f,%f,%f", &ref, &ID, &xp, &yp, &xpp, &ypp );
+        sscanf( line, "%d,%f,%f,%f,%f", &ID, &xp, &yp, &xpp, &ypp );
 
         /* calculate body frame coordinates */
         float p1 = (xp-u0)/fu;
@@ -91,7 +99,7 @@ main ( int argc, char *argv[] )
         cv::Matx31d Yic1 = cv::Matx31d( Xs1, Ys1, Zs1);
         cv::Mat Yib1 = (cv::Mat)Rc2b * (cv::Mat)Yic1;
         
-        printf("%d, %d,%f,%f,%f,%f,%f\n",ref, ID,Yib.at<double>(1,0)/ Yib.at<double>(0,0), Yib.at<double>(2,0)/ Yib.at<double>(0,0) ,Yib1.at<double>(1,0)/ Yib1.at<double>(0,0), Yib1.at<double>(2,0)/ Yib1.at<double>(0,0) );
+        printf("%d,%f,%f,%f,%f,%f\n",ID,Yib.at<double>(1,0)/ Yib.at<double>(0,0), Yib.at<double>(2,0)/ Yib.at<double>(0,0) ,Yib1.at<double>(1,0)/ Yib1.at<double>(0,0), Yib1.at<double>(2,0)/ Yib1.at<double>(0,0) );
         fflush(stdout);
 
     }
