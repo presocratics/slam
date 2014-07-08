@@ -1,4 +1,4 @@
-all: slam sensor-emu multitap img2body
+all: slam sensor-emu multitap img2body lpf euler2qbw
 lpf:
 	$(MAKE) -C src/lpf $(MFLAGS)
 slam:
