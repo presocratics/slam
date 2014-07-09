@@ -25,7 +25,6 @@
 int main( int argc, char **argv )
 {
     char *line;
-    ssize_t rs;
     double x, y, z;
     double xp, yp, zp;
     double alpha;
@@ -33,6 +32,7 @@ int main( int argc, char **argv )
     if( argc!=2 )
     {
         printf("Usage: %s alpha\n", argv[0] );
+        printf("y=(alpha*x[n]+(1-alpha)*x[n-1]\n");
         exit(EXIT_FAILURE);
     }
     sscanf( argv[1], "%lf", &alpha );

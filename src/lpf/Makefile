@@ -1,5 +1,6 @@
 objects = lpf.o 
-CXXFLAGS= -g
+CXXFLAGS = -Wall -Werror
+CXXFLAGS += -g
 
 lpf: $(objects)
 	$(CXX) -o ../../bin/lpf $(objects) $(CXXFLAGS) $(LIBS)

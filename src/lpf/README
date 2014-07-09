@@ -1,0 +1,7 @@
+lpf
+===
+Implements a low pass filter of the form:
+y=alpha*x[n]+(1-alpha)*x[n-1]
+
+Reads input from STDIN in the form:
+x,y,z
