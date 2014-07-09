@@ -54,10 +54,10 @@ Reads image frame coordinates from STDIN in format:\n\
     char* line;
     ssize_t rs;
 
-    float u0 = 314.27445;
-    float v0 = 219.26341;
-    float fu = 772.09201;
-    float fv = 768.33574;
+    const double u0 = 314.27445;
+    const double v0 = 219.26341;
+    const double fu = 772.09201;
+    const double fv = 768.33574;
 
     Quaternion qbc = Quaternion(cv::Vec4d(0.50798 , 0.50067, 0.49636, -0.49489) );
     cv::Matx33d Rb2c = qbc.rotation();
@@ -72,34 +72,36 @@ Reads image frame coordinates from STDIN in format:\n\
     while( fgets( line, MAXLINE, stdin )!=NULL )
     {
         int ID;
-        float xp, yp, xpp, ypp;
+        double xp, yp, xpp, ypp;
+        double p1, p2,Zs, Xs, Ys;
+        cv::Matx31d Yic, Yic1;
+        cv::Mat Yib, Yib1;
 
         if( line[0] == '\n' )
         {
             printf("%s",line);
-
             continue;
         }
-        sscanf( line, "%d,%f,%f,%f,%f", &ID, &xp, &yp, &xpp, &ypp );
+        sscanf( line, "%d,%lf,%lf,%lf,%lf", &ID, &xp, &yp, &xpp, &ypp );
 
         /* calculate body frame coordinates */
-        float p1 = (xp-u0)/fu;
-        float p2 = (yp-v0)/fv;
-        float Zs = 1/sqrt(pow(p1,2)+pow(p2,2)+1);
-        float Xs = p1*Zs;
-        float Ys = p2*Zs;
-        cv::Matx31d Yic = cv::Matx31d( Xs, Ys, Zs);
-        cv::Mat Yib = (cv::Mat)Rc2b * (cv::Mat)Yic;
+        p1 = (xp-u0)/fu;
+        p2 = (yp-v0)/fv;
+        Zs = 1/sqrt(pow(p1,2)+pow(p2,2)+1);
+        Xs = p1*Zs;
+        Ys = p2*Zs;
+        Yic = cv::Matx31d( Xs, Ys, Zs);
+        Yib = (cv::Mat)Rc2b * (cv::Mat)Yic;
 
-        float p11 = (xpp-u0)/fu;
-        float p21 = (ypp-v0)/fv;
-        float Zs1 = 1/sqrt(pow(p11,2)+pow(p21,2)+1);
-        float Xs1 = p11*Zs1;
-        float Ys1 = p21*Zs1;
-        cv::Matx31d Yic1 = cv::Matx31d( Xs1, Ys1, Zs1);
-        cv::Mat Yib1 = (cv::Mat)Rc2b * (cv::Mat)Yic1;
+        double p11 = (xpp-u0)/fu;
+        double p21 = (ypp-v0)/fv;
+        double Zs1 = 1/sqrt(pow(p11,2)+pow(p21,2)+1);
+        double Xs1 = p11*Zs1;
+        double Ys1 = p21*Zs1;
+        Yic1 = cv::Matx31d( Xs1, Ys1, Zs1);
+        Yib1 = (cv::Mat)Rc2b * (cv::Mat)Yic1;
         
-        printf("%d,%f,%f,%f,%f,%f\n",ID,Yib.at<double>(1,0)/ Yib.at<double>(0,0), Yib.at<double>(2,0)/ Yib.at<double>(0,0) ,Yib1.at<double>(1,0)/ Yib1.at<double>(0,0), Yib1.at<double>(2,0)/ Yib1.at<double>(0,0) );
+        printf("%d,%.17lf,%.17lf,%.17lf,%.17lf\n",ID,Yib.at<double>(1,0)/ Yib.at<double>(0,0), Yib.at<double>(2,0)/ Yib.at<double>(0,0) ,Yib1.at<double>(1,0)/ Yib1.at<double>(0,0), Yib1.at<double>(2,0)/ Yib1.at<double>(0,0) );
         fflush(stdout);
 
     }
