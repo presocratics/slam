@@ -3,7 +3,8 @@ objects = feature.o featureIO.o \
 		  ourerr.o Quaternion.o\
 		  Sensors.o states.o \
 		  view.o 
-CXXFLAGS= -g
+CXXFLAGS = -Wall -Werror
+CXXFLAGS += -g
 CXXFLAGS += $(shell pkg-config --cflags opencv)
 LIBS += $(shell pkg-config --libs opencv)
 

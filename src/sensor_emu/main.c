@@ -49,6 +49,7 @@ main ( int argc, char *argv[] )
     
     int sz = MAXLINE-1;
 
+    // Use tr to ensure consistent output.
     if( (fout=popen("tr -d '[:blank:]'", "w"))==NULL )
         err_sys("popen");
     if( argc!=2 )

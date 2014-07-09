@@ -45,7 +45,6 @@ Sensors::Mat2Vec4d ( cv::Mat src, int timestep )
 Sensors::open_source ( const char *fn )
 {
     FILE *fp;
-    char line[MAXLINE];
     if( (fp=fopen(fn,"r"))==NULL )
         err_sys("fopen altitude");
     return fp ;

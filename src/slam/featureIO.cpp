@@ -31,7 +31,6 @@ FeatureIO::update ( )
 FeatureIO::open_source ( const char *fn )
 {
     FILE *fp;
-    char line[MAXLINE];
     if( (fp=fopen(fn,"r"))==NULL )
         err_sys("fopen body");
     return fp ;

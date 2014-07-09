@@ -95,15 +95,6 @@ void States::setV(Vec3d vel)
     V = vel;
 }
 
-void States::setFeature(int i, Feature f)
-{
-    if(features.size() > i)
-    {
-        std::swap(features[features.size()-1], features[i]);
-        features.pop_back();
-    }
-}
-
 void States::addFeature(Feature f)
 {
     features.push_back(f);
