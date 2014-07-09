@@ -1,0 +1,15 @@
+multitap
+========
+A tool for writing asynchronous inputs to multiple outputs.
+
+Similar to tee, multitap reads input from STDIN and writes to the output files
+provided on the command line. However, multitap differs by using non-blocking
+I/O. Output files are only opened for writing when the file is already opened
+for reading. If a file is not opened for reading when multitap is ready to
+write, it is skipped until the next iteration.
+
+This non-blocking behavior is useful for distributing sensor readings to
+applications that run at different rates. Each client application can open its
+respective FIFO for reading when it is ready for the latest sensor data,
+ignoring any intermediate values.
+
