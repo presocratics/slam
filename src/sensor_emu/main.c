@@ -35,7 +35,7 @@
     int
 main ( int argc, char *argv[] )
 {
-    FILE *fp;
+    FILE *fp, *fout;
     char *line;
     int del;
     struct timespec req, rem;
@@ -48,8 +48,9 @@ main ( int argc, char *argv[] )
     }
     
     int sz = MAXLINE-1;
-    //cur.t=9;
 
+    if( (fout=popen("tr -d '[:blank:]'", "w"))==NULL )
+        err_sys("popen");
     if( argc!=2 )
     {
         printf("Usage: %s gyrodata\n", argv[0]);
@@ -65,15 +66,16 @@ main ( int argc, char *argv[] )
     while( fgets( line, sz, fp )!=NULL )
     {
         cur = next;
-        printf("%s", line );
+        fprintf( fout, "%s", line );
         sscanf( line, "%d", &next );
         del = next-cur;
         req.tv_sec=0;
         req.tv_nsec=(int)1e3*del; /* convert microseconds to nanoseconds */
         if( nanosleep(&req,&rem)==-1 )
             err_sys("nanosleep");
-        fflush(stdout);
+        fflush(fout);
     }
+    pclose(fout);
     fclose(fp);
     free (line);
     line	= NULL;
