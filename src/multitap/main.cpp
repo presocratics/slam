@@ -41,9 +41,6 @@ main ( int argc, char *argv[] )
 {
     char buf[BUFSIZE];
     int *fd;
-    int nfds;
-    fd_set writefds;
-    struct timeval tv;
     ssize_t rs;
     if( argc<2 )
     {

@@ -1,5 +1,6 @@
 objects = main.o ourerr.o
-CXXFLAGS= -g
+CXXFLAGS = -Wall -Werror
+CXXFLAGS += -g
 
 multitap: $(objects)
 	$(CXX) -o ../../bin/multitap $(objects) $(CXXFLAGS) $(LIBS)
