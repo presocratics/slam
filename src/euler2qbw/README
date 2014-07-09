@@ -1,0 +1,9 @@
+euler2qbw
+=========
+Usage
+=====
+Reads euler angles in radians from STDIN and writes Quaternions to STDOUT.
+
+Testing
+=======
+Test this program against matlab generated output by running test.sh
