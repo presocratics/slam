@@ -1,0 +1,16 @@
+img2body
+========
+Reads source and reflection image frame coordinates from STDIN and writes
+normalized body frame coordinates. z-coordinate is omitted since it is 1 after
+normalization.
+
+Input should be of the form:
+id,x1,y1,x2,y2
+
+and output will be of the form:
+id,x1,y1,x2,y2
+
+Testing
+======
+test.sh compares the output of img2body using pixels.txt as input to the
+Matout.txt file
