@@ -1,5 +1,6 @@
 objects = img2body.o Quaternion.o
-CXXFLAGS= -g
+CXXFLAGS = -Wall -Werror
+CXXFLAGS += -g
 CXXFLAGS += $(shell pkg-config --cflags opencv)
 LIBS += $(shell pkg-config --libs opencv)
 

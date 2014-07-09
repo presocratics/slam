@@ -52,7 +52,6 @@ Reads image frame coordinates from STDIN in format:\n\
         exit(EXIT_FAILURE);
     }
     char* line;
-    ssize_t rs;
 
     const double u0 = 314.27445;
     const double v0 = 219.26341;
