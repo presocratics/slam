@@ -1,5 +1,6 @@
 objects = euler2qbw.o
-CXXFLAGS= -g
+CXXFLAGS = -Wall -Werror
+CXXFLAGS += -g
 
 euler2qbw: $(objects)
 	$(CXX) -o ../../bin/euler2qbw $(objects) $(CXXFLAGS) $(LIBS)

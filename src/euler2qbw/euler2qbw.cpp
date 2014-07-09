@@ -46,7 +46,6 @@ int main( int argc, char **argv )
 {
     char *line;
     double *quaternion;
-    ssize_t rs;
 
     if( argc!=1 )
     {
