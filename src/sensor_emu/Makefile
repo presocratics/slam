@@ -1,5 +1,6 @@
 objects = main.o ourerr.o
-CXXFLAGS= -g
+CXXFLAGS = -Wall -Werror -std=c99
+CXXFLAGS += -g
 
 sensor-emu: $(objects)
 	$(CXX) -o ../../bin/sensor-emu $(objects) $(CXXFLAGS) $(LIBS)

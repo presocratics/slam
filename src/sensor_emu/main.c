@@ -24,11 +24,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "ourerr.h"
-#define MAXLINE 128            /*  */
-typedef struct imudata_t {
-    double t;
-    double x,y,z;
-} imudata;
+#define MAXLINE 1024            /*  */
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -41,8 +37,9 @@ main ( int argc, char *argv[] )
 {
     FILE *fp;
     char *line;
-    struct timespec req, rem;
     int del;
+    struct timespec req, rem;
+    long cur, next;
     
     line	= (char *) calloc ( (size_t)(MAXLINE), sizeof(char) );
     if ( line==NULL ) {
@@ -51,7 +48,6 @@ main ( int argc, char *argv[] )
     }
     
     int sz = MAXLINE-1;
-    imudata cur, next;
     //cur.t=9;
 
     if( argc!=2 )
@@ -65,18 +61,18 @@ main ( int argc, char *argv[] )
         err_sys("fgets");
     if( (fgets( line, sz, fp ))==NULL ) // Get first line
         err_sys("fgets");
-    sscanf( line, "%lf", &next.t );
+    sscanf( line, "%d", &next );
     while( fgets( line, sz, fp )!=NULL )
     {
-        fflush(stdout);
         cur = next;
-        printf("%lf\n", cur.t );
-        sscanf( line, "%lf", &next.t );
-        del = next.t-cur.t;
+        printf("%s", line );
+        sscanf( line, "%d", &next );
+        del = next-cur;
         req.tv_sec=0;
-        req.tv_nsec=(int)1e9*next.t; /* convert microseconds to nanoseconds */
+        req.tv_nsec=(int)1e3*del; /* convert microseconds to nanoseconds */
         if( nanosleep(&req,&rem)==-1 )
             err_sys("nanosleep");
+        fflush(stdout);
     }
     fclose(fp);
     free (line);
