@@ -49,10 +49,9 @@ main ( int argc, char *argv[] )
     
     int sz = MAXLINE-1;
 
-    // Use tr to ensure consistent output.
     if( argc!=2 )
     {
-        printf("Usage: %s gyrodata\n", argv[0]);
+        printf("Usage: %s data\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     if( (fp=fopen(argv[1], "r"))==NULL )
@@ -65,13 +64,13 @@ main ( int argc, char *argv[] )
     while( fgets( line, sz, fp )!=NULL )
     {
         cur = next;
-        printf( "%s", line );
         sscanf( line, "%d", &next );
         del = next-cur;
-        req.tv_sec=0;
-        req.tv_nsec=(int)1e3*del; /* convert microseconds to nanoseconds */
+        req.tv_sec=del/1e6;
+        req.tv_nsec=(int)1e3*(del%(int)1e6); /* convert microseconds to nanoseconds */
         if( nanosleep(&req,&rem)==-1 )
             err_sys("nanosleep");
+        printf( "%s", line );
         fflush(stdout);
     }
     fclose(fp);

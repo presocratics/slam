@@ -65,15 +65,12 @@ Reads Euler angles as triple x,y,z from STDIN.\n", argv[0] );
         exit (EXIT_FAILURE);
     }
 
-
-
     while( fgets( line, MAXLINE, stdin )!=NULL )
     {
         double x, y, z;
         sscanf( line, "%lf,%lf,%lf", &x, &y, &z );
         euler2quaternion(x,y,z, quaternion);
-        printf("%.8e,%.8e,%.8e,%.8e\n", quaternion[0], quaternion[1], quaternion[2], quaternion[3] );
-        fflush(stdout);
+        printf("%.15lf,%.15lf,%.15lf,%.15lf\n", quaternion[0], quaternion[1], quaternion[2], quaternion[3] );
     }
     free (line);
     line	= NULL;
