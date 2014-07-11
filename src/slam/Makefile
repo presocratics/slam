@@ -1,17 +1,23 @@
-objects = feature.o featureIO.o \
-		  imagesensor.o main.o \
-		  ourerr.o Quaternion.o\
-		  Sensors.o states.o \
-		  view.o 
+
+IDIR = ../../include
+
 CXXFLAGS = -Wall -Werror
 CXXFLAGS += -g
 CXXFLAGS += $(shell pkg-config --cflags opencv)
+CXXFLAGS += -I$(IDIR)
+LDIR = ../../lib/
+LIBS += $(LDIR)libARC.a
 LIBS += $(shell pkg-config --libs opencv)
 
-slam: $(objects)
-	$(CXX) -o ../../bin/slam $(objects) $(CXXFLAGS) $(LIBS)
-%.o: %cpp
-	$(CXX) $(CXXFLAGS) -o $@ -c $<  $(LIBS)
+slam: main.o libARC.a
+	$(CXX) -o ../../bin/slam main.o $(CXXFLAGS) $(LIBS) 
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+libARC.a:
+	$(MAKE) -C ../ARC
+
 .PHONY: clean
 clean:
 	rm -f *.o
