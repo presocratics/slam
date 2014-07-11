@@ -1,4 +1,3 @@
-
 IDIR = ../../include
 
 CXXFLAGS = -Wall -Werror
