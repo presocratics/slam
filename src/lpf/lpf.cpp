@@ -21,42 +21,94 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
-#define MAXLINE 32            /*  */
+#define MAXLINE 1024            /*  */
+#define FILTER_ORDER 4            /*  */
+
+double filter ( double *x, const double *coeffs, int index, int order );
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  filter
+ *  Description:  Implements a low pass filter.
+ *  x: inputs
+ *  coeffs: filter coeffs
+ *  index: index of first value
+ *  order: number of elements in x and coeffs
+ * =====================================================================================
+ */
+    double
+filter ( double *x, const double *coeffs, int index, int order )
+{
+    double y;
+    int i;
+    for( i=0, y=0; i<order; ++i,++index )
+    {
+        y+=x[i]*coeffs[index%order];
+    }
+    return y;
+}		/* -----  end of function filter  ----- */
+
 int main( int argc, char **argv )
 {
     char *line;
-    double x, y, z;
-    double xp, yp, zp;
-    double alpha;
+    // coeff for n-0 at top, n-N at end.
+    const double coeffs[FILTER_ORDER]={
+        0.50,
+        0.25,
+        0.125,
+        0.125,
+    };
+    double *x,*y,*z;
+    
+    // Callocs init to zeros.
+    x	= (double *) calloc ( (size_t)(FILTER_ORDER), sizeof(double) );
+    if ( x==NULL ) {
+        fprintf ( stderr, "\ndynamic memory allocation failed\n" );
+        exit (EXIT_FAILURE);
+    }
+    y	= (double *) calloc ( (size_t)(FILTER_ORDER), sizeof(double) );
+    if ( y==NULL ) {
+        fprintf ( stderr, "\ndynamic memory allocation failed\n" );
+        exit (EXIT_FAILURE);
+    }
+    z	= (double *) calloc ( (size_t)(FILTER_ORDER), sizeof(double) );
+    if ( z==NULL ) {
+        fprintf ( stderr, "\ndynamic memory allocation failed\n" );
+        exit (EXIT_FAILURE);
+    }
+    double out[3];
 
-    if( argc!=2 )
+    if( argc!=1 )
     {
-        printf("Usage: %s alpha\n", argv[0] );
-        printf("y=(alpha*x[n]+(1-alpha)*x[n-1]\n");
+        printf("Usage: %s <input\n", argv[0] );
+        printf("Applies LPF on an input triple. Filter coeffs are compiled in.\n");
         exit(EXIT_FAILURE);
     }
-    sscanf( argv[1], "%lf", &alpha );
 
-    xp=yp=zp=0;
-    
     line	= (char *) calloc ( (size_t)(MAXLINE), sizeof(char) );
     if ( line==NULL ) {
         fprintf ( stderr, "\ndynamic memory allocation failed\n" );
         exit (EXIT_FAILURE);
     }
 
-    while( fgets( line, MAXLINE, stdin )!=NULL )
+    int i;
+    for( i=0; fgets( line, MAXLINE, stdin )!=NULL; ++i )
     {
-        xp=x;
-        yp=y;
-        zp=z;
-        sscanf( line, "%lf,%lf,%lf", &x, &y, &z );
-        printf("%lf,%lf,%lf\n", alpha*x+(1-alpha)*xp, alpha*y+(1-alpha)*yp, alpha*z+(1-alpha)*zp);
-        fflush(stdout);
+        sscanf( line, "%lf,%lf,%lf", x+i%FILTER_ORDER, y+i%FILTER_ORDER, z+i%FILTER_ORDER );
+        out[0] = filter(x,coeffs, i, FILTER_ORDER);
+        out[1] = filter(y,coeffs, i, FILTER_ORDER);
+        out[2] = filter(z,coeffs, i, FILTER_ORDER);
+        printf("%lf,%lf,%lf\n", out[0], out[1], out[2] );
     }
 
     free (line);
     line	= NULL;
+    free (x);
+    x	= NULL;
+    free (y);
+    y	= NULL;
+    free (z);
+    z	= NULL;
 	return 0;
 }
 
