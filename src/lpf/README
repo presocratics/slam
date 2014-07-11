@@ -1,7 +1,7 @@
 lpf
 ===
-Implements a low pass filter of the form:
-y=alpha*x[n]+(1-alpha)*x[n-1]
+Implements an Nth order low pass filter of the form:
+y[n]=c[0]*x[n]+c[1]*x[n-1]+...+c[N]*x[n-N]
 
 Reads input from STDIN in the form:
 x,y,z
