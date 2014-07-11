@@ -27,6 +27,44 @@
 
 #define MAXLINE 512 
 
+// Camera calibration parameters
+const cv::Point2d center( 314.27445, 219.26341 ); // Center pixel?
+const cv::Point2d focal(  772.09201, 768.33574 ); // focal length
+// Camera orientation w.r.t. IMU
+Quaternion qbc(cv::Vec4d(0.50798 , 0.50067, 0.49636, -0.49489) );
+cv::Matx33d Rb2c = qbc.rotation();
+cv::Matx33d Rc2b = Rb2c.t();
+
+void image2body ( const cv::Point2d source, cv::Point2d& y );
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  image2body
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+image2body ( const cv::Point2d source, cv::Point2d& y )
+{
+    cv::Point2d p;
+    cv::Point3d S;
+    cv::Matx31d Yic;
+    cv::Matx31d Yib;
+
+    // Center coordinates, adjust for focal length, and normalize z-coordinate
+    p=source-center;
+    p.x/=focal.x;
+    p.y/=focal.y;
+    S = cv::Point3d( p.x, p.y, 1 );
+    S *= 1/sqrt(p.x*p.x+p.y*p.y+1);
+
+    Yic = cv::Matx31d( S.x, S.y, S.z);
+    // Transform to body
+    Yib = Rc2b*Yic;
+    y.x=Yib(1)/Yib(0);
+    y.y=Yib(2)/Yib(0);
+    return;
+}		/* -----  end of function image2body  ----- */
+
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  main
@@ -53,14 +91,8 @@ Reads image frame coordinates from STDIN in format:\n\
     }
     char* line;
 
-    const double u0 = 314.27445;
-    const double v0 = 219.26341;
-    const double fu = 772.09201;
-    const double fv = 768.33574;
-
-    Quaternion qbc = Quaternion(cv::Vec4d(0.50798 , 0.50067, 0.49636, -0.49489) );
-    cv::Matx33d Rb2c = qbc.rotation();
-    cv::Matx33d Rc2b = Rb2c.t();
+    // TODO: move these to a config file.
+    // Camera calibration parameters
 
     line	= (char *) calloc ( (size_t)(MAXLINE), sizeof(char) );
     if ( line==NULL ) {
@@ -71,38 +103,20 @@ Reads image frame coordinates from STDIN in format:\n\
     while( fgets( line, MAXLINE, stdin )!=NULL )
     {
         int ID;
-        double xp, yp, xpp, ypp;
-        double p1, p2,Zs, Xs, Ys;
-        cv::Matx31d Yic, Yic1;
-        cv::Mat Yib, Yib1;
-
+        cv::Point2d source, reflection;
+        cv::Point2d sbody, rbody;
         if( line[0] == '\n' )
         {
             printf("%s",line);
             continue;
         }
-        sscanf( line, "%d,%lf,%lf,%lf,%lf", &ID, &xp, &yp, &xpp, &ypp );
+        sscanf( line, "%d,%lf,%lf,%lf,%lf", &ID, &source.x, &source.y, &reflection.x, &reflection.y );
 
         /* calculate body frame coordinates */
-        p1 = (xp-u0)/fu;
-        p2 = (yp-v0)/fv;
-        Zs = 1/sqrt(pow(p1,2)+pow(p2,2)+1);
-        Xs = p1*Zs;
-        Ys = p2*Zs;
-        Yic = cv::Matx31d( Xs, Ys, Zs);
-        Yib = (cv::Mat)Rc2b * (cv::Mat)Yic;
-
-        double p11 = (xpp-u0)/fu;
-        double p21 = (ypp-v0)/fv;
-        double Zs1 = 1/sqrt(pow(p11,2)+pow(p21,2)+1);
-        double Xs1 = p11*Zs1;
-        double Ys1 = p21*Zs1;
-        Yic1 = cv::Matx31d( Xs1, Ys1, Zs1);
-        Yib1 = (cv::Mat)Rc2b * (cv::Mat)Yic1;
+        image2body( source, sbody );
+        image2body( reflection, rbody );
         
-        printf("%d,%.17lf,%.17lf,%.17lf,%.17lf\n",ID,Yib.at<double>(1,0)/ Yib.at<double>(0,0), Yib.at<double>(2,0)/ Yib.at<double>(0,0) ,Yib1.at<double>(1,0)/ Yib1.at<double>(0,0), Yib1.at<double>(2,0)/ Yib1.at<double>(0,0) );
-        fflush(stdout);
-
+        printf("%d,%.17lf,%.17lf,%.17lf,%.17lf\n",ID,sbody.x, sbody.y ,rbody.x, rbody.y);
     }
 
     free (line);
