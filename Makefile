@@ -1,4 +1,6 @@
-all: slam sensor-emu multitap img2body lpf euler2qbw
+all: slam sensor-emu multitap img2body lpf euler2qbw ARC
+ARC:
+	$(MAKE) -C src/ARC $(MFLAGS)
 lpf:
 	$(MAKE) -C src/lpf $(MFLAGS)
 slam:
@@ -18,3 +20,4 @@ clean:
 	$(MAKE) clean -C src/multitap
 	$(MAKE) clean -C src/img2body
 	$(MAKE) clean -C src/euler2qbw
+	$(MAKE) clean -c src/ARC
