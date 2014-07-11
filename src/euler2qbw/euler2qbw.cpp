@@ -24,7 +24,7 @@
 #include <cstdlib>
 #define MAXLINE 1024            /*  */
 
-void euler2quaternion ( double x, double y, double z, double *q );
+void euler2quaternion ( double phi, double theta, double psi, double *q );
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  euler2quaternion
@@ -32,12 +32,12 @@ void euler2quaternion ( double x, double y, double z, double *q );
  * =====================================================================================
  */
     void
-euler2quaternion ( double x, double y, double z, double *q )
+euler2quaternion ( double phi, double theta, double psi, double *q )
 {
-    q[0] = sin(x/2)*cos(y/2)*cos(z/2)-cos(x/2)*sin(y/2)*sin(z/2);
-    q[1] = cos(x/2)*sin(y/2)*cos(z/2)+sin(x/2)*cos(y/2)*sin(z/2);
-    q[2] = cos(x/2)*cos(y/2)*sin(z/2)-sin(x/2)*sin(y/2)*cos(z/2);
-    q[3] = cos(x/2)*cos(y/2)*cos(z/2)+sin(x/2)*sin(y/2)*sin(z/2);
+    q[0] = sin(phi/2)*cos(theta/2)*cos(psi/2)-cos(phi/2)*sin(theta/2)*sin(psi/2);
+    q[1] = cos(phi/2)*sin(theta/2)*cos(psi/2)+sin(phi/2)*cos(theta/2)*sin(psi/2);
+    q[2] = cos(phi/2)*cos(theta/2)*sin(psi/2)-sin(phi/2)*sin(theta/2)*cos(psi/2);
+    q[3] = cos(phi/2)*cos(theta/2)*cos(psi/2)+sin(phi/2)*sin(theta/2)*sin(psi/2);
 
     return;
 }		/* -----  end of function euler2quaternion  ----- */
