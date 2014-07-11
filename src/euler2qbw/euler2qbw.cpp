@@ -67,9 +67,9 @@ Reads Euler angles as triple x,y,z from STDIN.\n", argv[0] );
 
     while( fgets( line, MAXLINE, stdin )!=NULL )
     {
-        double x, y, z;
-        sscanf( line, "%lf,%lf,%lf", &x, &y, &z );
-        euler2quaternion(x,y,z, quaternion);
+        double phi, theta, psi;
+        sscanf( line, "%lf,%lf,%lf", &phi, &theta, &psi );
+        euler2quaternion( phi, theta, psi, quaternion );
         printf("%.15lf,%.15lf,%.15lf,%.15lf\n", quaternion[0], quaternion[1], quaternion[2], quaternion[3] );
     }
     free (line);
