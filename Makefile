@@ -20,4 +20,4 @@ clean:
 	$(MAKE) clean -C src/multitap
 	$(MAKE) clean -C src/img2body
 	$(MAKE) clean -C src/euler2qbw
-	$(MAKE) clean -c src/ARC
+	$(MAKE) clean -C src/ARC
