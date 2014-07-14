@@ -109,17 +109,19 @@ void States::setb(Vec3d bias)
 
 void States::add(States a)
 {
-    if(rows == a.rows)
+    if( a.getNumFeatures()!=getNumFeatures() )
     {
-        X += a.X;
-        V += a.V;
-        for(int i = 0; i < nf; i++ )
-        {
-            features[i].position.body += a.features[i].position.body;
-            features[i].position.world += a.features[i].position.world;
-        }
-        b += a.b;
+        std::cerr << "add: feature mismatch" << std::endl;
+        exit(EXIT_FAILURE);
     }
+    X += a.X;
+    V += a.V;
+    for(int i = 0; i<getNumFeatures(); i++ )
+    {
+        features[i].position.body += a.features[i].position.body;
+        features[i].position.world += a.features[i].position.world;
+    }
+    b += a.b;
 }
 
     void
