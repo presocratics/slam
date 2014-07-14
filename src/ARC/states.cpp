@@ -23,7 +23,6 @@ States::States()
     nf = 5;
     features.reserve(nf);
     b = Vec3d(0,0,0);
-    rows = 6+3*nf+3;
 }
 
 States::~States()
@@ -54,8 +53,6 @@ States::States(Vec3d pos, Vec3d vel, std::vector<Feature> feat, Vec3d bias, int 
     features = feat;
     b = bias;
     nf = n;
-    rows = 6+3*nf+3;
-
 }
 
 // accessor
@@ -99,7 +96,6 @@ void States::addFeature(Feature f)
 {
     features.push_back(f);
     nf = features.size();
-    rows = 6+nf*3+3;
 }
 
 void States::setb(Vec3d bias)

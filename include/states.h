@@ -58,7 +58,6 @@ class States{
         States& operator+= ( const States& rhs );
     private:
         int nf;
-        int rows;
 };
 inline States operator*(States lhs, const double& rhs)
 {
