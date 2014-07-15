@@ -4,6 +4,7 @@ hb/
 data/
 output/
 matlab/*/
+src/test/
 #################
 ## Eclipse
 #################
