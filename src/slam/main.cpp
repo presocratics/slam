@@ -91,7 +91,7 @@ int main( int argc, char **argv )
     double scaleW = 10;
     double scaleH = 10;
     int width=800;
-    int height=800;
+    int height=1800;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
 	for( int i=0; i<stepEnd; ++i )
 	{
@@ -115,11 +115,11 @@ int main( int argc, char **argv )
 
         f = mu.dynamics( sense );           // Motion model
         f*=sense.dt;
-		jacobianMotionModel(mu, sense, F );
+		jacobianMotionModel(&mu, sense, F );
         mu+=f;
 
 		measurementModel( old_pos, sense.altitude, imgsense.matches, 
-                sense.quaternion, meas, hmu, H, mu );
+                sense.quaternion, meas, hmu, H, &mu );
 
 		altHat = meas.altitude;
 
@@ -520,9 +520,9 @@ void jacobianH(cv::Vec3d X, Quaternion qbw, Feature feat, Mat& Hb, Mat& Hi )
 
 }
 
-void jacobianMotionModel(States mu, Sensors sense, Mat& F_out )
+void jacobianMotionModel(States *mu, Sensors sense, Mat& F_out )
 {
-    F_out = Mat::zeros(mu.getRows(), mu.getRows(), CV_64F);
+    F_out = Mat::zeros(mu->getRows(), mu->getRows(), CV_64F);
     int nf;
     Quaternion qbw;
     double dt;
@@ -531,7 +531,7 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out )
     qbw = sense.quaternion;
     dt = sense.dt;
     w=sense.angular_velocity;
-    nf=mu.getNumFeatures();
+    nf=mu->getNumFeatures();
 
     Mat Fb = cv::Mat::zeros(9,9,CV_64F);
     Mat Fb1 = (Mat_<double>(6, 6) << 0, 0, 0, 
@@ -563,25 +563,25 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out )
     for (int i = 0; i<nf; i++)
     {
         Matx13d pib( 
-            mu.features[i].position.body[0],
-            mu.features[i].position.body[1],
-            mu.features[i].position.body[2]
+            mu->features[i].position.body[0],
+            mu->features[i].position.body[1],
+            mu->features[i].position.body[2]
         );
-        double pib1 = mu.features[i].position.body[0];
-        double pib2 = mu.features[i].position.body[1];
-        double pib3 = mu.features[i].position.body[2];
+        double pib1 = mu->features[i].position.body[0];
+        double pib2 = mu->features[i].position.body[1];
+        double pib3 = mu->features[i].position.body[2];
 
 
         FiTemp = (Mat_<double>(3, 3) <<
-                    (pib * Matx31d( mu.V[2], w[0], -2*w[1]))(0,0),
+                    (pib * Matx31d( mu->V[2], w[0], -2*w[1]))(0,0),
                     w[2] + pib1*w[0],
-                    pib1*mu.V[2] - mu.V[0],
+                    pib1*mu->V[2] - mu->V[0],
                     -w[2] - pib2*w[1], 
-                    pib3*mu.V[2] - pib1*w[1] + 2 * pib2*w[0],
-                    pib2*mu.V[2] - mu.V[1],
+                    pib3*mu->V[2] - pib1*w[1] + 2 * pib2*w[0],
+                    pib2*mu->V[2] - mu->V[1],
                     -pib3*w[1],
                     pib3*w[0],
-                    2 * pib3*mu.V[2] - pib1*w[1] + pib2*w[0]);
+                    2 * pib3*mu->V[2] - pib1*w[1] + pib2*w[0]);
         // work on Fib
         Fib_ith = (Mat_<double>(3, 6) <<
                     0, 0, 0, -pib3, 0, pib1*pib3,
@@ -603,7 +603,7 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out )
         Point(Fi_ith_1.cols+FiTemp.cols,0));
         blockAssign(Fi, Fi_ith, Point(0,3*i));
     }
-    Mat temp1 = Mat::eye(mu.getRows(), mu.getRows(), CV_64F);
+    Mat temp1 = Mat::eye(mu->getRows(), mu->getRows(), CV_64F);
     F_out.setTo(0);
     blockAssign(F_out, Fb, Point(0,0));
     blockAssign(F_out, Fib, Point(0,Fb.rows));
@@ -621,14 +621,14 @@ void jacobianMotionModel(States mu, Sensors sense, Mat& F_out )
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
-        Quaternion qbw, View& meas, View& hmu, Mat& H, States& mu )
+        Quaternion qbw, View& meas, View& hmu, Mat& H, States *mu )
 {
     int nf;
-    nf=mu.getNumFeatures();
+    nf=mu->getNumFeatures();
     meas.altitude = alt;							// altitude
-    hmu.altitude = -mu.X[2];
+    hmu.altitude = -mu->X[2];
 
-    H=cv::Mat::zeros(6*nf+1,mu.getRows(),CV_64F);
+    H=cv::Mat::zeros(6*nf+1,mu->getRows(),CV_64F);
 	Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
 	Mat S = Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
 
@@ -636,8 +636,8 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
 	Mat Hi;
 
     matchIter match=matches.begin();
-    Fiter feat=mu.features.begin();
-	for (int i=0; feat!=mu.features.end(); ++i,  ++feat, ++match)
+    Fiter feat=mu->features.begin();
+	for (int i=0; feat!=mu->features.end(); ++i,  ++feat, ++match)
 	{
         cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
 
@@ -658,7 +658,7 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
                 0);
 
         temp = S * (Mat)qbw.rotation()*(Mat)xibHat;
-        temp -= 2*n*n.t()*(Mat)mu.X; 
+        temp -= 2*n*n.t()*(Mat)mu->X; 
         temp = (Mat)qbw.rotation().t() * temp;
         xpbHat = (cv::Vec3d) temp;
 
@@ -667,16 +667,16 @@ void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> ma
 			xpbHat[2] / xpbHat[0],
             0);
 
-        add(mu.X,(Mat)qbw.rotation()*(Mat)xibHat, feat->position.world );
+        add(mu->X,(Mat)qbw.rotation()*(Mat)xibHat, feat->position.world );
 
-		jacobianH(mu.X, qbw, *feat, Hb, Hi);
+		jacobianH(mu->X, qbw, *feat, Hb, Hi);
 
         meas.features.push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
         hmu.features.push_back(Vfeat( pibHat, pib0Hat, ppbHat ));
 
         H.row(0).col(2).setTo(-1);
         // For each feature
-        Mat Hfeat = Mat::zeros(6,mu.getRows(),CV_64F);
+        Mat Hfeat = Mat::zeros(6,mu->getRows(),CV_64F);
         blockAssign( Hfeat, Mat::eye(2,2,CV_64F), Point(9+3*i,0) );
         blockAssign( Hfeat, Hb, Point(0,2) );
         blockAssign( Hfeat, Hi, Point(9+3*i,2) );

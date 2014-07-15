@@ -21,9 +21,6 @@
 // constructor
 Feature::Feature()
 {
-    position.body = Vec3d(0,0,0);
-    RGB = Scalar(0,0,0);
-    ID = -1;
 }
 
 Feature::Feature(Vec3d pos, Scalar color, int n )
@@ -36,7 +33,6 @@ Feature::Feature(Vec3d pos, Scalar color, int n )
 Feature::Feature( cv::Vec3d anchor, Sensors sense, matchIter match )
 {
     initialize( anchor, sense, match, false );
-
     return ;
 }		/* -----  end of method Feature::Feature  ----- */
 

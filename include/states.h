@@ -13,6 +13,7 @@
 #include "config.hpp"
 using namespace cv;
 #define GRAVITY -9.80665            /* Standard acceleration due to free fall m/s^2 */
+#define DMIN 0.3            /*  */
 typedef std::map<int,Feature> featMap;
 typedef featMap::iterator featIter;
 typedef std::vector<projection>::iterator matchIter;
@@ -57,7 +58,6 @@ class States{
         States& operator*= ( const double& rhs );
         States& operator+= ( const States& rhs );
     private:
-        int nf;
 };
 inline States operator*(States lhs, const double& rhs)
 {
