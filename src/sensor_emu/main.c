@@ -40,6 +40,7 @@ main ( int argc, char *argv[] )
     int del;
     struct timespec req, rem;
     long cur, next;
+    int usedel=0;
     
     line	= (char *) calloc ( (size_t)(MAXLINE), sizeof(char) );
     if ( line==NULL ) {
@@ -49,10 +50,16 @@ main ( int argc, char *argv[] )
     
     int sz = MAXLINE-1;
 
-    if( argc!=2 )
+    if( argc<2 )
     {
-        printf("Usage: %s data\n", argv[0]);
+        printf("Usage: %s data [-d]\n", argv[0]);
+        printf("OPTIONS:\n");
+        printf("-d\tinputs are deltas, not absolute timestamps\n");
         exit(EXIT_FAILURE);
+    }
+    else if( argc>2 )
+    {
+        usedel=1;
     }
     if( (fp=fopen(argv[1], "r"))==NULL )
         err_sys("fopen");
@@ -65,7 +72,7 @@ main ( int argc, char *argv[] )
     {
         cur = next;
         sscanf( line, "%d", &next );
-        del = next-cur;
+        del = (usedel) ? next : next-cur;
         req.tv_sec=del/1e6;
         req.tv_nsec=(int)1e3*(del%(int)1e6); /* convert microseconds to nanoseconds */
         if( nanosleep(&req,&rem)==-1 )
