@@ -68,11 +68,11 @@ int main( int argc, char **argv )
     States mu;
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
-    sense.set_altitude( argv[2], true );
-    sense.set_acceleration( argv[3], true );
+    sense.set_altitude( argv[2], false );
+    sense.set_acceleration( argv[3], false );
     sense.set_dt( argv[4], false );
-    sense.set_quaternion( argv[5], true );
-    sense.set_angular_velocity( argv[6], true );
+    sense.set_quaternion( argv[5], false );
+    sense.set_angular_velocity( argv[6], false );
     sense.update();
 
 	clock_t startTime = clock();
