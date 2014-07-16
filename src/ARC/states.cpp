@@ -1,4 +1,5 @@
 #include "states.h"
+#define DMIN 0.3            /*  */
 
     States&
 States::operator*= ( const double& rhs )
@@ -172,7 +173,10 @@ States::end_loop (  )
             std::cerr << "end_loop: feat not found." <<std::endl;
             exit(EXIT_FAILURE);
         }
-        fi->second=*vf;
+        else if( std::isnormal(vf->position.body[2]) )
+        {
+            fi->second=*vf;
+        }
     }
 
     return ;
