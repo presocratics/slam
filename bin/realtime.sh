@@ -3,9 +3,11 @@
 # Martin Miller
 # Created: 2014/07/07
 # Simulate real-time
-RTOPTS="data/bodyHist3.txt data/altHist.hex data/aHistF.hex data/dt.fifo data/qbwHistF.hex data/wHistF.hex"
-FASTOPTS="data/bodyHist3.txt data/altHist.hex data/aHistF.hex \
-data/dtHist.txt data/qbwHistF.hex data/wHistF.hex"
+#RTOPTS="data/bodyHist3.txt data/altHist.hex data/aHistF.hex data/dt.fifo data/qbwHistF.hex data/wHistF.hex"
+#FASTOPTS="data/bodyHist4.txt data/altHist.hex data/aHistF.hex \
+#data/dtHist.txt data/qbwHistF.hex data/wHistF.hex"
+#FASTOPTS="data/bodyHist4.txt data/altHist.fifo data/aHistF.hex \
+#data/dtHist.txt data/qbwHistF.hex data/wHistF.hex"
 #mkfifo data/dt.fifo 2>/dev/null
 #mkfifo data/altitude.fifo 2>/dev/null
 #mkfifo data/acceleration.fifo 2>/dev/null
@@ -28,10 +30,10 @@ data/dtHist.txt data/qbwHistF.hex data/wHistF.hex"
 
 
 
-./bin/slam $FASTOPTS
+#./bin/slam $FASTOPTS
 
-#DATA=/home/marty/ARC/data/Nov2720131205
-DATA=/home/marty/ARC/data/2nd
+DATA=/home/marty/ARC/data/Nov2720131205
+#DATA=/home/marty/ARC/data/2nd
 
 BODY=data/bodyHist3.txt
 DT=data/dt.fifo
@@ -61,7 +63,8 @@ stdbuf -oL -eL ./bin/multitap $ALT &
     stdbuf -oL -eL ./bin/euler2qbw | \
     stdbuf -oL -eL ./bin/multitap $QBW &
 
-./bin/sensor-emu data/dtRaw.txt d|stdbuf -oL -eL sed 's/[0-9]*,//' > $DT &
+# no multitap because all samples needed
+./bin/sensor-emu data/dtRaw.txt d |stdbuf -oL -eL sed 's/[0-9]*,//' > $DT &
 
 ./bin/slam $BODY $ALT $ACC $DT $QBW $ANGVEL || killall -9 multitap
 rm -f data/*.fifo
