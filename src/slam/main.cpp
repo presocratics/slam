@@ -157,9 +157,6 @@ int main( int argc, char **argv )
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
         mu.end_loop();
-    imshow("drawing", rtplot);
-    waitKey(3);
-
 	} //  k loop
     for( featIter fi=mu.feats.begin(); fi!=mu.feats.end(); ++fi )
     {
