@@ -68,11 +68,11 @@ int main( int argc, char **argv )
     States mu;
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
-    sense.set_altitude( argv[2], false );
-    sense.set_acceleration( argv[3], false );
+    sense.set_altitude( argv[2], true );
+    sense.set_acceleration( argv[3], true );
     sense.set_dt( argv[4], false );
-    sense.set_quaternion( argv[5], false );
-    sense.set_angular_velocity( argv[6], false );
+    sense.set_quaternion( argv[5], true );
+    sense.set_angular_velocity( argv[6], true );
     sense.update();
 
 	clock_t startTime = clock();
@@ -157,6 +157,8 @@ int main( int argc, char **argv )
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
         mu.end_loop();
+    imshow("drawing", rtplot);
+    waitKey(3);
 
 	} //  k loop
     for( featIter fi=mu.feats.begin(); fi!=mu.feats.end(); ++fi )

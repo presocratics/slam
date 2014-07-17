@@ -32,8 +32,9 @@
 
 #./bin/slam $FASTOPTS
 
-DATA=/home/marty/ARC/data/Nov2720131205
-#DATA=/home/marty/ARC/data/2nd
+#DATA=/home/marty/ARC/data/Nov2720131205
+DATA=/home/marty/ARC/data/2nd
+SLAMPP=/home/marty/ARC/slampp/output
 
 BODY=data/bodyHist3.txt
 DT=data/dt.fifo
@@ -42,6 +43,7 @@ ACC=data/acc.fifo
 QBW=data/qbw.fifo
 ANGVEL=data/w.fifo
 
+killall -9 multitap
 rm -f data/*.fifo
 mkfifo $ALT 2>/dev/null
 mkfifo $ACC 2>/dev/null
@@ -53,18 +55,18 @@ mkfifo $DT 2>/dev/null
 stdbuf -oL -eL sed 's/,$//' | \
 stdbuf -oL -eL ./bin/multitap $ALT &
 
-./bin/sensor-emu $DATA/acc|stdbuf -oL -eL sed 's/[0-9]*,//'| \
+./bin/sensor-emu $SLAMPP/accfiltbias2|stdbuf -oL -eL sed 's/[0-9]*,//'| \
     stdbuf -oL -eL ./bin/multitap $ACC &
 
 ./bin/sensor-emu $DATA/attitude|stdbuf -oL -eL sed 's/[0-9]*,//'| \
-    stdbuf -oL -eL ./bin/multitap $ANGVEL &
-
-./bin/sensor-emu $DATA/gyro|stdbuf -oL -eL sed 's/[0-9]*,//'| \
     stdbuf -oL -eL ./bin/euler2qbw | \
     stdbuf -oL -eL ./bin/multitap $QBW &
 
+./bin/sensor-emu $DATA/gyro|stdbuf -oL -eL sed 's/[0-9]*,//'| \
+    stdbuf -oL -eL ./bin/multitap $ANGVEL &
+
 # no multitap because all samples needed
-./bin/sensor-emu data/dtRaw.txt d |stdbuf -oL -eL sed 's/[0-9]*,//' > $DT &
+./bin/sensor-emu $DATA/dt d |stdbuf -oL -eL sed 's/[0-9]*,//' > $DT &
 
 ./bin/slam $BODY $ALT $ACC $DT $QBW $ANGVEL || killall -9 multitap
 rm -f data/*.fifo

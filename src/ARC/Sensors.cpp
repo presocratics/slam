@@ -46,7 +46,7 @@ Sensors::open_source ( const char *fn )
 {
     FILE *fp;
     if( (fp=fopen(fn,"r"))==NULL )
-        err_sys("fopen");
+        err_sys("fopen altitude");
     return fp ;
 }		/* -----  end of method Sensors::open_source  ----- */
 
@@ -89,14 +89,10 @@ Sensors::get_val ( FILE* fp, const char *str, const char *fmt, ... )
     double
 Sensors::get_altitude( )
 { 
-    FILE *fp;
     double alt;
     char str[4];
-
-    fp = open_source( altitude_fn.c_str() );
     strcpy( str, (altitudeIsHex) ? "%lx" : "%lf" );
-    get_val( fp, "alt", str, &alt );
-    fclose(fp);
+    get_val( altitude_fp, "alt", str, &alt );
     return alt;
 }		/* -----  end of method Sensors::get_altitude  ----- */
 
@@ -105,7 +101,6 @@ Sensors::get_dt ( )
 {
     double d;
     char str[4];
-
     strcpy( str, (dtIsHex) ? "%lx" : "%lf" );
     get_val( dt_fp, "dt", str, &d );
     return d;
@@ -115,41 +110,29 @@ Sensors::get_dt ( )
     cv::Vec3d
 Sensors::get_acceleration ( )
 {
-    FILE *fp;
     cv::Vec3d acc;
     char str[12];
-
-    fp = open_source( acceleration_fn.c_str() );
     strcpy( str, (accelerationIsHex) ? "%lx,%lx,%lx" : "%lf,%lf,%lf" );
-    get_val( fp, "acc", str, &acc[0], &acc[1], &acc[2] );
-    fclose(fp);
+    get_val( acceleration_fp, "acc", str, &acc[0], &acc[1], &acc[2] );
     return acc;
 }		/* -----  end of method Sensors::get_acceleration  ----- */
 
     cv::Vec3d
 Sensors::get_angular_velocity ( )
 {
-    FILE *fp;
     cv::Vec3d w;
     char str[12];
-    
-    fp = open_source( angular_velocity_fn.c_str() );
     strcpy( str, (angular_velocityIsHex) ? "%lx,%lx,%lx" : "%lf,%lf,%lf" );
-    get_val( fp, "w", str, &w[0], &w[1], &w[2] );
-    fclose(fp);
+    get_val( angular_velocity_fp, "w", str, &w[0], &w[1], &w[2] );
     return w;
 }		/* -----  end of method Sensors::get_angular_velocity  ----- */
 
     cv::Vec4d
 Sensors::get_quaternion ( )
 {
-    FILE *fp;
     cv::Vec4d q;
     char str[16];
-
-    fp = open_source( quaternion_fn.c_str() );
     strcpy( str, (quaternionIsHex) ? "%lx,%lx,%lx,%lx" : "%lf,%lf,%lf,%lf" );
-    get_val( fp, "quat", str, &q[0], &q[1], &q[2], &q[3] );
-    fclose(fp);
+    get_val( quaternion_fp, "quat", str, &q[0], &q[1], &q[2], &q[3] );
     return q;
 }		/* -----  end of method Sensors::get_acceleration  ----- */

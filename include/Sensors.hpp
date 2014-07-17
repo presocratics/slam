@@ -28,18 +28,18 @@ class Sensors
         /* ====================  MUTATORS      ======================================= */
         void update();
         void set_acceleration( const char *fn, bool isHex ) { 
-            acceleration_fn = fn;
             accelerationIsHex = isHex;
+            acceleration_fp=open_source(fn); 
         }
 
         void set_altitude ( const char *fn, bool isHex ) {
-            altitude_fn = fn;
             altitudeIsHex = isHex;
+            altitude_fp = open_source(fn);
         }		
 
         void set_quaternion( const char *fn, bool isHex ) { 
-            quaternion_fn = fn;
             quaternionIsHex = isHex;
+            quaternion_fp=open_source(fn); 
         }
 
         void set_dt ( const char *fn, bool isHex ) {
@@ -48,8 +48,8 @@ class Sensors
         }		
 
         void set_angular_velocity( const char *fn, bool isHex ) { 
-            angular_velocity_fn = fn;
             angular_velocityIsHex = isHex;
+            angular_velocity_fp=open_source(fn); 
         }
 
         /* ====================  OPERATORS     ======================================= */
@@ -76,10 +76,9 @@ class Sensors
         bool accelerationIsHex, altitudeIsHex, angular_velocityIsHex, dtIsHex,
              quaternionIsHex;
 
-        std::string altitude_fn, acceleration_fn,
-            quaternion_fn, angular_velocity_fn;
-        FILE *dt_fp;
         /* Sources */
+        FILE *altitude_fp, *dt_fp, *acceleration_fp,
+             *quaternion_fp, *angular_velocity_fp;
 
 }; /* -----  end of class Sensors  ----- */
 
