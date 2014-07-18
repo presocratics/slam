@@ -48,7 +48,8 @@ mkfifo $ANGVEL 2>/dev/null
 #
 FASTOPTS="data/bodyHist3.txt data/altHist.hex data/aHistF.hex \
 data/dtHist.txt data/qbwHistF.hex"
-valgrind --leak-check=full ./bin/slam $FASTOPTS $ANGVEL || killall -9 multitap
+#valgrind --leak-check=full ./bin/slam $FASTOPTS $ANGVEL || killall -9 multitap
+./bin/slam $FASTOPTS $ANGVEL || killall -9 multitap
 rm -f data/*.fifo
 
 
