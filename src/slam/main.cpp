@@ -175,6 +175,7 @@ int main( int argc, char **argv )
 
     imshow("drawing", rtplot);
     waitKey(0);
+    destroyAllWindows();
 	return 0;
 }
 

@@ -73,7 +73,7 @@ Sensors::open_source ( const char *fn )
     void
 Sensors::get_val ( FILE* fp, const char *str, const char *fmt, ... )
 {
-    char *line = new char[MAXLINE];
+    char line[MAXLINE];
     va_list ap;
     va_start(ap,fmt);
 

@@ -81,7 +81,7 @@ FeatureIO::get_projections ( )
 FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
 {
     int rv;
-    char *line = new char[MAXLINE];
+    char line[MAXLINE];
     va_list ap;
     va_start(ap,fmt);
 
