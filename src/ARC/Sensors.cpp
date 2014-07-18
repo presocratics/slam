@@ -120,10 +120,14 @@ Sensors::get_acceleration ( )
     cv::Vec3d
 Sensors::get_angular_velocity ( )
 {
+    FILE *fp;
     cv::Vec3d w;
     char str[12];
+
+    fp = open_source( angular_velocity_fn.c_str() );
     strcpy( str, (angular_velocityIsHex) ? "%lx,%lx,%lx" : "%lf,%lf,%lf" );
-    get_val( angular_velocity_fp, "w", str, &w[0], &w[1], &w[2] );
+    get_val( fp, "w", str, &w[0], &w[1], &w[2] );
+    fclose(fp);
     return w;
 }		/* -----  end of method Sensors::get_angular_velocity  ----- */
 

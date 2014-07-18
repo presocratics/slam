@@ -72,7 +72,7 @@ int main( int argc, char **argv )
     sense.set_acceleration( argv[3], true );
     sense.set_dt( argv[4], false );
     sense.set_quaternion( argv[5], true );
-    sense.set_angular_velocity( argv[6], true );
+    sense.set_angular_velocity( argv[6], false );
     sense.update();
 
 	clock_t startTime = clock();
@@ -110,6 +110,7 @@ int main( int argc, char **argv )
         imgsense.update();
         mu.update_features( &imgsense, sense );
         nf=mu.getNumFeatures();
+        cout << "w: " << sense.angular_velocity << endl;
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
