@@ -40,7 +40,10 @@ mkfifo $ANGVEL 2>/dev/null
 #    stdbuf -oL -eL ./bin/euler2qbw | \
 #    stdbuf -oL -eL ./bin/multitap $QBW &
 #
-./bin/sensor-emu $SLAMPP/gyro.tr|stdbuf -oL -eL sed 's/[0-9]*,//'| \
+#./bin/sensor-emu $SLAMPP/gyro2.tr|stdbuf -oL -eL sed 's/[0-9]*,//'| \
+./bin/sensor-emu data/wHist3.txt|stdbuf -oL -eL sed 's/[0-9]*,//'| \
+    stdbuf -oL -eL ./bin/rmbias 0.0006 0.0009 -0.0011 | \
+    stdbuf -oL -eL ./bin/fir ./config/coeffs.txt | \
     stdbuf -oL -eL ./bin/multitap $ANGVEL &
 #
 ## no multitap because all samples needed
