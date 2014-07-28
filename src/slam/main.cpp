@@ -68,10 +68,10 @@ int main( int argc, char **argv )
     States mu;
 
 	// Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
-    sense.set_altitude( argv[2], true );
-    sense.set_acceleration( argv[3], true );
+    sense.set_altitude( argv[2], false );
+    sense.set_acceleration( argv[3], false );
     sense.set_dt( argv[4], false );
-    sense.set_quaternion( argv[5], true );
+    sense.set_quaternion( argv[5], false );
     sense.set_angular_velocity( argv[6], false );
     sense.update();
 
@@ -110,7 +110,6 @@ int main( int argc, char **argv )
         imgsense.update();
         mu.update_features( &imgsense, sense );
         nf=mu.getNumFeatures();
-        cout << "w: " << sense.angular_velocity << endl;
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
@@ -144,8 +143,6 @@ int main( int argc, char **argv )
 
         kmh = States(kx);
         mu+=kmh;
-
-		if (i%300 == 0) cout << i << endl;
 
         // Real time plotting.
         printf("%lf,%lf,%lf,%lf,%lf,%lf\n", mu.X[0], mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);

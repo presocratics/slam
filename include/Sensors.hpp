@@ -48,8 +48,8 @@ class Sensors
         }		
 
         void set_angular_velocity( const char *fn, bool isHex ) { 
-            angular_velocity_fn = fn;
             angular_velocityIsHex = isHex;
+            angular_velocity_fp=open_source(fn);
         }
 
         /* ====================  OPERATORS     ======================================= */
@@ -77,8 +77,7 @@ class Sensors
              quaternionIsHex;
 
         /* Sources */
-        std::string angular_velocity_fn;
-        FILE *altitude_fp, *dt_fp, *acceleration_fp,
+        FILE *angular_velocity_fp, *altitude_fp, *dt_fp, *acceleration_fp,
              *quaternion_fp;
 
 }; /* -----  end of class Sensors  ----- */
