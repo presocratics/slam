@@ -19,10 +19,6 @@
 #include "feature.h"
 #define DINIT 5            /* Max initial depth */
 // constructor
-Feature::Feature()
-{
-}
-
 Feature::Feature(Vec3d pos, Scalar color, int n )
 {
    position.body = pos;
@@ -36,7 +32,6 @@ Feature::Feature( cv::Vec3d anchor, Sensors sense, matchIter match )
     return ;
 }		/* -----  end of method Feature::Feature  ----- */
 
-Feature::~Feature(){};
 
     void
 Feature::initialize ( cv::Vec3d anchor, Sensors sense, matchIter match, bool extant )

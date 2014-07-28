@@ -30,17 +30,17 @@ typedef struct frame Frame;
 
 class Feature{
     public:
+        // constructor
+        Feature(){};
+        Feature(Vec3d pos, Scalar color, int n );
+        Feature( cv::Vec3d anchor, Sensors sense, matchIter match );
+
         Scalar RGB;
         int ID;
         frame position;
         inits initial;
 
 
-        // constructor
-        Feature();
-        ~Feature(); 
-        Feature(Vec3d pos, Scalar color, int n );
-        Feature( cv::Vec3d anchor, Sensors sense, matchIter match );
 
         // accessor
         cv::Vec3d fromAnchor ( cv::Vec3d pos );
