@@ -1,4 +1,4 @@
-all: slam sensor-emu multitap img2body lpf euler2qbw rmbias downsample ARC 
+all: slam sensor-emu multitap img2body lpf euler2qbw rmbias downsample getdt ARC 
 ARC:
 	$(MAKE) -C src/ARC $(MFLAGS)
 lpf:
@@ -17,6 +17,8 @@ rmbias:
 	$(MAKE) -C src/rmbias $(MFLAGS)
 downsample:
 	$(MAKE) -C src/downsample $(MFLAGS)
+getdt:
+	$(MAKE) -C src/getdt $(MFLAGS)
 clean:
 	$(MAKE) clean -C src/slam
 	$(MAKE) clean -C src/lpf
