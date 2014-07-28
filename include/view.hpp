@@ -12,7 +12,6 @@ class Vfeat
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        Vfeat (){;}                             /* constructor */
         Vfeat ( cv::Point2d cur, cv::Point2d init, cv::Point2d refl ) {
             set_views( cur, init, refl );
         }
