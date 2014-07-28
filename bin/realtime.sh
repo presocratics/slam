@@ -27,14 +27,13 @@ mkfifo $ACC 2>/dev/null
 mkfifo $QBW 2>/dev/null
 mkfifo $ANGVEL 2>/dev/null
 mkfifo $DT 2>/dev/null
-#
-./bin/downsample $DATA/framedata $DATA/alt | sed 's/[0-9]*,//'| \
-sed 's/,$//' > $ALT &
 
-#<$SLAMPP/acc2.tr sed 's/[0-9]*,//'| \
-#    ./bin/fir config/coeffs98.txt | \
-#    ./bin/rmbias -0.0171 0.0116 0.0158 > $ACC &
-tail -n 2693 data/aHistF.txt > $ACC &
+./bin/downsample $DATA/framedata $DATA/alt | sed 's/[0-9]*,//'| \
+    sed 's/,$//' > $ALT &
+
+./bin/downsample $DATA/framedata $DATA/acc |  sed 's/[0-9]*,//'| \
+    ./bin/fir config/98.txt | \
+    ./bin/rmbias -0.0171 0.0116 0.0158 > $ACC &
 
 ./bin/downsample $DATA/framedata $DATA/attitude| sed 's/[0-9]*,//'| \
     ./bin/euler2qbw  > $QBW &
