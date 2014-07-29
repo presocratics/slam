@@ -203,14 +203,14 @@ States::dynamics ( Sensors s )
 
 
     int
-States::getRows ( )
+States::getRows ( ) const
 {
     return 9+3*getNumFeatures() ;
 }		/* -----  end of method States::getRows  ----- */
 
 
     int
-States::getNumFeatures ( )
+States::getNumFeatures ( ) const
 {
     return features.size();
 }		/* -----  end of method States::getNumFeatures  ----- */

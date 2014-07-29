@@ -45,8 +45,8 @@ class States{
         std::vector<Feature> getFeatures();
         Feature getFeature(int i);
         Vec3d getb();
-        int getRows();
-        int getNumFeatures();
+        int getRows() const;
+        int getNumFeatures() const;
 
         // mutator
         void update_features( ImageSensor *imgsense, Sensors sense );
