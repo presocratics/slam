@@ -35,23 +35,21 @@ class Feature{
         Feature( const Vec3d& pos, int n );
         Feature( const cv::Vec3d& anchor, const Sensors& sense, const projection& match );
 
-        int ID;
-        frame position;
         inits initial;
 
         // accessor
+        int getID() const;
+
         cv::Vec3d fromAnchor ( const cv::Vec3d& pos ) const;
         cv::Matx33d rb2b ( const Quaternion& qbw ) const;
 
-        int getID() const;
-       
         // mutator
         void initialize ( const cv::Vec3d& anchor, const Sensors& sense, const
                 projection& match, const bool extant );
-
         int incNoMatch();
         Feature& set_body( const cv::Vec3d& pos);
         Feature& setID(int n);
+
             inline void
         set_initial_pib ( cv::Vec3d p )
         {
@@ -65,6 +63,18 @@ class Feature{
             initial.pib = p;
             return ;
         }		/* -----  end of method Feature::set_initial_pib  ----- */
+
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  get_world_position
+         *--------------------------------------------------------------------------------------
+         */
+        inline cv::Vec3d
+        get_world_position (  ) const
+        {
+            return position.world;
+        }		/* -----  end of method Feature::get_world_position  ----- */
 
         /*
          *--------------------------------------------------------------------------------------
@@ -91,6 +101,24 @@ class Feature{
             return ;
         }		/* -----  end of method Feature::set_body_position  ----- */
 
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  Feature
+         *      Method:  set_world_position
+         *--------------------------------------------------------------------------------------
+         */
+            inline void
+        set_world_position ( cv::Vec3d value )
+        {
+            position.world	= value;
+            return ;
+        }		/* -----  end of method Feature::set_world_position  ----- */
+            inline void
+        set_world_position ( cv::Point2d p, double d )
+        {
+            set_world_position( cv::Vec3d(p.x,p.y,d) );
+            return ;
+        }		/* -----  end of method Feature::set_body_position  ----- */
             inline void
         set_body_position ( cv::Point2d p, double d )
         {
@@ -172,7 +200,9 @@ class Feature{
 
 
     private:
+        frame position;
         int noMatch;
+        int ID;
 
 };
 typedef std::map<int,Feature> featMap;

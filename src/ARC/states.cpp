@@ -6,7 +6,8 @@ States::operator*= ( const double& rhs )
 {
     this->X*=rhs;
     this->V*=rhs;
-    for( Fiter fi=this->features.begin(); fi!=this->features.end(); ++fi ) fi->position.body*=rhs;
+    for( Fiter fi=this->features.begin(); fi!=this->features.end(); ++fi ) 
+        fi->set_body_position( fi->get_body_position()*rhs );
     return *this;
 }
 // constructor
@@ -77,8 +78,10 @@ void States::add(States a)
     V += a.V;
     for(int i = 0; i<getNumFeatures(); i++ )
     {
-        features[i].position.body += a.features[i].position.body;
-        features[i].position.world += a.features[i].position.world;
+        features[i].set_body_position( features[i].get_body_position() +
+                a.features[i].get_body_position() );
+        features[i].set_world_position( features[i].get_world_position() +
+                a.features[i].get_world_position() );
     }
     b += a.b;
 }
@@ -134,12 +137,12 @@ States::end_loop (  )
     for( Fiter vf=features.begin(); vf!=features.end(); ++vf )
     {
         featIter fi;
-        if( (fi=feats.find(vf->ID))==feats.end() )
+        if( (fi=feats.find(vf->getID()))==feats.end() )
         {
             std::cerr << "end_loop: feat not found." <<std::endl;
             exit(EXIT_FAILURE);
         }
-        else if( std::isnormal(vf->position.body[2]) )
+        else if( std::isnormal(vf->get_body_position()[2]) )
         {
             fi->second=*vf;
         }
@@ -186,10 +189,10 @@ States::dynamics ( Sensors s )
         Feature fi;
         cv::Vec3d bp;
         bp = pib->get_body_position();
-        fi.position.body = cv::Vec3d( 
+        fi.set_body_position( cv::Vec3d( 
             (-V[1] + bp[0]*V[0])*bp[2] + bp[1]*w[0] - (1 + bp[0]*bp[0])*w[2] + bp[0]*bp[1]*w[1],
             (-V[2] + bp[1]*V[0])*bp[2] - bp[0]*w[0] + (1 + bp[1]*bp[1])*w[1] - bp[0]*bp[1]*w[2],
-            (-w[2] * bp[0]+w[1] *bp[1])* bp[2]+V[0] *      bp[2]*bp[2]
+            (-w[2] * bp[0]+w[1] *bp[1])* bp[2]+V[0] *      bp[2]*bp[2])
         );
         predicted_state.addFeature(fi);
     }
