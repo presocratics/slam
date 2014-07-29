@@ -12,11 +12,8 @@ class Quaternion
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        Quaternion () {;}
-        Quaternion ( cv::Vec4d q )
-        {
-            coord = q;
-        }/* constructor */
+        Quaternion () : coord() {};
+        Quaternion ( const cv::Vec4d& q ) : coord(q) {};
 
         /* ====================  ACCESSORS     ======================================= */
 
