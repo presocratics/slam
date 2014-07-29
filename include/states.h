@@ -1,6 +1,8 @@
 // states class header
 #ifndef STATES_H
 #define STATES_H
+#include <utility>
+#include <vector>
 #include <map>
 #include "Quaternion.hpp"
 #include "opencv2/core/core.hpp"
@@ -18,7 +20,7 @@ typedef std::map<int,Feature> featMap;
 typedef featMap::iterator featIter;
 typedef std::vector<projection>::iterator matchIter;
 typedef std::vector<Feature>::iterator Fiter;
-typedef std::vector<Feature>::iterator cFiter;
+typedef std::vector<Feature>::const_iterator cFiter;
 
 
 class States{
@@ -26,13 +28,9 @@ class States{
     public:
         // constructor
         States() : X(), V(), b() {};
-        States( const cv::Vec3d& pos, const cv::Vec3d& vel, std::vector<Feature>&
+        States( const cv::Vec3d& pos, const cv::Vec3d& vel, const std::vector<Feature>&
                 feat, const cv::Vec3d& bias, const int n); 
         States( const cv::Mat& kx);
-        ~States() {
-            features.clear();
-            feats.clear();
-        }
 
         Vec3d X;
         Vec3d V;

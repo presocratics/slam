@@ -24,7 +24,7 @@ FeatureIO::update ( )
 {
     get_projections();
     return ;
-}		/* -----  end of method imageSensor::update  ----- */
+}        /* -----  end of method imageSensor::update  ----- */
 
 
     FILE *
@@ -34,7 +34,7 @@ FeatureIO::open_source ( const char *fn )
     if( (fp=fopen(fn,"r"))==NULL )
         err_sys("fopen body");
     return fp ;
-}		/* -----  end of method imageSensor::open_source  ----- */
+}        /* -----  end of method imageSensor::open_source  ----- */
 
 
 /*
@@ -56,7 +56,7 @@ FeatureIO::get_projections ( )
                 &it->reflection.x, &it->reflection.y );
     }
     return ;
-}		/* -----  end of method imageSensor::get_projections  ----- */
+}        /* -----  end of method imageSensor::get_projections  ----- */
 
 /*
  *--------------------------------------------------------------------------------------
@@ -91,4 +91,4 @@ FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
     va_end(ap);
 
     return rv ;
-}		/* -----  end of method ImageSensor::get_val  ----- */
+}        /* -----  end of method ImageSensor::get_val  ----- */

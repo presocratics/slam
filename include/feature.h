@@ -14,14 +14,14 @@ using namespace cv;
 
 struct frame {
     cv::Vec3d world,body;
-};				/* ----------  end of struct frame  ---------- */
+};                /* ----------  end of struct frame  ---------- */
 
 struct inits {
     Quaternion quaternion;
     double inverse_depth;
     cv::Vec3d anchor;
     cv::Point2d pib;
-};				/* ----------  end of struct inits  ---------- */
+};                /* ----------  end of struct inits  ---------- */
 
 typedef std::vector<projection>::iterator matchIter;
 
@@ -55,14 +55,14 @@ class Feature{
         {
             set_initial_pib( cv::Point2d(p[0], p[1]) );
             return ;
-        }		/* -----  end of method Feature::set_initial_pib  ----- */
+        }        /* -----  end of method Feature::set_initial_pib  ----- */
 
             inline void
         set_initial_pib ( cv::Point2d p )
         {
             initial.pib = p;
             return ;
-        }		/* -----  end of method Feature::set_initial_pib  ----- */
+        }        /* -----  end of method Feature::set_initial_pib  ----- */
 
         /*
          *--------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ class Feature{
         get_world_position (  ) const
         {
             return position.world;
-        }		/* -----  end of method Feature::get_world_position  ----- */
+        }        /* -----  end of method Feature::get_world_position  ----- */
 
         /*
          *--------------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ class Feature{
         get_body_position (  ) const
         {
             return position.body;
-        }		/* -----  end of method Feature::get_body_position  ----- */
+        }        /* -----  end of method Feature::get_body_position  ----- */
 
         /*
          *--------------------------------------------------------------------------------------
@@ -97,9 +97,9 @@ class Feature{
             inline void
         set_body_position ( cv::Vec3d value )
         {
-            position.body	= value;
+            position.body    = value;
             return ;
-        }		/* -----  end of method Feature::set_body_position  ----- */
+        }        /* -----  end of method Feature::set_body_position  ----- */
 
         /*
          *--------------------------------------------------------------------------------------
@@ -110,21 +110,21 @@ class Feature{
             inline void
         set_world_position ( cv::Vec3d value )
         {
-            position.world	= value;
+            position.world    = value;
             return ;
-        }		/* -----  end of method Feature::set_world_position  ----- */
+        }        /* -----  end of method Feature::set_world_position  ----- */
             inline void
         set_world_position ( cv::Point2d p, double d )
         {
             set_world_position( cv::Vec3d(p.x,p.y,d) );
             return ;
-        }		/* -----  end of method Feature::set_body_position  ----- */
+        }        /* -----  end of method Feature::set_body_position  ----- */
             inline void
         set_body_position ( cv::Point2d p, double d )
         {
             set_body_position( cv::Vec3d(p.x,p.y,d) );
             return ;
-        }		/* -----  end of method Feature::set_body_position  ----- */
+        }        /* -----  end of method Feature::set_body_position  ----- */
         /*
          *--------------------------------------------------------------------------------------
          *       Class:  Feature
@@ -135,7 +135,7 @@ class Feature{
         get_initial_anchor (  ) const
         {
             return initial.anchor;
-        }		/* -----  end of method Feature::get_anchor  ----- */
+        }        /* -----  end of method Feature::get_anchor  ----- */
 
         /*
          *--------------------------------------------------------------------------------------
@@ -146,9 +146,9 @@ class Feature{
             inline void
         set_initial_anchor ( cv::Vec3d value )
         {
-            initial.anchor	= value;
+            initial.anchor    = value;
             return ;
-        }		/* -----  end of method Feature::set_anchor  ----- */
+        }        /* -----  end of method Feature::set_anchor  ----- */
         /*
          *--------------------------------------------------------------------------------------
          *       Class:  Feature
@@ -159,7 +159,7 @@ class Feature{
         get_initial_quaternion (  ) const
         {
             return initial.quaternion;
-        }		/* -----  end of method Feature::get_initial.quaternion  ----- */
+        }        /* -----  end of method Feature::get_initial.quaternion  ----- */
 
         /*
          *--------------------------------------------------------------------------------------
@@ -170,9 +170,9 @@ class Feature{
             inline void
         set_initial_quaternion ( Quaternion value )
         {
-            initial.quaternion	= value;
+            initial.quaternion    = value;
             return ;
-        }		/* -----  end of method Feature::set_initial.quaternion  ----- */
+        }        /* -----  end of method Feature::set_initial.quaternion  ----- */
         /*
          *--------------------------------------------------------------------------------------
          *       Class:  Feature
@@ -183,7 +183,7 @@ class Feature{
         get_noMatch (  ) const
         {
             return noMatch;
-        }		/* -----  end of method Feature::get_noMatch  ----- */
+        }        /* -----  end of method Feature::get_noMatch  ----- */
 
         /*
          *--------------------------------------------------------------------------------------
@@ -194,9 +194,9 @@ class Feature{
             inline void
         set_noMatch ( int value )
         {
-            noMatch	= value;
+            noMatch    = value;
             return ;
-        }		/* -----  end of method Feature::set_noMatch  ----- */
+        }        /* -----  end of method Feature::set_noMatch  ----- */
 
 
     private:

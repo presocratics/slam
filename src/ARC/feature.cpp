@@ -21,20 +21,20 @@
 // constructor
 Feature::Feature( const Vec3d& pos, int n )
 {
-   set_body_position(pos);
-   setID(n);
+    set_body_position(pos);
+    setID(n);
 }
 
 Feature::Feature( const cv::Vec3d& anchor, const Sensors& sense, const projection& match )
 {
     initialize( anchor, sense, match, false );
     return ;
-}		/* -----  end of method Feature::Feature  ----- */
+}        /* -----  end of method Feature::Feature  ----- */
 
 
     void
-Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense, const
-        projection& match, const bool extant )
+Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense, 
+        const projection& match, const bool extant )
 {
     if( !extant )
     {
@@ -57,7 +57,7 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense, const
     set_initial_pib(match.source);
     set_noMatch(0);
     return ;
-}		/* -----  end of method Feature::initialize  ----- */
+}        /* -----  end of method Feature::initialize  ----- */
 
 // accessor
 
@@ -80,14 +80,14 @@ Feature& Feature::setID(int n)
 Feature::fromAnchor ( const cv::Vec3d& pos ) const
 {
     return initial.quaternion.rotation().t()*(pos - initial.anchor);
-}		/* -----  end of method Feature::fromAnchor  ----- */
+}        /* -----  end of method Feature::fromAnchor  ----- */
 
 
     cv::Matx33d
 Feature::rb2b ( const Quaternion& qbw ) const
 {
     return initial.quaternion.rotation().t() * qbw.rotation();
-}		/* -----  end of method Feature::rb2b  ----- */
+}        /* -----  end of method Feature::rb2b  ----- */
 
 
 
@@ -103,5 +103,5 @@ Feature::incNoMatch ( )
 {
     set_noMatch( get_noMatch()+1 );
     return get_noMatch();
-}		/* -----  end of method Feature::incNoMatch  ----- */
+}        /* -----  end of method Feature::incNoMatch  ----- */
 
