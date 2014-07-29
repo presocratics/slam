@@ -40,18 +40,18 @@ class Feature{
         inits initial;
 
         // accessor
-        cv::Vec3d fromAnchor ( cv::Vec3d pos );
-        cv::Matx33d rb2b ( Quaternion qbw );
+        cv::Vec3d fromAnchor ( const cv::Vec3d& pos ) const;
+        cv::Matx33d rb2b ( const Quaternion& qbw ) const;
 
-        int getID();
+        int getID() const;
        
         // mutator
         void initialize ( const cv::Vec3d& anchor, const Sensors& sense, const
                 projection& match, const bool extant );
 
         int incNoMatch();
-        void set_body(Vec3d pos);
-        void setID(int n);
+        Feature& set_body( const cv::Vec3d& pos);
+        Feature& setID(int n);
             inline void
         set_initial_pib ( cv::Vec3d p )
         {

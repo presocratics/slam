@@ -61,40 +61,30 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense, const
 
 // accessor
 
-int Feature::getID()
-{
-    return ID;
-}
+int Feature::getID() const { return ID; }
 
 // mutator
-
-
-
-void Feature::set_body(Vec3d pos)
+Feature& Feature::set_body( const cv::Vec3d& pos)
 {
     position.body = pos;
+    return *this;
 }
 
-
-
-
-
-
-
-void Feature::setID(int n)
+Feature& Feature::setID(int n)
 {
     ID = n;
+    return *this;
 }
 
     cv::Vec3d
-Feature::fromAnchor ( cv::Vec3d pos )
+Feature::fromAnchor ( const cv::Vec3d& pos ) const
 {
     return initial.quaternion.rotation().t()*(pos - initial.anchor);
 }		/* -----  end of method Feature::fromAnchor  ----- */
 
 
     cv::Matx33d
-Feature::rb2b ( Quaternion qbw )
+Feature::rb2b ( const Quaternion& qbw ) const
 {
     return initial.quaternion.rotation().t() * qbw.rotation();
 }		/* -----  end of method Feature::rb2b  ----- */
