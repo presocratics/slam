@@ -19,6 +19,7 @@ using namespace cv;
 typedef std::map<int,Feature> featMap;
 typedef featMap::iterator featIter;
 typedef std::vector<projection>::iterator matchIter;
+typedef std::vector<projection>::const_iterator cMatchIter;
 typedef std::vector<Feature>::iterator Fiter;
 typedef std::vector<Feature>::const_iterator cFiter;
 
@@ -47,7 +48,7 @@ class States{
         int getNumFeatures() const;
 
         // mutator
-        void update_features( ImageSensor *imgsense, Sensors sense );
+        void update_features( const ImageSensor& imgsense, const Sensors& sense );
         void end_loop (  );
         States& setX(const Vec3d& pos);
         States& setV(const Vec3d& vel);

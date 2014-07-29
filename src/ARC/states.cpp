@@ -91,10 +91,10 @@ void States::add( const States& a)
 }
 
     void
-States::update_features ( ImageSensor *imgsense, Sensors sense )
+States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
 {
     features.clear();
-    features.reserve(imgsense->matches.size());
+    features.reserve(imgsense.matches.size());
     // Age each feature
     featIter fi=feats.begin(); 
     for( ; fi!=feats.end(); ++fi )
@@ -102,8 +102,8 @@ States::update_features ( ImageSensor *imgsense, Sensors sense )
         fi->second.incNoMatch();
     }
 
-    matchIter match=imgsense->matches.begin();
-    for( ; match!=imgsense->matches.end(); ++match )
+    cMatchIter match=imgsense.matches.begin();
+    for( ; match!=imgsense.matches.end(); ++match )
     {
         Feature f;
         fi=feats.find(match->id);

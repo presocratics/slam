@@ -86,7 +86,7 @@ int main( int argc, char **argv )
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0) );
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6) );
     // Inverse depth
-    mu.setb(Vec3d(0,0,0));
+    mu.setb(cv::Vec3d(0,0,0));
 
     double scaleW = 10;
     double scaleH = 10;
@@ -108,7 +108,7 @@ int main( int argc, char **argv )
         // Update sensors
         sense.update();
         imgsense.update();
-        mu.update_features( &imgsense, sense );
+        mu.update_features( imgsense, sense );
         nf=mu.getNumFeatures();
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
