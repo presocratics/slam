@@ -34,7 +34,7 @@ void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );
 void jacobianH( const cv::Vec3d& X, const Quaternion& qbw, const Feature& feat,
         Mat& Hb, Mat& Hi );
 void jacobianMotionModel( States *mu, const Sensors& sense, Mat& F_out );
-void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<projection> matches,
+void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<projection>& matches,
         const Quaternion& qbw, View& meas, View& hmu, Mat& H, States *mu );
 void initG ( cv::Mat& G, int nf, double dt );
 void initQ ( cv::Mat& Q, int nf, double Q0 );

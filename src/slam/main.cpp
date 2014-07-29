@@ -501,7 +501,7 @@ void jacobianMotionModel( States *mu, const Sensors& sense, Mat& F_out )
 * measurementModel
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
-void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<projection> matches,
+void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<projection>& matches,
         const Quaternion& qbw, View& meas, View& hmu, Mat& H, States *mu )
 {
     int nf;

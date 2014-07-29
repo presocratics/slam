@@ -28,6 +28,8 @@
  * coordinate frame.
  */
 struct projection {
+    projection(){};
+    projection( const cv::Point2d& s, const cv::Point2d& r, int i ) : source(s), reflection(r), id(i) {};
     cv::Point2d source, reflection;
     int id;
 };				/* ----------  end of struct match  ---------- */
@@ -46,6 +48,7 @@ class FeatureIO
         FeatureIO ( const char *fn, bool ih) : isHex(ih) {
             set_file( fn );
         }/* constructor */
+        ~FeatureIO() { matches.clear(); };
 
         /* ====================  ACCESSORS     ======================================= */
 

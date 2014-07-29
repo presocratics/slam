@@ -29,6 +29,10 @@ class States{
         States( const cv::Vec3d& pos, const cv::Vec3d& vel, std::vector<Feature>&
                 feat, const cv::Vec3d& bias, const int n); 
         States( const cv::Mat& kx);
+        ~States() {
+            features.clear();
+            feats.clear();
+        }
 
         Vec3d X;
         Vec3d V;
