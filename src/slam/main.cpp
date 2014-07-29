@@ -120,10 +120,6 @@ int main( int argc, char **argv )
 
         measurementModel( old_pos, sense.altitude, imgsense.matches, 
                 sense.quaternion, meas, hmu, H, &mu );
-        for( size_t j=0; j<meas.features.size(); ++j )
-        {
-            cout << "TEST:" << meas.features[j].current << endl;
-        }
 
         altHat = meas.altitude;
 
