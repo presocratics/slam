@@ -32,22 +32,18 @@ class Feature{
     public:
         // constructor
         Feature(){};
-        Feature(Vec3d pos, Scalar color, int n );
+        Feature( const Vec3d& pos, int n );
         Feature( const cv::Vec3d& anchor, Sensors& sense, const projection& match );
 
-        Scalar RGB;
         int ID;
         frame position;
         inits initial;
-
-
 
         // accessor
         cv::Vec3d fromAnchor ( cv::Vec3d pos );
         cv::Matx33d rb2b ( Quaternion qbw );
 
         Vec3d get_body();
-        Scalar getRGB();
         int getID();
        
         // mutator
@@ -56,7 +52,6 @@ class Feature{
 
         int incNoMatch();
         void set_body(Vec3d pos);
-        void setRGB(Scalar color);
         void setID(int n);
             inline void
         set_initial_pib ( cv::Vec3d p )

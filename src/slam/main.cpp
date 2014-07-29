@@ -573,22 +573,3 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
     //meas = meas(~ismember(1:size(meas, 1), find(meas == 0)), :);
     
 }
-
-/************************************************************************************************
-* Find indexes of elements equal to val in src: 1D array
-**************************************************************************************************/
-vector<int> findIndex(const Mat& src, double val)
-{
-    vector<int> out;
-    for (int i = 0; i < src.rows; i++)
-    {
-        for (int j = 0; j < src.cols; j++)
-        {
-            if (src.at<double>(i, j) == val)
-            {
-                out.push_back(src.cols*i + j);
-            }
-        }
-    }
-    return out;
-}

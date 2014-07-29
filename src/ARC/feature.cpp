@@ -19,10 +19,9 @@
 #include "feature.h"
 #define DINIT 5            /* Max initial depth */
 // constructor
-Feature::Feature(Vec3d pos, Scalar color, int n )
+Feature::Feature( const Vec3d& pos, int n )
 {
    position.body = pos;
-   RGB = color;
    ID = n;
 }
 
@@ -66,10 +65,6 @@ Vec3d Feature::get_body()
     return position.body;
 }
 
-Scalar Feature::getRGB()
-{
-    return RGB;
-}
 
 int Feature::getID()
 {
@@ -90,10 +85,6 @@ void Feature::set_body(Vec3d pos)
 
 
 
-void Feature::setRGB(Scalar color)
-{
-    RGB = color;
-}
 
 void Feature::setID(int n)
 {
