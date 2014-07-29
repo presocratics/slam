@@ -3,7 +3,7 @@
 # Martin Miller
 # Created: 2014/07/07
 # Simulate real-time
-DATA=/home/marty/ARC/data/2nd
+DATA=raw/2nd
 #BODY=data/bodyHist3.txt
 DT=data/dt.fifo
 ALT=data/alt.fifo
@@ -24,7 +24,7 @@ mkfifo $DT 2>/dev/null
 ./bin/downsample $DATA/framedata $DATA/acc | \
     cut -d, -f2,3,4 | \
     ./bin/fir config/gravity.txt | \
-    ./bin/rmbias -0.0171 0.0116 0.0158 > $ACC &
+    ./bin/rmbias -- -0.0171 0.0116 0.0158 > $ACC &
 
 ./bin/downsample $DATA/framedata $DATA/attitude| \
     cut -d, -f2,3,4 | \
@@ -32,7 +32,7 @@ mkfifo $DT 2>/dev/null
 
 ./bin/downsample $DATA/framedata $DATA/gyro| \
     cut -d, -f2,3,4 | \
-    ./bin/rmbias 0.0006 0.0009 -0.0011 | \
+    ./bin/rmbias -- 0.0006 0.0009 -0.0011 | \
     ./bin/fir ./config/coeffs.txt > $ANGVEL &
 
 ./bin/getdt $DATA/framedata| \
