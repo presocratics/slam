@@ -145,10 +145,10 @@ int main( int argc, char **argv )
         mu+=kmh;
 
         // Real time plotting.
-        printf("%lf,%lf,%lf,%lf,%lf,%lf\n", mu.X[0], mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
+        printf("%f,%f,%f,%f,%f,%f\n", mu.X[0], mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
         for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
         {
-            printf("%d,%lf,%lf,%lf\n", fi->ID, fi->position.world[0],
+            printf("%d,%f,%f,%f\n", fi->ID, fi->position.world[0],
                     fi->position.world[1], fi->position.world[2] );
         }
         printf("\n");
@@ -345,124 +345,7 @@ blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl )
  *  Description:  
  * =====================================================================================
  */
-    void
-ARC_compare ( cv::Mat cmat, char *fn, double thresh )
-{
-    cv::Mat diff;
-    cv::Mat mlabmat(cmat.size(), CV_64F );
-    vector<double> v;
-    double minVal, maxVal;
-    hexToVec( fn, v ); 
-    reshapeMat( v, mlabmat );
-    absdiff( cmat, mlabmat, diff );
-    minMaxLoc( diff, &minVal, &maxVal );
-    cout << "Min err: " << minVal << " " << "Max err: " << maxVal << endl;
-    if( maxVal>thresh ) 
-    {
-        cerr << "Error too large." << endl;
-        cerr << diff << endl;
-        exit(EXIT_FAILURE);
-    }
-    return ;
-}		/* -----  end of function ARC_compare  ----- */
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  hexToVec
- *  Description:  Reads hex values from an ifstream and writes to a vector.
- * =====================================================================================
- */
-void hexToVec ( const char *fn, vector<double>& vec )
-{
 
-	long long * iv = new long long;
-	double * dv = (double*)iv;
-
-    FILE *fp;
-    char *line;
-    size_t sz=32;
-
-    line = (char *) calloc(sz, sizeof(char) );
-    if( line==NULL ) {
-        fprintf( stderr, "\ndynamic memory allocation failed\n" );
-        exit( EXIT_FAILURE );
-    }
-
-	if ((fp = fopen(fn, "r")) == NULL);
-
-    while( fgets( line, sz, fp )!=NULL )
-    {
-		*iv = std::strtoull(line, NULL, 16);
-		vec.push_back(*dv);
-    }
-    fclose(fp);
-    free(line);
-    line = NULL;
-    return;
-}		/* -----  end of function hexToVec  ----- */
-
-/************************************************************************************************
-* Reads txt file and outputs vector
-*
-**************************************************************************************************/
-
-void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dtHist, vector<double>& qbwHist, vector<double>& wHist)
-{
-    hexToVec( "../data/aHist.hex", aHist );
-    hexToVec( "../data/altHist.hex", altHist );
-    hexToVec( "../data/dtHist.hex", dtHist );
-    hexToVec( "../data/qbwHist.hex", qbwHist );
-    hexToVec( "../data/wHist.hex", wHist );
-}
-
-/************************************************************************************************
-* Copy Matrix from src to dst.
-**************************************************************************************************/
-void copyMat(Mat& src, Mat& dst)
-{
-	for (int i = 0; i < src.rows; i++)
-	{
-		for (int j = 0; j < src.cols; j++)
-		{
-			dst.at<double>(i, j) = src.at<double>(i, j);
-		}
-	}
-}
-
-/************************************************************************************************
-* Reshapes vector to Mat
-**************************************************************************************************/
-void reshapeMat(vector<double> src, Mat& dst)
-{
-	int rows = dst.rows;
-	int cols = dst.cols;
-	for (int j = 0; j < cols; j++)
-	{
-		for (int i = 0; i < rows; i++)
-		{
-			dst.at<double>(i, j) = src[rows*j + i];
-		}
-	}
-}
-
-/************************************************************************************************
-* Reshapes vector to Mat with 3 Channels
-**************************************************************************************************/
-void reshapeMat3D(vector<double> src, Mat& dst)
-{
-	int rows = dst.rows;
-	int cols = dst.cols;
-
-	for (int k = 0; k < cols; k++)
-	{
-		for (int j = 0; j < rows; j++)
-		{
-			for (int i = 0; i < 3; i++)
-			{
-				dst.at<Vec3d>(j, k)[i] = src[3 * (rows*k + j) + i];
-			}
-		}
-	}
-}
 
 /************************************************************************************************
 * JacobianH. Note: 'i' here should be 1 less 'i' in matlab

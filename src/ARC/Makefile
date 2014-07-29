@@ -3,7 +3,7 @@ SRC = feature.cpp featureIO.cpp imagesensor.cpp ourerr.cpp \
 OBJ = $(SRC:.cpp=.o)
 OUT = libARC.a
 IDIR = ../../include
-CXXFLAGS = -Wall -Werror
+CXXFLAGS = -Wall -Werror -std=c++03 -pedantic-errors
 CXXFLAGS += -g
 CXXFLAGS += $(shell pkg-config --cflags opencv)
 CXXFLAGS += -I$(IDIR)
@@ -23,4 +23,5 @@ $(OUT): $(OBJ)
 .PHONY: clean
 clean:
 	rm -f *.o
+	rm -f ../../lib/libARC.a
 

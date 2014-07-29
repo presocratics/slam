@@ -1,6 +1,6 @@
 IDIR = ../../include
 
-CXXFLAGS = -Wall -Werror
+CXXFLAGS = -Wall -Werror -std=c++03 -pedantic-errors
 CXXFLAGS += -g
 CXXFLAGS += $(shell pkg-config --cflags opencv)
 CXXFLAGS += -I$(IDIR)
@@ -20,4 +20,5 @@ libARC.a:
 .PHONY: clean
 clean:
 	rm -f *.o
+	rm -f ../../bin/slam
 

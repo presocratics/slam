@@ -13,4 +13,5 @@ libARC.a:
 .PHONY: clean
 clean:
 	rm -f *.o
+	rm -f ../../bin/multitap
 

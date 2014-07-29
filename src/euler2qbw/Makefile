@@ -9,4 +9,5 @@ euler2qbw: $(objects)
 .PHONY: clean
 clean:
 	rm -f *.o
+	rm -f ../../bin/euler2qbw
 

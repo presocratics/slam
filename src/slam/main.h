@@ -30,12 +30,6 @@ typedef std::vector<projection>::iterator matchIter;
 typedef std::vector<Feature>::iterator Fiter;
 
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );
-void ARC_compare ( cv::Mat cmat, char *fn, double thresh=0 );
-void hexToVec ( const char *fn, vector<double>& vec );
-void loadData(vector<double>& aHist, vector<double>& altHist, vector<double>& dtHist, vector<double>& qbwHist, vector<double>& wHist);
-void copyMat(Mat& src, Mat& dst);
-void reshapeMat(vector<double> src, Mat& dst);
-void reshapeMat3D(vector<double> src, Mat& dst);
 void jacobianH(cv::Vec3d X, Quaternion qbw, Feature feat, Mat& Hb, Mat& Hi );
 void jacobianMotionModel(States *mu, Sensors sense, Mat& F_out );
 void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
