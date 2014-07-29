@@ -27,8 +27,8 @@ States::States ( const cv::Mat& kx ) :
     nf = (kx.rows-9)/3;
     for( int i=0; i<nf; ++i )
     {
-        addFeature(Feature( cv::Vec3d( kx.at<double>(9+3*i,0), kx.at<double>(10+3*i,0), kx.at<double>(11+3*i,0) ),
-                cv::Scalar(0,0,0), 0 ));
+        addFeature(Feature( cv::Vec3d( kx.at<double>(9+3*i,0), 
+            kx.at<double>(10+3*i,0), kx.at<double>(11+3*i,0) ), cv::Scalar(0,0,0), 0 )); 
     }
     return ;
 }		/* -----  end of method States::States  ----- */
