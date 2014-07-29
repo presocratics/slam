@@ -42,8 +42,6 @@ class States{
         // accessor
         Vec3d getX();
         Vec3d getV();
-        std::vector<Feature> getFeatures();
-        Feature getFeature(int i);
         Vec3d getb();
         int getRows() const;
         int getNumFeatures() const;
@@ -51,13 +49,12 @@ class States{
         // mutator
         void update_features( ImageSensor *imgsense, Sensors sense );
         void end_loop (  );
-        void setX(const Vec3d& pos);
-        void setV(const Vec3d& vel);
-        void setFeature(int i, Feature f);
-        void addFeature(const Feature& f);
-        void setb(const Vec3d& bias);
-        void add(States a);
-        States dynamics( Sensors s );
+        States& setX(const Vec3d& pos);
+        States& setV(const Vec3d& vel);
+        States& addFeature(const Feature& f);
+        States& setb(const Vec3d& bias);
+        void add( const States& a);
+        States dynamics( const Sensors& s );
         //Operator
         States& operator*= ( const double& rhs );
         States& operator+= ( const States& rhs );

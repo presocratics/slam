@@ -46,28 +46,32 @@ Vec3d States::getX() { return X; }
 
 Vec3d States::getV() { return V; }
 
-std::vector<Feature> States::getFeatures() { return features; }
-
-Feature States::getFeature(int i) { return features[i]; }
-
 Vec3d States::getb() { return b; }
 
 // mutator
-void States::setX(const Vec3d& pos) { X = pos; }
+States& States::setX(const Vec3d& pos) { 
+    X = pos; 
+    return *this;
+}
 
-void States::setV(const Vec3d& vel) { V = vel; }
+States& States::setV(const Vec3d& vel) { 
+    V = vel; 
+    return *this;
+}
 
-void States::addFeature(const Feature& f)
+States& States::addFeature(const Feature& f)
 {
     features.push_back(f);
+    return *this;
 }
 
-void States::setb(const Vec3d& bias)
+States& States::setb(const Vec3d& bias)
 {
     b = bias;
+    return *this;
 }
 
-void States::add(States a)
+void States::add( const States& a)
 {
     if( a.getNumFeatures()!=getNumFeatures() )
     {
@@ -160,7 +164,7 @@ States::end_loop (  )
  *--------------------------------------------------------------------------------------
  */
     States
-States::dynamics ( Sensors s )
+States::dynamics ( const Sensors& s )
 {
     States predicted_state;
     Matx33d A;
