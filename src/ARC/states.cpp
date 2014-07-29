@@ -18,68 +18,43 @@ States::operator+= ( const States& rhs )
     return *this;
 }
 
-States::States ( cv::Mat kx )
+States::States ( const cv::Mat& kx ) :
+    X(cv::Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) ),
+    V( cv::Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) ),
+    b( cv::Vec3d( kx.at<double>(6,0), kx.at<double>(7,0), kx.at<double>(8,0) ) )
 {
     int nf;
     nf = (kx.rows-9)/3;
-    setX( cv::Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) );
-    setV( cv::Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) );
     for( int i=0; i<nf; ++i )
     {
-        Feature ft( cv::Vec3d( kx.at<double>(9+3*i,0), kx.at<double>(10+3*i,0), kx.at<double>(11+3*i,0) ),
-                cv::Scalar(0,0,0), 0 );
-        addFeature(ft);
+        addFeature(Feature( cv::Vec3d( kx.at<double>(9+3*i,0), kx.at<double>(10+3*i,0), kx.at<double>(11+3*i,0) ),
+                cv::Scalar(0,0,0), 0 ));
     }
-    setb( cv::Vec3d( kx.at<double>(6,0), kx.at<double>(7,0), kx.at<double>(8,0) ) );
     return ;
 }		/* -----  end of method States::States  ----- */
 
 States::States( const cv::Vec3d& pos, const cv::Vec3d& vel,
-        std::vector<Feature>& feat, const cv::Vec3d& bias, const int n)
+        std::vector<Feature>& feat, const cv::Vec3d& bias, const int n) :
+    X(pos), V(vel), b(bias)
 {
-    X = pos;
-    V = vel;
-    b = bias;
-    for( Fiter fi=feat.begin(); fi!=feat.end(); ++fi )
-        features.push_back(*fi);
+    for( Fiter fi=feat.begin(); fi!=feat.end(); ++fi ) features.push_back(*fi);
 }
 
 // accessor
-Vec3d States::getX()
-{
-    return X;
-}
+Vec3d States::getX() { return X; }
 
-Vec3d States::getV()
-{
-    return V;
-}
+Vec3d States::getV() { return V; }
 
-std::vector<Feature> States::getFeatures()
-{
-    return features;
-}
+std::vector<Feature> States::getFeatures() { return features; }
 
-Feature States::getFeature(int i)
-{
-    return features[i];
-}
+Feature States::getFeature(int i) { return features[i]; }
 
-Vec3d States::getb()
-{
-    return b;
-}
+Vec3d States::getb() { return b; }
 
 // mutator
-void States::setX(Vec3d pos)
-{
-    X = pos;
-}
+void States::setX(Vec3d pos) { X = pos; }
 
-void States::setV(Vec3d vel)
-{
-    V = vel;
-}
+void States::setV(Vec3d vel) { V = vel; }
 
 void States::addFeature(Feature f)
 {

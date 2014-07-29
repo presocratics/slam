@@ -28,7 +28,7 @@ class States{
         States() : X(), V(), b() {};
         States( const cv::Vec3d& pos, const cv::Vec3d& vel, std::vector<Feature>&
                 feat, const cv::Vec3d& bias, const int n); 
-        States(cv::Mat kx);
+        States( const cv::Mat& kx);
 
         Vec3d X;
         Vec3d V;
