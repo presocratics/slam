@@ -43,7 +43,6 @@ class FeatureIO
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        FeatureIO(){ }                             /* constructor */
         FeatureIO ( const char *fn, bool ih) {
             set_file( fn, ih );
         }/* constructor */

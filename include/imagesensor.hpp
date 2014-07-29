@@ -17,7 +17,6 @@ class ImageSensor : public FeatureIO
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        ImageSensor () { }                             /* constructor */
         ImageSensor ( const char *fn, bool ih) : FeatureIO( fn, ih) { }
 
         /* ====================  ACCESSORS     ======================================= */
