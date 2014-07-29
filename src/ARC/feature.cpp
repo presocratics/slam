@@ -21,11 +21,11 @@
 // constructor
 Feature::Feature( const Vec3d& pos, int n )
 {
-   position.body = pos;
-   ID = n;
+   set_body_position(pos);
+   setID(n);
 }
 
-Feature::Feature( const cv::Vec3d& anchor, Sensors& sense, const projection& match )
+Feature::Feature( const cv::Vec3d& anchor, const Sensors& sense, const projection& match )
 {
     initialize( anchor, sense, match, false );
     return ;
@@ -33,7 +33,7 @@ Feature::Feature( const cv::Vec3d& anchor, Sensors& sense, const projection& mat
 
 
     void
-Feature::initialize ( const cv::Vec3d& anchor, Sensors& sense, const
+Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense, const
         projection& match, const bool extant )
 {
     if( !extant )
@@ -60,11 +60,6 @@ Feature::initialize ( const cv::Vec3d& anchor, Sensors& sense, const
 }		/* -----  end of method Feature::initialize  ----- */
 
 // accessor
-Vec3d Feature::get_body()
-{
-    return position.body;
-}
-
 
 int Feature::getID()
 {

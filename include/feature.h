@@ -33,7 +33,7 @@ class Feature{
         // constructor
         Feature(){};
         Feature( const Vec3d& pos, int n );
-        Feature( const cv::Vec3d& anchor, Sensors& sense, const projection& match );
+        Feature( const cv::Vec3d& anchor, const Sensors& sense, const projection& match );
 
         int ID;
         frame position;
@@ -43,11 +43,10 @@ class Feature{
         cv::Vec3d fromAnchor ( cv::Vec3d pos );
         cv::Matx33d rb2b ( Quaternion qbw );
 
-        Vec3d get_body();
         int getID();
        
         // mutator
-        void initialize ( const cv::Vec3d& anchor, Sensors& sense, const
+        void initialize ( const cv::Vec3d& anchor, const Sensors& sense, const
                 projection& match, const bool extant );
 
         int incNoMatch();
