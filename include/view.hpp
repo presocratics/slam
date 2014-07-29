@@ -52,11 +52,9 @@ class View
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        View() {
-            features = new std::vector<Vfeat>;
-        }
-        ~View() {
-            delete features;
+        View()
+        {
+            features.reserve(100);
         }
 
         /* ====================  ACCESSORS     ======================================= */
@@ -68,7 +66,7 @@ class View
 
         /* ====================  DATA MEMBERS  ======================================= */
         double altitude;
-        std::vector<Vfeat>* features; 
+        std::vector<Vfeat> features;
 
     protected:
         /* ====================  METHODS       ======================================= */

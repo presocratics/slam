@@ -120,9 +120,9 @@ int main( int argc, char **argv )
 
         measurementModel( old_pos, sense.altitude, imgsense.matches, 
                 sense.quaternion, meas, hmu, H, &mu );
-        for( size_t j=0; j<hmu.features->size(); ++j )
+        for( size_t j=0; j<meas.features.size(); ++j )
         {
-            cout << "TEST:" << (*hmu.features)[j].current << endl;
+            cout << "TEST:" << meas.features[j].current << endl;
         }
 
         altHat = meas.altitude;
@@ -558,8 +558,8 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
 
         jacobianH(mu->X, qbw, *feat, Hb, Hi);
 
-        meas.features->push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
-        hmu.features->push_back(Vfeat( pibHat, pib0Hat, ppbHat ));
+        meas.features.push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
+        hmu.features.push_back(Vfeat( pibHat, pib0Hat, ppbHat ));
 
         H.row(0).col(2).setTo(-1);
         // For each feature
