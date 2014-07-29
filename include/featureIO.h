@@ -43,15 +43,14 @@ class FeatureIO
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        FeatureIO ( const char *fn, bool ih) {
-            set_file( fn, ih );
+        FeatureIO ( const char *fn, bool ih) : isHex(ih) {
+            set_file( fn );
         }/* constructor */
 
         /* ====================  ACCESSORS     ======================================= */
 
         /* ====================  MUTATORS      ======================================= */
-        void set_file( const char *fn, bool ih ) {
-            isHex = ih;
+        void set_file( const char *fn ) {
             fp=open_source(fn); 
         }
         void update();
