@@ -13,7 +13,6 @@ class Sensors
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        Sensors (){;} /* constructor */
 
         /* ====================  ACCESSORS     ======================================= */
         double get_altitude();
