@@ -12,22 +12,17 @@ class Vfeat
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        Vfeat ( cv::Point2d cur, cv::Point2d init, cv::Point2d refl ) {
-            set_views( cur, init, refl );
-        }
-        Vfeat ( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl ) {
-            set_views( cur, init, refl );
-        }
+        Vfeat ( const cv::Point2d& cur, const cv::Point2d& init, const cv::Point2d&
+                refl ) : current(cur), initial(init), reflection(refl) {};
+        Vfeat ( const cv::Vec3d& cur, const cv::Vec3d& init, const cv::Vec3d& refl ) :
+                current(cv::Point2d(cur[0],cur[1])), initial(cv::Point2d(init[0],init[1])),
+                reflection(cv::Point2d(refl[0],refl[1])) {};
 
         /* ====================  ACCESSORS     ======================================= */
 
         /* ====================  MUTATORS      ======================================= */
 
         /* ====================  OPERATORS     ======================================= */
-        void set_views( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl );
-        void set_views( cv::Point2d cur, cv::Vec3d init, cv::Point2d refl );
-        void set_views( cv::Point2d cur, cv::Point2d init, cv::Point2d refl );
-        
 
         /* ====================  DATA MEMBERS  ======================================= */
         cv::Point2d current, initial, reflection;

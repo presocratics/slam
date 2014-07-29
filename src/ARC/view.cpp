@@ -20,36 +20,6 @@ View::toMat ( cv::Mat& R )
     return ;
 }		/* -----  end of method View::toMat  ----- */
 
-
-    void
-Vfeat::set_views ( cv::Vec3d cur, cv::Vec3d init, cv::Vec3d refl )
-{
-    cv::Point2d c,r;
-    c=cv::Point2d( cur[0], cur[1] );
-    r=cv::Point2d( refl[0], refl[1] );
-    set_views( c, init, r );
-    return ;
-}		/* -----  end of method View::set_views  ----- */
-
-    void
-Vfeat::set_views ( cv::Point2d cur, cv::Vec3d init, cv::Point2d refl )
-{
-    cv::Point2d i;
-    i = cv::Point2d( init[0], init[1] );
-    set_views( cur, i, refl );
-    return ;
-}		/* -----  end of method Vfeat::set_views  ----- */
-
-    void
-Vfeat::set_views ( cv::Point2d cur, cv::Point2d init, cv::Point2d refl )
-{
-    current=cur;
-    reflection=refl;
-    initial=init;
-    return ;
-}		/* -----  end of method Vfeat::set_views  ----- */
-
-
     void
 subtract ( const View& lhs, const View& rhs, View& dst )
 {
