@@ -17,17 +17,6 @@ States::operator+= ( const States& rhs )
     this->add(rhs);
     return *this;
 }
-States::States()
-{
-    X = Vec3d(0,0,0);
-    V = Vec3d(0,0,0);
-    b = Vec3d(0,0,0);
-}
-
-States::~States()
-{
-    features.clear();
-}
 
 States::States ( cv::Mat kx )
 {

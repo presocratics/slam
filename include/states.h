@@ -23,17 +23,17 @@ typedef std::vector<Feature>::iterator Fiter;
 class States{
 
     public:
+        // constructor
+        States() : X(), V(), b() {};
+        States(Vec3d pos, Vec3d vel, std::vector<Feature> feat, Vec3d bias, int n);
+        States(cv::Mat kx);
+
         Vec3d X;
         Vec3d V;
         Vec3d b;
         std::vector<Feature> features;
         std::map<int,Feature> feats;
 
-        // constructor
-        States();
-        ~States();
-        States(Vec3d pos, Vec3d vel, std::vector<Feature> feat, Vec3d bias, int n);
-        States(cv::Mat kx);
 
         // accessor
         Vec3d getX();
