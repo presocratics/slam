@@ -18,6 +18,7 @@ typedef std::map<int,Feature> featMap;
 typedef featMap::iterator featIter;
 typedef std::vector<projection>::iterator matchIter;
 typedef std::vector<Feature>::iterator Fiter;
+typedef std::vector<Feature>::iterator cFiter;
 
 
 class States{
@@ -25,7 +26,8 @@ class States{
     public:
         // constructor
         States() : X(), V(), b() {};
-        States(Vec3d pos, Vec3d vel, std::vector<Feature> feat, Vec3d bias, int n);
+        States( const cv::Vec3d& pos, const cv::Vec3d& vel, std::vector<Feature>&
+                feat, const cv::Vec3d& bias, const int n); 
         States(cv::Mat kx);
 
         Vec3d X;

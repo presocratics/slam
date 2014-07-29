@@ -34,12 +34,14 @@ States::States ( cv::Mat kx )
     return ;
 }		/* -----  end of method States::States  ----- */
 
-States::States(Vec3d pos, Vec3d vel, std::vector<Feature> feat, Vec3d bias, int n)
+States::States( const cv::Vec3d& pos, const cv::Vec3d& vel,
+        std::vector<Feature>& feat, const cv::Vec3d& bias, const int n)
 {
     X = pos;
     V = vel;
-    features = feat;
     b = bias;
+    for( Fiter fi=feat.begin(); fi!=feat.end(); ++fi )
+        features.push_back(*fi);
 }
 
 // accessor
