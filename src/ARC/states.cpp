@@ -102,12 +102,12 @@ States::update_features ( ImageSensor *imgsense, Sensors sense )
         fi=feats.find(match->id);
         if( fi==feats.end() ) // New feature
         {
-            f=Feature( X, sense, match);
+            f=Feature( X, sense, *match);
             feats.insert( std::pair<int,Feature>(match->id, f) );
         }
         else if( fi->second.get_noMatch()>1 ) // Reinitialize old feature
         {
-            fi->second.initialize( X, sense, match, true );
+            fi->second.initialize( X, sense, *match, true );
             f=fi->second;
         }
         else

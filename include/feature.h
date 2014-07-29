@@ -33,7 +33,7 @@ class Feature{
         // constructor
         Feature(){};
         Feature(Vec3d pos, Scalar color, int n );
-        Feature( cv::Vec3d anchor, Sensors sense, matchIter match );
+        Feature( const cv::Vec3d& anchor, Sensors& sense, const projection& match );
 
         Scalar RGB;
         int ID;
@@ -51,7 +51,8 @@ class Feature{
         int getID();
        
         // mutator
-        void initialize ( cv::Vec3d anchor, Sensors sense, matchIter match, bool extant );
+        void initialize ( const cv::Vec3d& anchor, Sensors& sense, const
+                projection& match, const bool extant );
 
         int incNoMatch();
         void set_body(Vec3d pos);
