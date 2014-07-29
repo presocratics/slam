@@ -27,20 +27,22 @@ using namespace cv;
 typedef std::map<int,Feature> featMap;
 typedef featMap::iterator featIter;
 typedef std::vector<projection>::iterator matchIter;
+typedef std::vector<projection>::const_iterator cMatchIter;
 typedef std::vector<Feature>::iterator Fiter;
 
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );
-void jacobianH(cv::Vec3d X, Quaternion qbw, Feature feat, Mat& Hb, Mat& Hi );
-void jacobianMotionModel(States *mu, Sensors sense, Mat& F_out );
-void measurementModel( cv::Vec3d old_pos, double alt, std::vector<projection> matches,
-        Quaternion qbw, View& meas, View& hmu, Mat& H, States *mu );
+void jacobianH( const cv::Vec3d& X, const Quaternion& qbw, const Feature& feat,
+        Mat& Hb, Mat& Hi );
+void jacobianMotionModel( States *mu, const Sensors& sense, Mat& F_out );
+void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<projection> matches,
+        const Quaternion& qbw, View& meas, View& hmu, Mat& H, States *mu );
 vector<int> findIndex(const Mat& src, double val);
 void initG ( cv::Mat& G, int nf, double dt );
 void initQ ( cv::Mat& Q, int nf, double Q0 );
 void initR ( cv::Mat& R, int nf, double R0 );
-void calcP ( cv::Mat& P, cv::Mat F, cv::Mat G, cv::Mat Q );
-void calcK ( cv::Mat& K, cv::Mat H, cv::Mat P, cv::Mat R );
-void updateP( cv::Mat& P, cv::Mat K, cv::Mat H );
+void calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q );
+void calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R );
+void updateP( cv::Mat& P, const cv::Mat& K, const cv::Mat& H );
 void resizeP( cv::Mat& P, int nf );
 
 #endif

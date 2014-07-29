@@ -20,8 +20,8 @@ class Quaternion
         /* ====================  MUTATORS      ======================================= */
 
         /* ====================  OPERATORS     ======================================= */
-        cv::Vec3d euler();
-        cv::Matx33d rotation();
+        cv::Vec3d euler() const;
+        cv::Matx33d rotation() const;
 
         /* ====================  DATA MEMBERS  ======================================= */
         cv::Vec4d coord;

@@ -9,7 +9,7 @@
  *--------------------------------------------------------------------------------------
  */
     cv::Vec3d
-Quaternion::euler ( )
+Quaternion::euler ( ) const
 {
     cv::Vec3d r;
     r[0] = atan2( 2*coord[1]*coord[2]+2*coord[3]*coord[0],pow(coord[2],2) 
@@ -30,7 +30,7 @@ Quaternion::euler ( )
  *--------------------------------------------------------------------------------------
  */
     cv::Matx33d
-Quaternion::rotation ( )
+Quaternion::rotation ( ) const
 {
     cv::Matx33d m;
 	// -(!) Different From Wikipedia ... ??
