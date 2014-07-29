@@ -52,16 +52,16 @@ Feature States::getFeature(int i) { return features[i]; }
 Vec3d States::getb() { return b; }
 
 // mutator
-void States::setX(Vec3d pos) { X = pos; }
+void States::setX(const Vec3d& pos) { X = pos; }
 
-void States::setV(Vec3d vel) { V = vel; }
+void States::setV(const Vec3d& vel) { V = vel; }
 
-void States::addFeature(Feature f)
+void States::addFeature(const Feature& f)
 {
     features.push_back(f);
 }
 
-void States::setb(Vec3d bias)
+void States::setb(const Vec3d& bias)
 {
     b = bias;
 }

@@ -49,11 +49,11 @@ class States{
         // mutator
         void update_features( ImageSensor *imgsense, Sensors sense );
         void end_loop (  );
-        void setX(Vec3d pos);
-        void setV(Vec3d vel);
+        void setX(const Vec3d& pos);
+        void setV(const Vec3d& vel);
         void setFeature(int i, Feature f);
-        void addFeature(Feature f);
-        void setb(Vec3d bias);
+        void addFeature(const Feature& f);
+        void setb(const Vec3d& bias);
         void add(States a);
         States dynamics( Sensors s );
         //Operator
