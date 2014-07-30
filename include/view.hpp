@@ -32,31 +32,47 @@ class View
 {
     public:
         /* ====================  LIFECYCLE     ======================================= */
-        View()
+        ~View()
         {
-            features.reserve(100);
+            for( size_t i=0; i<features.size(); ++i )
+                delete features[i];
         }
 
         /* ====================  ACCESSORS     ======================================= */
         void toMat(cv::Mat& R);
+        
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  View
+         *      Method:  get_altitude
+         *--------------------------------------------------------------------------------------
+         */
+        inline double
+        get_altitude (  ) const
+        {
+            return altitude;
+        }		/* -----  end of method View::get_altitude  ----- */
 
-        /* ====================  MUTATORS      ======================================= */
-
-        /* ====================  OPERATORS     ======================================= */
-
+        /*
+         *--------------------------------------------------------------------------------------
+         *       Class:  View
+         *      Method:  set_altitude
+         *--------------------------------------------------------------------------------------
+         */
+        inline View&
+        set_altitude ( double value )
+        {
+            altitude	= value;
+            return *this;
+        }		/* -----  end of method View::set_altitude  ----- */
+        
         /* ====================  DATA MEMBERS  ======================================= */
-        double altitude;
-        std::vector<Vfeat> features;
-
-    protected:
-        /* ====================  METHODS       ======================================= */
-
-        /* ====================  DATA MEMBERS  ======================================= */
-
+        std::vector<Vfeat*> features;
     private:
         /* ====================  METHODS       ======================================= */
 
         /* ====================  DATA MEMBERS  ======================================= */
+        double altitude;
 
 }; /* -----  end of class View  ----- */
 void subtract ( const View& lhs, const View& rhs, View& dst );
