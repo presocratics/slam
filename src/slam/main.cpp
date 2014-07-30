@@ -121,7 +121,7 @@ int main( int argc, char **argv )
         measurementModel( old_pos, sense.altitude, imgsense.matches, 
                 sense.quaternion, meas, hmu, H, &mu );
 
-        altHat = meas.get_altitude();
+        altHat = meas.altitude;
 
         initG( G, nf, sense.dt );
         if( i>0 && altHat-alt_old<-0.6 )
@@ -506,8 +506,8 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
 {
     int nf;
     nf=mu->getNumFeatures();
-    meas.set_altitude(alt);                            // altitude
-    hmu.set_altitude( -mu->X[2] );
+    meas.altitude = alt;                            // altitude
+    hmu.altitude = -mu->X[2];
 
     H=cv::Mat::zeros(6*nf+1,mu->getRows(),CV_64F);
     Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
@@ -554,8 +554,8 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
 
         jacobianH(mu->X, qbw, *feat, Hb, Hi);
 
-        meas.features.push_back( new Vfeat( match->source, feat->initial.pib, match->reflection ));
-        hmu.features.push_back( new Vfeat( pibHat, pib0Hat, ppbHat ));
+        meas.features.push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
+        hmu.features.push_back(Vfeat( pibHat, pib0Hat, ppbHat ));
 
         H.row(0).col(2).setTo(-1);
         // For each feature
