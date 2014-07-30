@@ -23,7 +23,6 @@ View::toMat ( cv::Mat& R )
     void
 subtract ( const View& lhs, const View& rhs, View& dst )
 {
-    dst.features.reserve( lhs.features.size() );
     dst.set_altitude( lhs.get_altitude()-rhs.get_altitude() );
     std::vector<Vfeat*>::const_iterator lt=lhs.features.begin();
     std::vector<Vfeat*>::const_iterator rt=rhs.features.begin();
