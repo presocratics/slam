@@ -1,12 +1,12 @@
 #include "view.hpp"
 
     void
-View::toMat ( cv::Mat& R )
+View::toMat ( cv::Mat& R ) const
 {
     R.create(31,1,CV_64F);
     std::vector<double> bar;
     bar.push_back(altitude);
-    std::vector<Vfeat>::iterator it=features.begin();
+    std::vector<Vfeat>::const_iterator it=features.begin();
     for( ; it!=features.end(); ++it )
     {
         bar.push_back(it->current.x);
