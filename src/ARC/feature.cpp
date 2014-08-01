@@ -105,3 +105,54 @@ Feature::incNoMatch ( )
     return get_noMatch();
 }        /* -----  end of method Feature::incNoMatch  ----- */
 
+
+
+    cv::Vec3d
+Feature::ppbHat ( const cv::Vec3d& X, const Quaternion& qbw ) const
+{
+    cv::Vec3d rv, xpbHat;
+    xpbHat = this->xpbHat( X, qbw );
+    rv = cv::Vec3d(
+        xpbHat[1] / xpbHat[0],
+        xpbHat[2] / xpbHat[0],
+        0);
+    return rv ;
+}		/* -----  end of method Feature::ppbHat  ----- */
+
+    cv::Vec3d
+Feature::xpbHat ( const cv::Vec3d& X, const Quaternion& qbw ) const
+{
+    cv::Mat temp;
+    const cv::Mat n = (cv::Mat_<double>(3, 1) << 0, 0, 1);
+    const cv::Mat S = cv::Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
+    temp = S * (Mat)qbw.rotation()*(Mat)this->xibHat();
+    temp -= 2*n*n.t()*(Mat)X; 
+    temp = (Mat)qbw.rotation().t() * temp;
+    return (cv::Vec3d) temp ;
+}		/* -----  end of method Feature::xpbHat  ----- */
+
+    cv::Vec3d 
+Feature::xibHat() const 
+{
+    return cv::Vec3d( 1 / position.body[2],
+            position.body[0] / position.body[2],
+            position.body[1] / position.body[2]);
+}
+    cv::Vec3d 
+Feature::xib0Hat( const cv::Vec3d& pos, const Quaternion& qbw) const
+{
+    cv::Vec3d rv;
+    cv::Vec3d xibHat = this->xibHat();
+    rv = rb2b(qbw)*xibHat;
+    rv+=fromAnchor(pos);
+    return rv;
+}
+    cv::Vec3d 
+Feature::pib0Hat( const cv::Vec3d& pos, const Quaternion& qbw) const 
+{
+    cv::Vec3d xib0Hat=this->xib0Hat(pos, qbw);
+    return cv::Vec3d(
+            xib0Hat[1] / xib0Hat[0],
+            xib0Hat[2] / xib0Hat[0],
+            0);
+}

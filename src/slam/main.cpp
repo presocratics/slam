@@ -154,6 +154,8 @@ int main( int argc, char **argv )
         printf("\n");
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
+    imshow("drawing", rtplot);
+    waitKey(10);
     } //  k loop
     for( featIter fi=mu.feats.begin(); fi!=mu.feats.end(); ++fi )
     {
@@ -509,8 +511,6 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
     hmu.altitude = -mu->X[2];
 
     H=cv::Mat::zeros(6*nf+1,mu->getRows(),CV_64F);
-    Mat n = (Mat_<double>(3, 1) << 0, 0, 1);
-    Mat S = Mat::eye(3, 3, CV_64F) - 2 * n * n.t();
 
     Mat Hb;
     Mat Hi;
@@ -519,42 +519,15 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
     Fiter feat=mu->features.begin();
     for (int i=0; feat!=mu->features.end(); ++i,  ++feat, ++match)
     {
-        cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
-
-        pibHat = (*feat)->get_body_position();
-    
-        xibHat = cv::Vec3d(
-                1 / pibHat[2],
-                pibHat[0] / pibHat[2],
-                pibHat[1] / pibHat[2]);
-
-        Mat temp;
-        temp =  (Mat)(*feat)->fromAnchor(old_pos) + (cv::Mat)(*feat)->rb2b(qbw) * (cv::Mat)xibHat;
-        xib0Hat = (cv::Vec3d) temp;
-
-        pib0Hat = cv::Vec3d(
-                xib0Hat[1] / xib0Hat[0],
-                xib0Hat[2] / xib0Hat[0],
-                0);
-
-        temp = S * (Mat)qbw.rotation()*(Mat)xibHat;
-        temp -= 2*n*n.t()*(Mat)mu->X; 
-        temp = (Mat)qbw.rotation().t() * temp;
-        xpbHat = (cv::Vec3d) temp;
-
-        ppbHat = cv::Vec3d(
-            xpbHat[1] / xpbHat[0],
-            xpbHat[2] / xpbHat[0],
-            0);
-
         cv::Vec3d dst;
-        add(mu->X,(Mat)qbw.rotation()*(Mat)xibHat, dst );
+        add(mu->X,(Mat)qbw.rotation()*(Mat)(*feat)->xibHat(), dst );
         (*feat)->set_world_position(dst);
 
         jacobianH(mu->X, qbw, **feat, Hb, Hi);
 
         meas.features.push_back(Vfeat( match->source, (*feat)->initial.pib, match->reflection ));
-        hmu.features.push_back(Vfeat( pibHat, pib0Hat, ppbHat ));
+        hmu.features.push_back(Vfeat( (*feat)->get_body_position(), 
+                    (*feat)->pib0Hat(old_pos, qbw), (*feat)->ppbHat(mu->X, qbw) ));
 
         H.row(0).col(2).setTo(-1);
         // For each feature

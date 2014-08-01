@@ -41,6 +41,12 @@ class Feature{
         cv::Vec3d fromAnchor ( const cv::Vec3d& pos ) const;
         cv::Matx33d rb2b ( const Quaternion& qbw ) const;
 
+        cv::Vec3d xibHat() const;
+        cv::Vec3d xib0Hat( const cv::Vec3d& pos, const Quaternion& qbw) const;
+        cv::Vec3d pib0Hat( const cv::Vec3d& pos, const Quaternion& qbw) const;
+        cv::Vec3d xpbHat ( const cv::Vec3d& X, const Quaternion& qbw ) const;
+        cv::Vec3d ppbHat ( const cv::Vec3d& X, const Quaternion& qbw ) const;
+
         // mutator
         void initialize ( const cv::Vec3d& anchor, const Sensors& sense, const
                 projection& match, const bool extant );
