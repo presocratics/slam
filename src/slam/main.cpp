@@ -119,7 +119,7 @@ int main( int argc, char **argv )
         mu+=f;
 
         measurementModel( old_pos, sense.altitude, imgsense.matches, 
-                sense.quaternion, meas, hmu, H, &mu );
+                sense.quaternion, meas, hmu, H, mu );
 
         altHat = meas.altitude;
 
@@ -503,35 +503,35 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out )
 * assumes output matrix to be initialized to 0.
 **************************************************************************************************/
 void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<projection>& matches,
-        const Quaternion& qbw, View& meas, View& hmu, Mat& H, States *mu )
+        const Quaternion& qbw, View& meas, View& hmu, Mat& H, States& mu )
 {
     int nf;
-    nf=mu->getNumFeatures();
+    nf=mu.getNumFeatures();
     meas.altitude = alt;                            // altitude
-    hmu.altitude = -mu->X[2];
+    hmu.altitude = -mu.X[2];
 
-    H=cv::Mat::zeros(6*nf+1,mu->getRows(),CV_64F);
+    H=cv::Mat::zeros(6*nf+1,mu.getRows(),CV_64F);
 
     Mat Hb;
     Mat Hi;
 
     cMatchIter match=matches.begin();
-    Fiter feat=mu->features.begin();
-    for (int i=0; feat!=mu->features.end(); ++i,  ++feat, ++match)
+    Fiter feat=mu.features.begin();
+    for (int i=0; feat!=mu.features.end(); ++i,  ++feat, ++match)
     {
         cv::Vec3d dst;
-        add(mu->X,(Mat)qbw.rotation()*(Mat)(*feat)->xibHat(), dst );
+        add(mu.X,(Mat)qbw.rotation()*(Mat)(*feat)->xibHat(), dst );
         (*feat)->set_world_position(dst);
 
-        jacobianH(mu->X, qbw, **feat, Hb, Hi);
+        jacobianH(mu.X, qbw, **feat, Hb, Hi);
 
         meas.features.push_back(Vfeat( match->source, (*feat)->initial.pib, match->reflection ));
         hmu.features.push_back(Vfeat( (*feat)->get_body_position(), 
-                    (*feat)->pib0Hat(old_pos, qbw), (*feat)->ppbHat(mu->X, qbw) ));
+                    (*feat)->pib0Hat(old_pos, qbw), (*feat)->ppbHat(mu.X, qbw) ));
 
         H.row(0).col(2).setTo(-1);
         // For each feature
-        Mat Hfeat = Mat::zeros(6,mu->getRows(),CV_64F);
+        Mat Hfeat = Mat::zeros(6,mu.getRows(),CV_64F);
         blockAssign( Hfeat, Mat::eye(2,2,CV_64F), Point(9+3*i,0) );
         blockAssign( Hfeat, Hb, Point(0,2) );
         blockAssign( Hfeat, Hi, Point(9+3*i,2) );
