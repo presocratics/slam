@@ -21,15 +21,13 @@ class States{
     public:
         // constructor
         States() : X(), V(), b() {};
-        States( const cv::Vec3d& pos, const cv::Vec3d& vel, const std::vector<Feature>&
-                feat, const cv::Vec3d& bias, const int n); 
         States( const cv::Mat& kx);
 
         Vec3d X;
         Vec3d V;
         Vec3d b;
-        std::vector<Feature> features;
-        std::map<int,Feature> feats;
+        featMap feats;
+        active features;
 
 
         // accessor
@@ -41,7 +39,6 @@ class States{
 
         // mutator
         void update_features( const ImageSensor& imgsense, const Sensors& sense );
-        void end_loop (  );
         States& setX(const Vec3d& pos);
         States& setV(const Vec3d& vel);
         States& addFeature(const Feature& f);

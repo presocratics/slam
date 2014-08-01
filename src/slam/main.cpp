@@ -148,21 +148,20 @@ int main( int argc, char **argv )
         printf("%f,%f,%f,%f,%f,%f\n", mu.X[0], mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
         for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
         {
-            printf("%d,%f,%f,%f\n", fi->getID(), fi->get_world_position()[0],
-                    fi->get_world_position()[1], fi->get_world_position()[2] );
+            printf("%d,%f,%f,%f\n", (*fi)->getID(), (*fi)->get_world_position()[0],
+                    (*fi)->get_world_position()[1], (*fi)->get_world_position()[2] );
         }
         printf("\n");
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
-        mu.end_loop();
     } //  k loop
     for( featIter fi=mu.feats.begin(); fi!=mu.feats.end(); ++fi )
     {
-        if( fi->second.get_body_position()[2]>1./10 &&
-            fi->second.get_body_position()[2]<1/DMIN )
+        if( fi->second->get_body_position()[2]>1./10 &&
+            fi->second->get_body_position()[2]<1/DMIN )
         {
-            circle( rtplot, Point(fi->second.get_world_position()[1] * scaleW + width/2,
-                        height/2 - (fi->second.get_world_position()[0] * scaleH + height/4  )),
+            circle( rtplot, Point(fi->second->get_world_position()[1] * scaleW + width/2,
+                        height/2 - (fi->second->get_world_position()[0] * scaleH + height/4  )),
                     3, Scalar(0, 120, 0));
         }
 
@@ -444,13 +443,13 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out )
     for (int i = 0; i<nf; i++)
     {
         Matx13d pib( 
-            mu.features[i].get_body_position()[0],
-            mu.features[i].get_body_position()[1],
-            mu.features[i].get_body_position()[2]
+            mu.features[i]->get_body_position()[0],
+            mu.features[i]->get_body_position()[1],
+            mu.features[i]->get_body_position()[2]
         );
-        double pib1 = mu.features[i].get_body_position()[0];
-        double pib2 = mu.features[i].get_body_position()[1];
-        double pib3 = mu.features[i].get_body_position()[2];
+        double pib1 = mu.features[i]->get_body_position()[0];
+        double pib2 = mu.features[i]->get_body_position()[1];
+        double pib3 = mu.features[i]->get_body_position()[2];
 
 
         FiTemp = (Mat_<double>(3, 3) <<
@@ -522,7 +521,7 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
     {
         cv::Vec3d pib0Hat, ppbHat, xibHat, xib0Hat, xpbHat, pibHat;
 
-        pibHat = feat->get_body_position();
+        pibHat = (*feat)->get_body_position();
     
         xibHat = cv::Vec3d(
                 1 / pibHat[2],
@@ -530,7 +529,7 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
                 pibHat[1] / pibHat[2]);
 
         Mat temp;
-        temp =  (Mat)feat->fromAnchor(old_pos) + (cv::Mat)feat->rb2b(qbw) * (cv::Mat)xibHat;
+        temp =  (Mat)(*feat)->fromAnchor(old_pos) + (cv::Mat)(*feat)->rb2b(qbw) * (cv::Mat)xibHat;
         xib0Hat = (cv::Vec3d) temp;
 
         pib0Hat = cv::Vec3d(
@@ -550,11 +549,11 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
 
         cv::Vec3d dst;
         add(mu->X,(Mat)qbw.rotation()*(Mat)xibHat, dst );
-        feat->set_world_position(dst);
+        (*feat)->set_world_position(dst);
 
-        jacobianH(mu->X, qbw, *feat, Hb, Hi);
+        jacobianH(mu->X, qbw, **feat, Hb, Hi);
 
-        meas.features.push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
+        meas.features.push_back(Vfeat( match->source, (*feat)->initial.pib, match->reflection ));
         hmu.features.push_back(Vfeat( pibHat, pib0Hat, ppbHat ));
 
         H.row(0).col(2).setTo(-1);
