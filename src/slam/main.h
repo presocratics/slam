@@ -18,18 +18,11 @@
 #include "states.h"
 #include "view.hpp"
 #include "imagesensor.hpp"
-#include "config.hpp"
 
 #define QBIAS 0.002            /*  */
 #define P0 1            /*  */
 #define DMIN 0.3            /*  */
 using namespace cv;
-
-typedef std::map<int,Feature> featMap;
-typedef featMap::iterator featIter;
-typedef std::vector<projection>::iterator matchIter;
-typedef std::vector<projection>::const_iterator cMatchIter;
-typedef std::vector<Feature>::iterator Fiter;
 
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );
 void jacobianH( const cv::Vec3d& X, const Quaternion& qbw, const Feature& feat,

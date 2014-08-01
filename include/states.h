@@ -12,17 +12,9 @@
 #include "feature.h"
 #include "Sensors.hpp"
 #include "imagesensor.hpp"
-#include "config.hpp"
 using namespace cv;
 #define GRAVITY -9.80665            /* Standard acceleration due to free fall m/s^2 */
 #define DMIN 0.3            /*  */
-typedef std::map<int,Feature> featMap;
-typedef featMap::iterator featIter;
-typedef std::vector<projection>::iterator matchIter;
-typedef std::vector<projection>::const_iterator cMatchIter;
-typedef std::vector<Feature>::iterator Fiter;
-typedef std::vector<Feature>::const_iterator cFiter;
-
 
 class States{
 

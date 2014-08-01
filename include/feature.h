@@ -23,8 +23,6 @@ struct inits {
     cv::Point2d pib;
 };                /* ----------  end of struct inits  ---------- */
 
-typedef std::vector<projection>::iterator matchIter;
-
 typedef struct inits Inits;
 typedef struct frame Frame;
 
@@ -208,5 +206,6 @@ class Feature{
 typedef std::map<int,Feature> featMap;
 typedef featMap::iterator featIter;
 typedef std::vector<Feature>::iterator Fiter;
+typedef std::vector<Feature>::const_iterator cFiter;
 
 #endif

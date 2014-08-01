@@ -74,5 +74,7 @@ class FeatureIO
 
 }; /* -----  end of class ImageSensor  ----- */
 
+typedef std::vector<projection>::iterator matchIter;
+typedef std::vector<projection>::const_iterator cMatchIter;
 #endif   /* ----- #ifndef imagesensor_INC  ----- */
 
