@@ -38,6 +38,7 @@ class States{
         int getNumFeatures() const;
 
         // mutator
+        void clearContainers();
         void update_features( const ImageSensor& imgsense, const Sensors& sense );
         States& setX(const Vec3d& pos);
         States& setV(const Vec3d& vel);

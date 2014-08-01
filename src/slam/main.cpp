@@ -154,8 +154,10 @@ int main( int argc, char **argv )
         printf("\n");
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
-    imshow("drawing", rtplot);
-    waitKey(10);
+        //imshow("drawing", rtplot);
+        //waitKey(1);
+        kmh.clearContainers();
+        f.clearContainers();
     } //  k loop
     for( featIter fi=mu.feats.begin(); fi!=mu.feats.end(); ++fi )
     {
@@ -168,6 +170,7 @@ int main( int argc, char **argv )
         }
 
     }
+    mu.clearContainers();
 
     cout << static_cast<double>(clock() - startTime) / CLOCKS_PER_SEC << " seconds." << endl;
 
@@ -505,12 +508,10 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out )
 void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<projection>& matches,
         const Quaternion& qbw, View& meas, View& hmu, Mat& H, States& mu )
 {
-    int nf;
-    nf=mu.getNumFeatures();
     meas.altitude = alt;                            // altitude
     hmu.altitude = -mu.X[2];
 
-    H=cv::Mat::zeros(6*nf+1,mu.getRows(),CV_64F);
+    H=cv::Mat::zeros(6*mu.getNumFeatures()+1,mu.getRows(),CV_64F);
 
     Mat Hb;
     Mat Hi;
@@ -538,12 +539,4 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
             
         blockAssign( H, Hfeat, Point(0,1+6*i) );
     } // end for loop
-
-    /*Remove Unavailable reflection measurements */
-
-    // NEED TO CONVERT
-    //hmu = hmu(~ismember(1:size(hmu, 1), find(meas == 0)), :);
-    //H = H(~ismember(1:size(H, 1), find(meas == 0)), :);
-    //meas = meas(~ismember(1:size(meas, 1), find(meas == 0)), :);
-    
 }
