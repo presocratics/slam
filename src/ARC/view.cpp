@@ -16,7 +16,7 @@ View::toMat ( cv::Mat& R ) const
         bar.push_back(it->reflection.x);
         bar.push_back(it->reflection.y);
     }
-    R = cv::Mat(bar);
+    R = cv::Mat(bar, true);
     return ;
 }		/* -----  end of method View::toMat  ----- */
 
