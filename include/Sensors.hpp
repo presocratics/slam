@@ -26,7 +26,7 @@ class Sensors
 
         /* ====================  MUTATORS      ======================================= */
         void update();
-        void set_acceleration( const char *fn, bool isHex, bool isRealTime ) { 
+        void set_acceleration( const char *fn, bool isHex, bool isRealTime=false ) { 
             accelerationIsHex = isHex;
             accelerationIsRealTime = isRealTime;
             if( !accelerationIsRealTime )
@@ -39,7 +39,7 @@ class Sensors
             }
         }
 
-        void set_altitude ( const char *fn, bool isHex, bool isRealTime ) {
+        void set_altitude ( const char *fn, bool isHex, bool isRealTime=false ) {
             altitudeIsHex = isHex;
             altitudeIsRealTime = isRealTime;
             if( !altitudeIsRealTime )
