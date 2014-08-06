@@ -89,10 +89,21 @@ Sensors::get_val ( FILE* fp, const char *str, const char *fmt, ... )
     double
 Sensors::get_altitude( )
 { 
+    FILE *fp;
     double alt;
     char str[4];
+
+    if( altitudeIsRealTime )
+    {
+        fp = open_source( altitude_fn.c_str() );
+    }
+    else
+    {
+        fp = altitude_fp;
+    }
     strcpy( str, (altitudeIsHex) ? "%lx" : "%lf" );
-    get_val( altitude_fp, "alt", str, &alt );
+    get_val( fp, "alt", str, &alt );
+    if( altitudeIsRealTime ) fclose(fp);
     return alt;
 }		/* -----  end of method Sensors::get_altitude  ----- */
 
@@ -121,10 +132,21 @@ Sensors::get_dt ( )
     cv::Vec3d
 Sensors::get_acceleration ( )
 {
+    FILE *fp;
     cv::Vec3d acc;
     char str[12];
+
+    if( accelerationIsRealTime )
+    {
+        fp = open_source( acceleration_fn.c_str() );
+    }
+    else
+    {
+        fp = acceleration_fp;
+    }
     strcpy( str, (accelerationIsHex) ? "%lx,%lx,%lx" : "%lf,%lf,%lf" );
-    get_val( acceleration_fp, "acc", str, &acc[0], &acc[1], &acc[2] );
+    get_val( fp, "acc", str, &acc[0], &acc[1], &acc[2] );
+    if( accelerationIsRealTime ) fclose(fp);
     return acc;
 }		/* -----  end of method Sensors::get_acceleration  ----- */
 
