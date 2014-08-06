@@ -72,7 +72,7 @@ int main( int argc, char **argv )
     sense.set_acceleration( argv[3], false );
     sense.set_dt( argv[4], false );
     sense.set_quaternion( argv[5], false );
-    sense.set_angular_velocity( argv[6], false );
+    sense.set_angular_velocity( argv[6], false, false );
     sense.update();
 
     clock_t startTime = clock();
@@ -116,7 +116,8 @@ int main( int argc, char **argv )
         f = mu.dynamics( sense );           // Motion model
         f*=sense.dt;
         jacobianMotionModel(mu, sense, F );
-        mu+=f;
+        //mu+=f;
+        mu.add(f);
 
         measurementModel( old_pos, sense.altitude, imgsense.matches, 
                 sense.quaternion, meas, hmu, H, mu );
@@ -142,7 +143,8 @@ int main( int argc, char **argv )
         kx = K*eeMat;
 
         kmh = States(kx);
-        mu+=kmh;
+        //mu+=kmh;
+        mu.add(kmh);
 
         // Real time plotting.
         printf("%f,%f,%f,%f,%f,%f\n", mu.X[0], mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
@@ -154,8 +156,8 @@ int main( int argc, char **argv )
         printf("\n");
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
-        //imshow("drawing", rtplot);
-        //waitKey(1);
+        imshow("drawing", rtplot);
+        waitKey(1);
         kmh.clearContainers();
         f.clearContainers();
     } //  k loop

@@ -99,10 +99,21 @@ Sensors::get_altitude( )
     double
 Sensors::get_dt ( )
 {
+    FILE *fp;
     double d;
     char str[4];
+
+    if( dtIsRealTime )
+    {
+        fp = open_source(dt_fn.c_str());
+    }
+    else
+    {
+        fp = dt_fp;
+    }
     strcpy( str, (dtIsHex) ? "%lx" : "%lf" );
-    get_val( dt_fp, "dt", str, &d );
+    get_val( fp, "dt", str, &d );
+    if( dtIsRealTime ) fclose(fp);
     return d;
 }		/* -----  end of method Sensors::get_dt  ----- */
 
@@ -120,10 +131,21 @@ Sensors::get_acceleration ( )
     cv::Vec3d
 Sensors::get_angular_velocity ( )
 {
+    FILE *fp;
     cv::Vec3d w;
     char str[12];
+
+    if( angular_velocityIsRealTime )
+    {
+        fp = open_source(angular_velocity_fn.c_str());
+    }
+    else
+    {
+        fp = angular_velocity_fp;
+    }
     strcpy( str, (angular_velocityIsHex) ? "%lx,%lx,%lx" : "%lf,%lf,%lf" );
-    get_val( angular_velocity_fp, "w", str, &w[0], &w[1], &w[2] );
+    get_val( fp, "w", str, &w[0], &w[1], &w[2] );
+    if( angular_velocityIsRealTime ) fclose(fp);
     return w;
 }		/* -----  end of method Sensors::get_angular_velocity  ----- */
 

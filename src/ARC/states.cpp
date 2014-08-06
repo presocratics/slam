@@ -69,21 +69,21 @@ States& States::setb(const Vec3d& bias)
 
 void States::add( const States& a)
 {
-    if( a.getNumFeatures()!=getNumFeatures() )
+    if( a.getNumFeatures()!=this->getNumFeatures() )
     {
         std::cerr << "add: feature mismatch" << std::endl;
         exit(EXIT_FAILURE);
     }
-    X += a.X;
-    V += a.V;
+    this->X += a.X;
+    this->V += a.V;
     for(int i = 0; i<getNumFeatures(); i++ )
     {
-        features[i]->set_body_position( features[i]->get_body_position() +
+        this->features[i]->set_body_position( this->features[i]->get_body_position() +
                 a.features[i]->get_body_position() );
-        features[i]->set_world_position( features[i]->get_world_position() +
+        this->features[i]->set_world_position( this->features[i]->get_world_position() +
                 a.features[i]->get_world_position() );
     }
-    b += a.b;
+    this->b += a.b;
 }
 
     void
@@ -193,6 +193,8 @@ States::clearContainers ( )
     {
         delete fi->second;
     }
+    feats.clear();
+    features.clear();
     return ;
 }		/* -----  end of method States::clearContainers  ----- */
 
