@@ -63,11 +63,10 @@ main ( int argc, char *argv[] )
     }
     if( (fp=fopen(argv[1], "r"))==NULL )
         err_sys("fopen");
-    if( (fgets( line, sz, fp ))==NULL ) // Get the header
-        err_sys("fgets");
     if( (fgets( line, sz, fp ))==NULL ) // Get first line
         err_sys("fgets");
     sscanf( line, "%d", &next );
+    printf( "%s", line );
     while( fgets( line, sz, fp )!=NULL )
     {
         cur = next;
