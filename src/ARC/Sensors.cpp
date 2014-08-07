@@ -46,7 +46,7 @@ Sensors::open_source ( const char *fn )
 {
     FILE *fp;
     if( (fp=fopen(fn,"r"))==NULL )
-        err_sys("fopen altitude");
+        err_sys("fopen %s", fn);
     return fp ;
 }		/* -----  end of method Sensors::open_source  ----- */
 
