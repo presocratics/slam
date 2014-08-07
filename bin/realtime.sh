@@ -22,11 +22,10 @@ mkfifo $DT 2>/dev/null
     stdbuf -eL -oL sed 's/[0-9]*,\(.*\),/\1/' | \
     stdbuf -eL -oL ./bin/multitap $ALT &
 
-./bin/sensor-emu $DATA/acc | \
+./bin/sensor-emu $DATA/ds/acc | \
     stdbuf -eL -oL sed 's/[0-9]*,//' | \
     stdbuf -eL -oL ./bin/fir config/gravity.txt | \
-    stdbuf -eL -oL ./bin/rmbias -- -0.0171 0.0116 0.0158 | \
-    stdbuf -eL -oL ./bin/multitap $ACC &
+    stdbuf -eL -oL ./bin/rmbias -- -0.0171 0.0116 0.0158 > $ACC &
 
 ./bin/sensor-emu $DATA/ds/attitude | \
     stdbuf -eL -oL sed 's/[0-9]*,//' | \

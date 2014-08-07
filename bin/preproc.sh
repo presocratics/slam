@@ -3,7 +3,8 @@
 # Martin Miller
 # Created: 2014/07/07
 # Simulate real-time
-DATA=raw/clake2
+#DATA=raw/clake2
+DATA=raw/2nd
 BODY=data/bodyHist3.txt
 DT=data/dt.fifo
 ALT=data/alt.fifo
