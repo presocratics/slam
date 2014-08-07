@@ -3,6 +3,10 @@
 # Martin Miller
 # Created: 2014/07/07
 # Simulate real-time
+
+###################
+## Configuration ##
+###################
 #DATA=raw/clake2
 DATA=raw/2nd
 BODY=data/bodyHist3.txt
@@ -11,6 +15,7 @@ ALT=data/alt.fifo
 ACC=data/acc.fifo
 QBW=data/qbw.fifo
 ANGVEL=data/w.fifo
+DISP=data/disp.fifo
 
 rm -f data/*.fifo
 mkfifo $ALT 2>/dev/null
@@ -18,7 +23,16 @@ mkfifo $ACC 2>/dev/null
 mkfifo $QBW 2>/dev/null
 mkfifo $ANGVEL 2>/dev/null
 mkfifo $DT 2>/dev/null
+mkfifo $DISP 2>/dev/null
 
+##############
+## Testing  ##
+##############
+
+# run display 
+rosrun rviz rviz -d config/rviz_display.rviz & 
+
+# data to fifo
 <$DATA/ds/alt    stdbuf -eL -oL cut -d, -f2 > $ALT &
 
 <$DATA/ds/acc   stdbuf -eL -oL cut -d, -f2,3,4 | \
@@ -35,10 +49,14 @@ mkfifo $DT 2>/dev/null
 stdbuf -eL -oL ./bin/getdt $DATA/framedata| \
     stdbuf -eL -oL cut -d, -f2 > $DT &
 
-BODY=/home/marty/ARC/git/segment2/output/clake2.arc
+# run slam
 FASTOPTS="$BODY $ALT $ACC $DT $QBW $ANGVEL"
 #valgrind --leak-check=full ./bin/slam $FASTOPTS
-stdbuf -eL -oL ./bin/slam $FASTOPTS 
+stdbuf -eL -oL ./bin/slam $FASTOPTS > $DISP &
+
+# slam data to display
+rosrun using_markers display_realtime $DISP &
+
 rm -f data/*.fifo
 
 
