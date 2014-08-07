@@ -156,8 +156,8 @@ int main( int argc, char **argv )
         printf("\n");
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
-        imshow("drawing", rtplot);
-        waitKey(1);
+        //imshow("drawing", rtplot);
+        //waitKey(1);
         kmh.clearContainers();
         f.clearContainers();
     } //  k loop
@@ -176,7 +176,7 @@ int main( int argc, char **argv )
 
     cout << static_cast<double>(clock() - startTime) / CLOCKS_PER_SEC << " seconds." << endl;
 
-    imshow("drawing", rtplot);
+   // imshow("drawing", rtplot);
     waitKey(0);
     destroyAllWindows();
     return 0;
