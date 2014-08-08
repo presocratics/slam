@@ -10,26 +10,34 @@ ALT=data/alt.fifo
 ACC=data/acc.fifo
 QBW=data/qbw.fifo
 ANGVEL=data/w.fifo
+DISP=data/disp.fifo
 
+pkill slam
+pkill sensor
+pkill multitap
+rosrun rviz rviz -d config/rviz_display.rviz & 
 rm -f data/*.fifo
 mkfifo $ALT 2>/dev/null
 mkfifo $ACC 2>/dev/null
 mkfifo $QBW 2>/dev/null
 mkfifo $ANGVEL 2>/dev/null
 mkfifo $DT 2>/dev/null
+mkfifo $DISP 2>/dev/null
 
 ./bin/sensor-emu $DATA/alt | \
     stdbuf -eL -oL sed 's/[0-9]*,\(.*\),/\1/' | \
     stdbuf -eL -oL ./bin/multitap $ALT &
 
-./bin/sensor-emu $DATA/ds/acc | \
+./bin/sensor-emu $DATA/acc | \
     stdbuf -eL -oL sed 's/[0-9]*,//' | \
     stdbuf -eL -oL ./bin/fir config/gravity.txt | \
-    stdbuf -eL -oL ./bin/rmbias -- -0.0171 0.0116 0.0158 > $ACC &
+    stdbuf -eL -oL ./bin/rmbias -- -0.0171 0.0116 0.0158 | \
+    stdbuf -eL -oL ./bin/multitap $ACC &
 
-./bin/sensor-emu $DATA/ds/attitude | \
+./bin/sensor-emu $DATA/attitude | \
     stdbuf -eL -oL sed 's/[0-9]*,//' | \
-    stdbuf -eL -oL ./bin/euler2qbw  > $QBW &
+    stdbuf -eL -oL ./bin/euler2qbw  | \
+    stdbuf -eL -oL ./bin/multitap $QBW &
 
 ./bin/sensor-emu $DATA/gyro | \
     stdbuf -eL -oL sed 's/[0-9]*,//' | \
@@ -42,7 +50,8 @@ mkfifo $DT 2>/dev/null
 
 FASTOPTS="data/bodyHist3.txt $ALT $ACC $DT $QBW $ANGVEL"
 #valgrind --leak-check=full ./bin/slam $FASTOPTS
-stdbuf -eL -oL ./bin/slam $FASTOPTS 
+stdbuf -eL -oL ./bin/slam $FASTOPTS  > $DISP &
+rosrun using_markers display_realtime $DISP  
 rm -f data/*.fifo
 
 

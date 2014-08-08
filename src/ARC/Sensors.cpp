@@ -174,9 +174,21 @@ Sensors::get_angular_velocity ( )
     cv::Vec4d
 Sensors::get_quaternion ( )
 {
+    FILE *fp;
     cv::Vec4d q;
     char str[16];
+
+    if( quaternionIsRealTime )
+    {
+        fp = open_source( quaternion_fn.c_str() );
+    }
+    else
+    {
+        fp = quaternion_fp;
+    }
     strcpy( str, (quaternionIsHex) ? "%lx,%lx,%lx,%lx" : "%lf,%lf,%lf,%lf" );
-    get_val( quaternion_fp, "quat", str, &q[0], &q[1], &q[2], &q[3] );
+    get_val( fp, "quat", str, &q[0], &q[1], &q[2], &q[3] );
+    if( quaternionIsRealTime ) fclose(fp);
     return q;
 }		/* -----  end of method Sensors::get_acceleration  ----- */
+

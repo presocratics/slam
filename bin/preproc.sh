@@ -52,10 +52,11 @@ stdbuf -eL -oL ./bin/getdt $DATA/framedata| \
 # run slam
 FASTOPTS="$BODY $ALT $ACC $DT $QBW $ANGVEL"
 #valgrind --leak-check=full ./bin/slam $FASTOPTS
-stdbuf -eL -oL ./bin/slam $FASTOPTS > $DISP &
+stdbuf -eL -oL ./bin/slam $FASTOPTS 
+#stdbuf -eL -oL ./bin/slam $FASTOPTS | tee  $DISP &
 
 # slam data to display
-rosrun using_markers display_realtime $DISP &
+rosrun using_markers display_realtime $DISP  
 
 rm -f data/*.fifo
 

@@ -52,9 +52,17 @@ class Sensors
             }
         }		
 
-        void set_quaternion( const char *fn, bool isHex ) { 
+        void set_quaternion( const char *fn, bool isHex, bool isRealTime ) { 
             quaternionIsHex = isHex;
-            quaternion_fp=open_source(fn); 
+            quaternionIsRealTime = isRealTime;
+            if( !quaternionIsRealTime )
+            {
+                quaternion_fp=open_source(fn); 
+            }
+            else
+            {
+                quaternion_fn = fn;
+            }
         }
 
         void set_dt ( const char *fn, bool isHex, bool isRealTime=false ) {
@@ -99,10 +107,11 @@ class Sensors
         bool accelerationIsHex, altitudeIsHex, angular_velocityIsHex, dtIsHex,
              quaternionIsHex;
         bool angular_velocityIsRealTime, dtIsRealTime, altitudeIsRealTime,
-             accelerationIsRealTime;
+             accelerationIsRealTime, quaternionIsRealTime;
 
         /* Sources */
-        std::string angular_velocity_fn, dt_fn, altitude_fn, acceleration_fn;
+        std::string angular_velocity_fn, dt_fn, altitude_fn, acceleration_fn,
+            quaternion_fn;
         FILE *angular_velocity_fp, *altitude_fp, *dt_fp, *acceleration_fp,
              *quaternion_fp;
 
