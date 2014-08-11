@@ -28,7 +28,7 @@ class SlamSensor : public FeatureIO
         /* ====================  ACCESSORS     ======================================= */
 
         /* ====================  MUTATORS      ======================================= */
-        void get_projections();
+        int get_projections();
 
         /* ====================  PUB MEMBER VARIABLES      ======================================= */
 	cv::Vec3d X,V;

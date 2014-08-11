@@ -26,21 +26,23 @@
  *       Class:  ImageSensor
  *      Method:  ImageSensor :: get_projections
  * Description:  Writes latest data to vector of matches.
+ * return 0 on EOF, -1 else.
  *--------------------------------------------------------------------------------------
  */
-    void
+    int
 ImageSensor::get_projections ( )
 {
+    int rv;
     matches.clear();
     projection pj;
     char str[20];
     strcpy( str, (isHex) ? "%d,%lx,%lx,%lx,%lx" : "%d,%lf,%lf,%lf,%lf" );
-    while( get_val( fp, "image", str, &pj.id,&pj.source.x, &pj.source.y, 
-                &pj.reflection.x, &pj.reflection.y )!=-1 )
+    while( (rv=get_val( fp, "image", str, &pj.id,&pj.source.x, &pj.source.y, 
+                &pj.reflection.x, &pj.reflection.y ))!=-1 && rv!=0 )
     {
         matches.push_back(pj);
     }
-    return ;
+    return rv ;
 }		/* -----  end of method imageSensor::get_projections  ----- */
 
 

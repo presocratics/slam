@@ -55,8 +55,8 @@ class FeatureIO
         void set_file( const char *fn ) {
             fp=open_source(fn); 
         }
-        void update();
-        virtual void get_projections();
+        int update();
+        virtual int get_projections();
 
         /* ====================  OPERATORS     ======================================= */
 

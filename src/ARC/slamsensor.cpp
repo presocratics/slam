@@ -27,7 +27,7 @@ typedef struct slamprojection Slamprojection;
  * Description:  Writes latest data to vector of matches.
  *--------------------------------------------------------------------------------------
  */
-    void
+    int
 SlamSensor::get_projections ( )
 {
     slammatches.clear();
@@ -45,7 +45,7 @@ SlamSensor::get_projections ( )
     {
         slammatches.push_back(pj);
     }
-    return ;
+    return 1 ;
 }		/* -----  end of method SlamSensor::get_projections  ----- */
 
 

@@ -55,17 +55,18 @@ int main( int argc, char **argv )
         exit(EXIT_FAILURE);
     }
     // Configuration
-    const int stepEnd = 2640;
 
     // Initial variables
     // Covariance Initialization
-    double Q0 = 1;                // 100 for simulation & 1 for experiments
+    double Q0 = 100;                // 100 for simulation & 1 for experiments
     double R0 = 10;                    // 10 for simulation & 1 for experiments
 
     // Declarations
     ImageSensor imgsense( argv[1], false );
     Sensors sense;
     States mu;
+    timeval curtime, prevtime, dt;
+    gettimeofday(&curtime, NULL);
 
     // Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
     sense.set_altitude( argv[2], false, true );
@@ -93,7 +94,7 @@ int main( int argc, char **argv )
     int width=800;
     int height=1800;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
-    for( int i=0; i<stepEnd; ++i )
+    while( imgsense.update() )
     {
         int nf;
         cv::Vec3d old_pos;
@@ -101,15 +102,20 @@ int main( int argc, char **argv )
         Mat kx, eeMat;
         View meas, hmu;
         View estimateError;
-        double altHat, alt_old;
         States f, kmh;
 
-        alt_old = sense.altitude;
+
         // Update sensors
         sense.update();
-        imgsense.update();
         mu.update_features( imgsense, sense );
         nf=mu.getNumFeatures();
+        
+        // Update dt
+        prevtime=curtime;
+        gettimeofday(&curtime, NULL);
+        dt.tv_sec = curtime.tv_sec-prevtime.tv_sec;
+        dt.tv_usec = curtime.tv_usec-prevtime.tv_usec;
+        sense.dt=dt.tv_sec + dt.tv_usec * 1e-6;
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
@@ -121,13 +127,7 @@ int main( int argc, char **argv )
         measurementModel( old_pos, sense.altitude, imgsense.matches, 
                 sense.quaternion, meas, hmu, H, mu );
 
-        altHat = meas.altitude;
-
         initG( G, nf, sense.dt );
-        if( i>0 && altHat-alt_old<-0.6 )
-        {
-            Q0 = 20;
-        }
         initQ( Q, nf, Q0 );
         initR( R, nf, R0 );
 

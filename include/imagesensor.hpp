@@ -22,7 +22,7 @@ class ImageSensor : public FeatureIO
         /* ====================  ACCESSORS     ======================================= */
 
         /* ====================  MUTATORS      ======================================= */
-        void get_projections();
+        int get_projections();
 
 }; /* -----  end of class ImageSensor  ----- */
 

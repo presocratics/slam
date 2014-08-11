@@ -8,10 +8,11 @@
 #include <fstream>
 #include <vector>
 #define _USE_MATH_DEFINES
-#include <math.h>
-#include <time.h>
+#include <cmath>
+#include <ctime>
 #include <stdint.h>
 #include <cstdio>
+#include <sys/time.h>
 #include "Quaternion.hpp"
 #include "Sensors.hpp"
 #include "feature.h"

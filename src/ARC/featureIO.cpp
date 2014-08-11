@@ -19,11 +19,10 @@
 
 #include "featureIO.h"
 
-    void
+    int
 FeatureIO::update ( )
 {
-    get_projections();
-    return ;
+    return get_projections();
 }        /* -----  end of method imageSensor::update  ----- */
 
 
@@ -44,7 +43,7 @@ FeatureIO::open_source ( const char *fn )
  * Description:  Writes latest data to vector of matches.
  *--------------------------------------------------------------------------------------
  */
-   void
+   int
 FeatureIO::get_projections ( )
 {
     char str[20];
@@ -55,7 +54,7 @@ FeatureIO::get_projections ( )
         get_val( fp, "image", str, &it->id,&it->source.x, &it->source.y,
                 &it->reflection.x, &it->reflection.y );
     }
-    return ;
+    return 1 ;
 }        /* -----  end of method imageSensor::get_projections  ----- */
 
 /*
@@ -86,7 +85,7 @@ FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
     va_start(ap,fmt);
 
     if( (fgets(line,MAXLINE,fp ))==NULL )
-        err_sys("fgets %s", str);
+        return 0;
     rv=vsscanf( line, fmt, ap );
     va_end(ap);
 
