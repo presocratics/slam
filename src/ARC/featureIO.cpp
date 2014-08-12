@@ -28,7 +28,8 @@
 FeatureIO::update ( )
 {
     get_projections();
-    return 1;
+
+    return matches.size();
 }        /* -----  end of method imageSensor::update  ----- */
 
 
