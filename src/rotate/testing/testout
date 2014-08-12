@@ -1,0 +1,9 @@
+-q or -e required
+Usage: ../../bin/rotate [options] [parameters]
+OPTIONS
+	-q		Provide 4 quaternion parameters.
+	-e		Provide 3 Euler parameters.
+SYMBOLS
+	p		Use pi for parameter.
+	h		Use pi/2 for parameter.
+	f		Use pi/4 for parameter.

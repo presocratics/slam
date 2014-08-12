@@ -1,0 +1,13 @@
+rotate
+======
+Performs a rotation on each line of STDIN. The rotations can be given as euler
+angles: phi, theta, psi or as quaternion: q1,q2,q3,q4.
+
+Each line of stdin shall be provided as a comma separated triple: x,y,z.
+
+Use p, h, f to represent pi, pi/2, and pi/4 respectively. This will use the
+internal representations of pi defined in <math.h>.
+
+Testing
+=======
+Run test.sh to verify that the code is working.

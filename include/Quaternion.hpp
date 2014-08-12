@@ -13,6 +13,7 @@ class Quaternion
     public:
         /* ====================  LIFECYCLE     ======================================= */
         Quaternion () : coord() {};
+        Quaternion ( double q1,double q2,double q3,double q4 ):coord(q1,q2,q3,q4) {};
         Quaternion ( const cv::Vec4d& q ) : coord(q) {};
 
         /* ====================  ACCESSORS     ======================================= */
