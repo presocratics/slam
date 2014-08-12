@@ -36,7 +36,7 @@ FeatureIO::update ( )
 FeatureIO::open_source ( const char *fn )
 {
     char cmd[1024];
-    sprintf(cmd, "tail -f -n1 %s", fn);
+    sprintf(cmd, "tail -f -n+0 %s", fn);
 
     FILE *fp = popen( cmd, "r");
     int fd = fileno(fp);
@@ -109,5 +109,6 @@ FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
         va_end(ap);
         return rv;
     }
+    std::cout << "-(!) get val error" << std::endl;
     return 0;
 }        /* -----  end of method ImageSensor::get_val  ----- */
