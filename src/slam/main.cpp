@@ -175,7 +175,7 @@ int main( int argc, char **argv )
 
     cout << static_cast<double>(clock() - startTime) / CLOCKS_PER_SEC << " seconds." << endl;
 
-   // imshow("drawing", rtplot);
+    //imshow("drawing", rtplot);
     //waitKey(0);
     destroyAllWindows();
     return 0;

@@ -16,22 +16,37 @@
  * =====================================================================================
  */
 
-
+#include <stdlib.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <time.h>
+#include <stdio.h>
+#include <iostream>
 #include "featureIO.h"
 
     int
 FeatureIO::update ( )
 {
-    return get_projections();
+
+    get_projections();
+    return matches.size();
+
 }        /* -----  end of method imageSensor::update  ----- */
 
 
     FILE *
 FeatureIO::open_source ( const char *fn )
 {
-    FILE *fp;
-    if( (fp=fopen(fn,"r"))==NULL )
-        err_sys("fopen body");
+    char cmd[1024];
+    sprintf(cmd, "tail -f -n+0 %s", fn);
+
+    FILE *fp = popen( cmd, "r");
+    int fd = fileno(fp);
+    int flags;
+    flags = fcntl(fd, F_GETFL, 0);
+    flags |= O_NONBLOCK;
+    fcntl(fd, F_SETFL, flags);
+
     return fp ;
 }        /* -----  end of method imageSensor::open_source  ----- */
 
@@ -54,7 +69,8 @@ FeatureIO::get_projections ( )
         get_val( fp, "image", str, &it->id,&it->source.x, &it->source.y,
                 &it->reflection.x, &it->reflection.y );
     }
-    return 1 ;
+
+    return 1;
 }        /* -----  end of method imageSensor::get_projections  ----- */
 
 /*
@@ -79,15 +95,24 @@ FeatureIO::get_projections ( )
     int
 FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
 {
-    int rv;
     char line[MAXLINE];
     va_list ap;
     va_start(ap,fmt);
 
-    if( (fgets(line,MAXLINE,fp ))==NULL )
-        return 0;
-    rv=vsscanf( line, fmt, ap );
-    va_end(ap);
+    char *r;
+    if( (r=fgets(line,1024,fp))==NULL && (errno != EWOULDBLOCK) )
+        err_sys("fgets");
+    else if( r==NULL && (errno == EWOULDBLOCK) )
+    {
+        return -2;    
+    }
+    else
+    {
+        int rv=vsscanf( line, fmt, ap );
+        va_end(ap);
+        return rv;
+    }
+    std::cout << "-(!) get val error" << std::endl;
+    return 0;
 
-    return rv ;
 }        /* -----  end of method ImageSensor::get_val  ----- */
