@@ -16,7 +16,7 @@ DISP=data/disp.fifo
 pkill slam
 pkill sensor
 pkill multitap
-#rosrun rviz rviz -d config/rviz_display.rviz & 
+rosrun rviz rviz -d config/rviz_display.rviz & 
 rm -f data/*.fifo
 mkfifo $ALT 2>/dev/null
 mkfifo $ACC 2>/dev/null
@@ -52,9 +52,9 @@ mkfifo $DISP 2>/dev/null
 
 FASTOPTS="$BODY $ALT $ACC $DT $QBW $ANGVEL"
 #valgrind --leak-check=full ./bin/slam $FASTOPTS
-stdbuf -eL -oL ./bin/slam $FASTOPTS # > $DISP & 
+stdbuf -eL -oL ./bin/slam $FASTOPTS  > $DISP & 
 
-#rosrun using_markers display_realtime $DISP  
+rosrun using_markers display_realtime $DISP  
 rm -f data/*.fifo
 
 

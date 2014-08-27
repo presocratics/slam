@@ -27,13 +27,10 @@
     int
 FeatureIO::update ( )
 {
-<<<<<<< HEAD
-    return get_projections();
-=======
-    get_projections();
 
+    get_projections();
     return matches.size();
->>>>>>> origin/hongbin
+
 }        /* -----  end of method imageSensor::update  ----- */
 
 
@@ -72,11 +69,8 @@ FeatureIO::get_projections ( )
         get_val( fp, "image", str, &it->id,&it->source.x, &it->source.y,
                 &it->reflection.x, &it->reflection.y );
     }
-<<<<<<< HEAD
-    return 1 ;
-=======
+
     return 1;
->>>>>>> origin/hongbin
 }        /* -----  end of method imageSensor::get_projections  ----- */
 
 /*
@@ -105,14 +99,6 @@ FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
     va_list ap;
     va_start(ap,fmt);
 
-<<<<<<< HEAD
-    if( (fgets(line,MAXLINE,fp ))==NULL )
-        return 0;
-    rv=vsscanf( line, fmt, ap );
-    va_end(ap);
-
-    return rv ;
-=======
     char *r;
     if( (r=fgets(line,1024,fp))==NULL && (errno != EWOULDBLOCK) )
         err_sys("fgets");
@@ -128,5 +114,5 @@ FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
     }
     std::cout << "-(!) get val error" << std::endl;
     return 0;
->>>>>>> origin/hongbin
+
 }        /* -----  end of method ImageSensor::get_val  ----- */
