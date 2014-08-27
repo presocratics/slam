@@ -60,6 +60,7 @@ int main( int argc, char **argv )
     // Covariance Initialization
     double Q0 = 100;                // 100 for simulation & 1 for experiments
     double R0 = 10;                    // 10 for simulation & 1 for experiments
+    const bool internaldt=true;
 
     // Declarations
     ImageSensor imgsense( argv[1], false );
@@ -115,7 +116,7 @@ int main( int argc, char **argv )
         gettimeofday(&curtime, NULL);
         dt.tv_sec = curtime.tv_sec-prevtime.tv_sec;
         dt.tv_usec = curtime.tv_usec-prevtime.tv_usec;
-        sense.dt=dt.tv_sec + dt.tv_usec * 1e-6;
+        if( internaldt ) sense.dt=dt.tv_sec + dt.tv_usec * 1e-6;
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
