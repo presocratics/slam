@@ -25,8 +25,13 @@
  *--------------------------------------------------------------------------------------
  *       Class:  ImageSensor
  *      Method:  ImageSensor :: get_projections
+<<<<<<< HEAD
  * Description:  Writes latest data to vector of matches.
  * return 0 on EOF, -1 else.
+=======
+ * Description:  Writes latest data to vector of matches. Returns -1 when eof
+ * and -2 when fifo would block.
+>>>>>>> origin/hongbin
  *--------------------------------------------------------------------------------------
  */
     int
@@ -37,12 +42,25 @@ ImageSensor::get_projections ( )
     projection pj;
     char str[20];
     strcpy( str, (isHex) ? "%d,%lx,%lx,%lx,%lx" : "%d,%lf,%lf,%lf,%lf" );
+<<<<<<< HEAD
     while( (rv=get_val( fp, "image", str, &pj.id,&pj.source.x, &pj.source.y, 
                 &pj.reflection.x, &pj.reflection.y ))!=-1 && rv!=0 )
+=======
+    while(1)
+>>>>>>> origin/hongbin
     {
+        int rv = get_val( fp, "image", str, &pj.id,&pj.source.x, &pj.source.y, 
+                &pj.reflection.x, &pj.reflection.y );
+        if(rv < 0)
+            return rv;
         matches.push_back(pj);
+      
     }
+<<<<<<< HEAD
     return rv ;
+=======
+    return 0;
+>>>>>>> origin/hongbin
 }		/* -----  end of method imageSensor::get_projections  ----- */
 
 

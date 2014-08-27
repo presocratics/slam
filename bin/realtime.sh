@@ -4,18 +4,19 @@
 # Created: 2014/07/07
 # Simulate real-time
 DATA=raw/2nd
-#BODY=data/bodyHist3.txt
+BODY=data/bodyHist3.txt
 DT=data/dt.fifo
 ALT=data/alt.fifo
 ACC=data/acc.fifo
 QBW=data/qbw.fifo
 ANGVEL=data/w.fifo
 DISP=data/disp.fifo
+#BODYFF=data/body.fifo
 
 pkill slam
 pkill sensor
 pkill multitap
-rosrun rviz rviz -d config/rviz_display.rviz & 
+#rosrun rviz rviz -d config/rviz_display.rviz & 
 rm -f data/*.fifo
 mkfifo $ALT 2>/dev/null
 mkfifo $ACC 2>/dev/null
@@ -23,6 +24,7 @@ mkfifo $QBW 2>/dev/null
 mkfifo $ANGVEL 2>/dev/null
 mkfifo $DT 2>/dev/null
 mkfifo $DISP 2>/dev/null
+#mkfifo $BODYFF 2>/dev/null
 
 ./bin/sensor-emu $DATA/alt | \
     stdbuf -eL -oL sed 's/[0-9]*,\(.*\),/\1/' | \
@@ -48,10 +50,11 @@ mkfifo $DISP 2>/dev/null
 ./bin/sensor-emu $DATA/dt -d | \
     stdbuf -eL -oL sed 's/[0-9]*,//' > $DT &
 
-FASTOPTS="data/bodyHist3.txt $ALT $ACC $DT $QBW $ANGVEL"
+FASTOPTS="$BODY $ALT $ACC $DT $QBW $ANGVEL"
 #valgrind --leak-check=full ./bin/slam $FASTOPTS
-stdbuf -eL -oL ./bin/slam $FASTOPTS  > $DISP &
-rosrun using_markers display_realtime $DISP  
+stdbuf -eL -oL ./bin/slam $FASTOPTS # > $DISP & 
+
+#rosrun using_markers display_realtime $DISP  
 rm -f data/*.fifo
 
 

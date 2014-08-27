@@ -1,4 +1,4 @@
-SRC = feature.cpp featureIO.cpp imagesensor.cpp slamsensor.cpp ourerr.cpp \
+SRC = feature.cpp featureIO.cpp imagesensor.cpp ourerr.cpp \
 		Quaternion.cpp Sensors.cpp states.cpp view.cpp
 OBJ = $(SRC:.cpp=.o)
 OUT = libARC.a
