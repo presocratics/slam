@@ -32,6 +32,9 @@ struct projection {
     projection( const cv::Point2d& s, const cv::Point2d& r, int i ) : source(s), reflection(r), id(i) {};
     cv::Point2d source, reflection;
     int id;
+    bool isRef() {
+        return ( reflection!=cv::Point2d(0,0) );
+    }
 };                /* ----------  end of struct match  ---------- */
 typedef struct projection Projection;
 
