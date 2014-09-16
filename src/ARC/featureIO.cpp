@@ -27,10 +27,9 @@
     int
 FeatureIO::update ( )
 {
-
-    get_projections();
-    return matches.size();
-
+    int rv;
+    rv=get_projections();
+    return rv;
 }        /* -----  end of method imageSensor::update  ----- */
 
 
@@ -104,6 +103,7 @@ FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
         err_sys("fgets");
     else if( r==NULL && (errno == EWOULDBLOCK) )
     {
+        /* No values ready, continue. */
         return -2;    
     }
     else

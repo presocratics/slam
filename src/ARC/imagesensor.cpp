@@ -39,14 +39,12 @@ ImageSensor::get_projections ( )
     strcpy( str, (isHex) ? "%d,%lx,%lx,%lx,%lx" : "%d,%lf,%lf,%lf,%lf" );
 
     while(1)
-
     {
         int rv = get_val( fp, "image", str, &pj.id,&pj.source.x, &pj.source.y, 
                 &pj.reflection.x, &pj.reflection.y );
-        if(rv < 0)
+        if( rv<0 )
             return rv;
         matches.push_back(pj);
-      
     }
 
     return rv ;
