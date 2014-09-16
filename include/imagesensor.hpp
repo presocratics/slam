@@ -20,6 +20,7 @@ class ImageSensor : public FeatureIO
         ImageSensor ( const char *fn, bool ih) : FeatureIO( fn, ih) { }
 
         /* ====================  ACCESSORS     ======================================= */
+        void getNumFeatures( int *refl, int *nonrefl) const;
 
         /* ====================  MUTATORS      ======================================= */
         int get_projections();

@@ -34,13 +34,13 @@ ImageSensor::get_projections ( )
 {
     int rv;
     matches.clear();
-    projection pj;
     char str[20];
     strcpy( str, (isHex) ? "%d,%lx,%lx,%lx,%lx" : "%d,%lf,%lf,%lf,%lf" );
 
     while(1)
     {
-        int rv = get_val( fp, "image", str, &pj.id,&pj.source.x, &pj.source.y, 
+        projection pj;
+        rv = get_val( fp, "image", str, &pj.id,&pj.source.x, &pj.source.y, 
                 &pj.reflection.x, &pj.reflection.y );
         if( rv<0 )
             return rv;
@@ -51,4 +51,22 @@ ImageSensor::get_projections ( )
 
 }		/* -----  end of method imageSensor::get_projections  ----- */
 
+
+/*
+ *--------------------------------------------------------------------------------------
+ *       Class:  ImageSensor
+ *      Method:  ImageSensor :: getNumRef
+ * Description:  Returns the number of reflected and nonreflected features.
+ *--------------------------------------------------------------------------------------
+ */
+    void
+ImageSensor::getNumFeatures ( int *refl, int *nonrefl ) const
+{
+    *refl=0;
+    *nonrefl=0;
+    for( cMatchIter mi=matches.begin(); mi!=matches.end(); ++mi )
+    {
+        ( mi->isRef() ) ? ++(*refl) : ++(*nonrefl);
+    }
+}		/* -----  end of method ImageSensor::getNumRef  ----- */
 

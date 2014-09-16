@@ -95,8 +95,16 @@ int main( int argc, char **argv )
     int width=800;
     int height=1800;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
-    while( imgsense.update()!=-2 ) // -2 only when prerecorded data
+    while( 1 ) // -2 only when prerecorded data
     {
+        int rv;
+        rv=imgsense.update();
+        if(rv!=-2)
+        {
+            int rf, nrf;
+            imgsense.getNumFeatures( &rf, &nrf);
+            //cout << "rf: " << rf << " nrf: " << nrf << endl;
+        }
         int nf;
         cv::Vec3d old_pos;
         Mat G, Q, R, K, H, F;    
@@ -160,17 +168,6 @@ int main( int argc, char **argv )
         kmh.clearContainers();
         f.clearContainers();
     } //  k loop
-    for( featIter fi=mu.feats.begin(); fi!=mu.feats.end(); ++fi )
-    {
-        if( fi->second->get_body_position()[2]>1./10 &&
-            fi->second->get_body_position()[2]<1/DMIN )
-        {
-            circle( rtplot, Point(fi->second->get_world_position()[1] * scaleW + width/2,
-                        height/2 - (fi->second->get_world_position()[0] * scaleH + height/4  )),
-                    3, Scalar(0, 120, 0));
-        }
-
-    }
     mu.clearContainers();
 
     cout << static_cast<double>(clock() - startTime) / CLOCKS_PER_SEC << " seconds." << endl;
