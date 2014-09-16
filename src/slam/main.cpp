@@ -60,7 +60,7 @@ int main( int argc, char **argv )
     // Covariance Initialization
     double Q0 = 100;                // 100 for simulation & 1 for experiments
     double R0 = 10;                    // 10 for simulation & 1 for experiments
-    const bool internaldt=true;
+    const bool internaldt=false;
 
     // Declarations
     ImageSensor imgsense( argv[1], false );
@@ -95,7 +95,7 @@ int main( int argc, char **argv )
     int width=800;
     int height=1800;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
-    while( imgsense.update() )
+    while( imgsense.update()!=-2 ) // -2 only when prerecorded data
     {
         int nf;
         cv::Vec3d old_pos;
