@@ -22,6 +22,7 @@
 #include "ourerr.hpp"
 
 #define MAXLINE 1024            /*  */
+#define NONREF cv::Point2d(0,0)
 
 /*
  * Normalized pixel coordinates of the a point feature in the camera *
@@ -32,9 +33,7 @@ struct projection {
     projection( const cv::Point2d& s, const cv::Point2d& r, int i ) : source(s), reflection(r), id(i) {};
     cv::Point2d source, reflection;
     int id;
-    bool isRef() const {
-        return ( reflection!=cv::Point2d(0,0) );
-    }
+    bool isRef() const { return ( reflection!=NONREF ); }
 };                /* ----------  end of struct match  ---------- */
 typedef struct projection Projection;
 

@@ -40,6 +40,7 @@ ImageSensor::get_projections ( )
     while(1)
     {
         projection pj;
+        pj.reflection=NONREF; // Initialize to NONREF
         rv = get_val( fp, "image", str, &pj.id,&pj.source.x, &pj.source.y, 
                 &pj.reflection.x, &pj.reflection.y );
         if( rv<0 )
