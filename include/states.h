@@ -46,6 +46,7 @@ class States{
         States& setb(const Vec3d& bias);
         void add( const States& a);
         States dynamics( const Sensors& s );
+        void setMinMaxDepth(double minD, double MaxD);
         //Operator
         States& operator*= ( const double& rhs );
         States& operator+= ( const States& rhs );

@@ -198,3 +198,20 @@ States::clearContainers ( )
     return ;
 }		/* -----  end of method States::clearContainers  ----- */
 
+void 
+States::setMinMaxDepth(double minD, double maxD)
+{
+    for(Fiter fi=features.begin(); fi!=features.end(); ++fi)
+    {
+        if((*fi)->get_body_position()[2] > maxD)
+        {
+            (*fi)->set_body_position(cv::Point3d((*fi)->get_body_position()[0], (*fi)->get_body_position()[1], maxD));
+        }
+        else if((*fi)->get_body_position()[2] < minD)
+        {
+            (*fi)->set_body_position(cv::Point3d((*fi)->get_body_position()[0], (*fi)->get_body_position()[1], minD));
+        }
+    }
+
+    return;
+}      /* ----- end of method States::setMinMaxDepth ----- */

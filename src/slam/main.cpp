@@ -118,6 +118,11 @@ int main( int argc, char **argv )
         sense.update();
         mu.update_features( imgsense, sense );
         nf=mu.getNumFeatures();
+
+        // Set min and max depth
+        double minDepth = 0.01;
+        double maxDepth = 1000;
+        mu.setMinMaxDepth(minDepth, maxDepth); // TODO: inverse depth (rho?) ?? currently implemented as world frame depth. Need to Check
         
         // Update dt
         prevtime=curtime;
