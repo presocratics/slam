@@ -110,13 +110,17 @@ Reads image frame coordinates from STDIN in format:\n\
             printf("%s",line);
             continue;
         }
+        reflection = cv::Point2d(0,0);
         sscanf( line, "%d,%lf,%lf,%lf,%lf", &ID, &source.x, &source.y, &reflection.x, &reflection.y );
 
         /* calculate body frame coordinates */
         image2body( source, sbody );
         image2body( reflection, rbody );
         
-        printf("%d,%.17lf,%.17lf,%.17lf,%.17lf\n",ID,sbody.x, sbody.y ,rbody.x, rbody.y);
+        if(reflection == cv::Point2d(0,0))
+            printf("%d,%.17lf,%.17lf\n",ID,sbody.x, sbody.y);
+        else
+            printf("%d,%.17lf,%.17lf,%.17lf,%.17lf\n",ID,sbody.x, sbody.y ,rbody.x, rbody.y);
     }
 
     free (line);
