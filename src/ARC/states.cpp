@@ -198,6 +198,13 @@ States::clearContainers ( )
     return ;
 }		/* -----  end of method States::clearContainers  ----- */
 
+/* 
+ * ------------------------------------------------------------
+ *  setMinMaxDepth
+ *  iterates through active features and re-initialize depths if
+ *  current depth is not in range of given min/max depth.
+ * ------------------------------------------------------------
+ */
 void 
 States::setMinMaxDepth(double minD, double maxD)
 {
@@ -210,6 +217,7 @@ States::setMinMaxDepth(double minD, double maxD)
         else if((*fi)->get_body_position()[2] < minD)
         {
             (*fi)->set_body_position(cv::Point3d((*fi)->get_body_position()[0], (*fi)->get_body_position()[1], minD));
+            //std::cout << "reset to minDepth" << std::endl;
         }
     }
 
