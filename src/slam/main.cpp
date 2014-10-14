@@ -58,15 +58,15 @@ int main( int argc, char **argv )
 
     // Initial variables
     // Covariance Initialization
-    double Q0 = 100;                // 100 for simulation & 1 for experiments
-    double R0 = 10;                    // 10 for simulation & 1 for experiments
+    double Q0 = 25;                // 100 for simulation & 1 for experiments
+    double R0 = 25;                    // 10 for simulation & 1 for experiments
     const bool internaldt=false;
 
     // Declarations
     ImageSensor imgsense( argv[1], false );
     Sensors sense;
     States mu;
-    timeval curtime, prevtime, dt;
+    timeval curtime;//, prevtime, dt;
     gettimeofday(&curtime, NULL);
 
     // Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
@@ -95,16 +95,21 @@ int main( int argc, char **argv )
     int width=800;
     int height=1800;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
+    int framenum = 1;
     while( 1 ) // -2 only when prerecorded data
     {
+        cout << "Iteration: " << framenum << endl;
+        framenum ++;
         int rv;
         rv=imgsense.update();
+        cout << "rv: " << rv << endl;
         if(rv!=-2)
         {
             int rf, nrf;
             imgsense.getNumFeatures( &rf, &nrf);
-            //cout << "rf: " << rf << " nrf: " << nrf << endl;
+            cout << "rf: " << rf << " nrf: " << nrf << endl;
         }
+
         int nf;
         cv::Vec3d old_pos;
         Mat G, Q, R, K, H, F;    
@@ -114,16 +119,18 @@ int main( int argc, char **argv )
         States f, kmh;
 
 
+         
         // Update sensors
         sense.update();
+        /* 
         mu.update_features( imgsense, sense );
         nf=mu.getNumFeatures();
-
+        cout << nf << endl;
         // Set min and max depth
         double minDepth = 0.01;
         double maxDepth = 1000;
         mu.setMinMaxDepth(minDepth, maxDepth); // TODO: inverse depth (rho?) ?? currently implemented as world frame depth. Need to Check
-        
+
         // Update dt
         prevtime=curtime;
         gettimeofday(&curtime, NULL);
@@ -140,6 +147,7 @@ int main( int argc, char **argv )
 
         measurementModel( old_pos, sense.altitude, imgsense.matches, 
                 sense.quaternion, meas, hmu, H, mu );
+        cout << "SEGFAULT START " << endl;
 
         initG( G, nf, sense.dt );
         initQ( Q, nf, Q0 );
@@ -151,6 +159,7 @@ int main( int argc, char **argv )
         calcK( K, H, P, R );
         updateP( P, K, H );
 
+        cout << "SEGFAULT END " << endl;
         subtract(meas,hmu,estimateError);
         estimateError.toMat(eeMat);
         kx = K*eeMat;
@@ -172,7 +181,11 @@ int main( int argc, char **argv )
         //waitKey(1);
         kmh.clearContainers();
         f.clearContainers();
+
+          */
     } //  k loop
+
+        
     mu.clearContainers();
 
     cout << static_cast<double>(clock() - startTime) / CLOCKS_PER_SEC << " seconds." << endl;
@@ -215,7 +228,9 @@ resizeP ( cv::Mat& P, int nf )
     }
     return;
 }        /* -----  end of function resizeP  ----- */
+
 /* 
+ *
  * ===  FUNCTION  ======================================================================
  *         Name:  updateP
  *  Description:  
@@ -228,13 +243,16 @@ updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H )
     P = (Mat::eye(kh.size(), CV_64F) - K*H)*P;
     P = (P.t() + P) / 2;
     return;
-}        /* -----  end of function updateP  ----- */
+}   
+
+/* -----  end of function updateP  ----- */
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  calcK
  *  Description:  
  * =====================================================================================
  */
+
     void
 calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R )
 {
@@ -269,12 +287,14 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
     P = tmp1 + tmp2;
     return;
 }        /* -----  end of function calcP  ----- */
+
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  initR
  *  Description:  
  * =====================================================================================
  */
+
     void
 initR ( cv::Mat& R, int nf, double R0 )
 {
@@ -311,6 +331,7 @@ initQ ( cv::Mat& Q, int nf, double Q0 )
     blockAssign(Q, QBIAS*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
     return;
 }        /* -----  end of function initq  ----- */
+
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  initG

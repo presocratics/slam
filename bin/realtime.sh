@@ -3,20 +3,20 @@
 # Martin Miller
 # Created: 2014/07/07
 # Simulate real-time
-DATA=raw/2nd
-BODY=data/bodyHist3.txt
+DATA=raw/clake_boat
+BODY=data/bodyHist_9_30.txt
 DT=data/dt.fifo
 ALT=data/alt.fifo
 ACC=data/acc.fifo
 QBW=data/qbw.fifo
 ANGVEL=data/w.fifo
 DISP=data/disp.fifo
-#BODYFF=data/body.fifo
+BODYFF=data/body.fifo
 
 pkill slam
 pkill sensor
 pkill multitap
-rosrun rviz rviz -d config/rviz_display.rviz & 
+#rosrun rviz rviz -d config/rviz_display.rviz & 
 rm -f data/*.fifo
 mkfifo $ALT 2>/dev/null
 mkfifo $ACC 2>/dev/null
@@ -50,11 +50,14 @@ mkfifo $DISP 2>/dev/null
 ./bin/sensor-emu $DATA/dt -d | \
     stdbuf -eL -oL sed 's/[0-9]*,//' > $DT &
 
-FASTOPTS="$BODY $ALT $ACC $DT $QBW $ANGVEL"
-#valgrind --leak-check=full ./bin/slam $FASTOPTS
-stdbuf -eL -oL ./bin/slam $FASTOPTS  > $DISP & 
+./bin/sensor-emu $DATA/bodyHist | \
+    stdbuf -eL -oL sed 's/[0-9]*,//' #> $BODYFF &
 
-rosrun using_markers display_realtime $DISP  
+FASTOPTS="$BODYFF $ALT $ACC $DT $QBW $ANGVEL"
+#valgrind --leak-check=full ./bin/slam $FASTOPTS
+stdbuf -eL -oL ./bin/slam $FASTOPTS  #> $DISP & 
+
+#rosrun using_markers display_realtime $DISP  
 rm -f data/*.fifo
 
 

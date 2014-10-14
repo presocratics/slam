@@ -1,6 +1,6 @@
 IDIR = ../../include
 
-CXXFLAGS = -Wall -Werror -std=c++03 -pedantic-errors
+CXXFLAGS = -std=c++03 -pedantic-errors
 CXXFLAGS += -g
 CXXFLAGS += $(shell pkg-config --cflags opencv)
 CXXFLAGS += -I$(IDIR)
