@@ -58,15 +58,15 @@ int main( int argc, char **argv )
 
     // Initial variables
     // Covariance Initialization
-    double Q0 = 25;                // 100 for simulation & 1 for experiments
-    double R0 = 25;                    // 10 for simulation & 1 for experiments
+    double Q0 = 5;                // 100 for simulation & 1 for experiments
+    double R0 = 5;                    // 10 for simulation & 1 for experiments
     const bool internaldt=false;
 
     // Declarations
     ImageSensor imgsense( argv[1], false );
     Sensors sense;
-    States mu;
-    timeval curtime;//, prevtime, dt;
+    States mu, mu_prev;
+    timeval curtime, prevtime, dt;
     gettimeofday(&curtime, NULL);
 
     // Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
@@ -95,19 +95,20 @@ int main( int argc, char **argv )
     int width=800;
     int height=1800;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
-    int framenum = 1;
+    int iter_cnt = 0;
+    int frame_cnt = 0;
     while( 1 ) // -2 only when prerecorded data
     {
-        cout << "Iteration: " << framenum << endl;
-        framenum ++;
+        iter_cnt++;
+        //cout << "######  iteration: " << iter_cnt << "  ######" << endl;
         int rv;
         rv=imgsense.update();
-        cout << "rv: " << rv << endl;
-        if(rv!=-2)
+        if(rv==-1)
         {
+            frame_cnt++;
             int rf, nrf;
             imgsense.getNumFeatures( &rf, &nrf);
-            cout << "rf: " << rf << " nrf: " << nrf << endl;
+            //cout << "rf: " << rf << " nrf: " << nrf << endl;
         }
 
         int nf;
@@ -122,10 +123,15 @@ int main( int argc, char **argv )
          
         // Update sensors
         sense.update();
-        /* 
+         
         mu.update_features( imgsense, sense );
         nf=mu.getNumFeatures();
-        cout << nf << endl;
+        int pnf= mu_prev.getNumFeatures();
+        if(nf==0)
+        {
+            mu.features = mu_prev.features;
+            nf = mu.getNumFeatures();
+        }
         // Set min and max depth
         double minDepth = 0.01;
         double maxDepth = 1000;
@@ -140,33 +146,52 @@ int main( int argc, char **argv )
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
+        //cout << "acc: " << sense.acceleration << endl;
+        //cout << "dt: " << sense.dt << endl;
+        //cout << "quat: " << sense.quaternion << endl;
         f = mu.dynamics( sense );           // Motion model
         f*=sense.dt;
+        //cout << "f: " << f.getNumFeatures() << endl;
         jacobianMotionModel(mu, sense, F );
         mu+=f;
-
-        measurementModel( old_pos, sense.altitude, imgsense.matches, 
-                sense.quaternion, meas, hmu, H, mu );
-        cout << "SEGFAULT START " << endl;
-
+        if(rv==-1)
+        {
+            measurementModel( old_pos, sense.altitude, imgsense.matches, 
+                    sense.quaternion, meas, hmu, H, mu );
+        }
+        //cout << "SEGFAULT loc 1" << endl;
         initG( G, nf, sense.dt );
-        initQ( Q, nf, Q0 );
+
+        //cout << "SEGFAULT loc 2" << endl;
+        initQ( Q, nf, Q0, sense.dt );
+        
+        //cout << "SEGFAULT loc 3" << endl;
         initR( R, nf, R0 );
 
-        // EKF measurement update
+        //cout << "SEGFAULT loc 4" << endl;
         resizeP( P, nf );
-        calcP( P, F, G, Q );
-        calcK( K, H, P, R );
-        updateP( P, K, H );
 
-        cout << "SEGFAULT END " << endl;
-        subtract(meas,hmu,estimateError);
-        estimateError.toMat(eeMat);
-        kx = K*eeMat;
+        //cout << "SEGFAULT loc 5" << endl;
+        //cout << "P: " << P.size() << endl;
+        //cout << "F: " << F.size() << endl;
+        //cout << "G: " << G.size() << endl;
+        //cout << "Q: " << Q.size() << endl;
+        //calcP( P, F, G, Q );
 
-        kmh = States(kx);
-        mu+=kmh;
+        //cout << "SEGFAULT loc 6" << endl;
+        // EKF measurement update
+        if(rv == -1)
+        {
+            calcK( K, H, P, R ); // only when vision data is avail.
+            updateP( P, K, H );
+            subtract(meas,hmu,estimateError);
+            estimateError.toMat(eeMat);
+            kx = K*eeMat;
+            kmh = States(kx);
+            mu+=kmh;
+        }
 
+        mu_prev.features = mu.features; 
         // Real time plotting.
         printf("%f,%f,%f,%f,%f,%f\n", mu.X[0], mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
         for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
@@ -175,15 +200,16 @@ int main( int argc, char **argv )
                     (*fi)->get_world_position()[1], (*fi)->get_world_position()[2] );
         }
         printf("\n");
-        circle(rtplot, Point(mu.X[1]*scaleW+width/2,
-            height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
+        
+        //circle(rtplot, Point(mu.X[1]*scaleW+width/2,
+        //    height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
         //imshow("drawing", rtplot);
         //waitKey(1);
         kmh.clearContainers();
         f.clearContainers();
 
-          */
-    } //  k loop
+          
+    } //  while loop
 
         
     mu.clearContainers();
@@ -278,13 +304,23 @@ calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R )
     void
 calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
 {
+/*  
     cv::Mat tmp1, tmp2;
-    /* Put multiplication on multiple lines for less error */
+    cout << "temp1 empty?: " << tmp1.empty() << endl;
+    // Put multiplication on multiple lines for less error
     tmp1 = F*P;
+
+    cout << "temp1 empty?: " << tmp1.empty() << endl;
     tmp1 *= F.t();
+    cout << "here" << endl;
     tmp2 = G*Q;
+    
+    cout << "temp1 empty?: " << tmp1.empty() << endl;
     tmp2 *= G.t();
     P = tmp1 + tmp2;
+*/
+    P = F*P*F.t() + G*Q*G.t();
+
     return;
 }        /* -----  end of function calcP  ----- */
 
@@ -325,9 +361,9 @@ initR ( cv::Mat& R, int nf, double R0 )
  * =====================================================================================
  */
     void
-initQ ( cv::Mat& Q, int nf, double Q0 )
+initQ ( cv::Mat& Q, int nf, double Q0, double dt )
 {
-    Q = Q0*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
+    Q = Q0*Mat::eye(9+3*nf, 9+3*nf, CV_64F)*dt;
     blockAssign(Q, QBIAS*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
     return;
 }        /* -----  end of function initq  ----- */

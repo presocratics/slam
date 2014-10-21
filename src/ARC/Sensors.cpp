@@ -13,7 +13,7 @@ Sensors::update ( )
     altitude = get_altitude( );
     acceleration = get_acceleration( );
     quaternion = get_quaternion( );
-    //dt = get_dt( );
+    dt = get_dt( );
     angular_velocity = get_angular_velocity(  );
     return ;
 }		/* -----  end of method Sensors::update  ----- */
