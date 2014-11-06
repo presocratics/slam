@@ -11,10 +11,20 @@
 Sensors::update ( )
 {
     altitude = get_altitude( );
+    //std::cout << "got alt " << altitude << std::endl;
+
     acceleration = get_acceleration( );
+    //std::cout << "got acc " << acceleration <<std::endl;
+
     quaternion = get_quaternion( );
+    //std::cout << "got q " << quaternion.coord <<std::endl;
+
     dt = get_dt( );
+    //std::cout << "got dt " << dt << std::endl;
+
     angular_velocity = get_angular_velocity(  );
+    //std::cout << "got w " << angular_velocity << std::endl;
+
     return ;
 }		/* -----  end of method Sensors::update  ----- */
 

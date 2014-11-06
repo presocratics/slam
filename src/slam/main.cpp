@@ -43,9 +43,61 @@
 //#include "ourerr.hpp"
 #define PINIT 1e-4            /*  */
 #define THRESH 2e-10           /*  */
+#define MAXLINE 1024
 using std::cout; 
 using std::cerr; 
 using std::endl;
+
+/* TEMPORARY FUNC TO TAKE CARE OF ROTATED MEASUREMENT */
+void
+euler2quaternion ( double phi, double theta, double psi, Quaternion& q )
+{
+    double q0 = sin(phi/2)*cos(theta/2)*cos(psi/2)-cos(phi/2)*sin(theta/2)*sin(psi/2);
+    double q1 = cos(phi/2)*sin(theta/2)*cos(psi/2)+sin(phi/2)*cos(theta/2)*sin(psi/2);
+    double q2 = cos(phi/2)*cos(theta/2)*sin(psi/2)-sin(phi/2)*sin(theta/2)*cos(psi/2);
+    double q3 = cos(phi/2)*cos(theta/2)*cos(psi/2)+sin(phi/2)*sin(theta/2)*sin(psi/2);
+    q.coord = cv::Vec4d(q0,q1,q2,q3);
+    return;
+}		/* -----  end of function euler2quaternion  ----- */
+
+void
+pause()
+{
+    Mat empty = Mat::ones(200, 300, CV_8UC1);
+    putText(empty,"Press Space To Continue", Point(50,90),FONT_HERSHEY_PLAIN, 1, Scalar(255,255,255));
+        imshow("debug", empty);
+        waitKey(10000000);
+}
+
+/* TEMPORARY FUNC - NUM OF FAST INTEGRATION */
+int
+getNumIterFast(FILE* fp)
+{
+    int nIter;
+    char* line;
+    line	= (char *) calloc ( (size_t)(MAXLINE), sizeof(char) );
+    if ( line==NULL ) {
+        fprintf ( stderr, "\ndynamic memory allocation failed\n" );
+        exit (EXIT_FAILURE);
+    }
+    
+    
+    if(fgets( line, MAXLINE, fp )!=NULL)
+    {
+        sscanf(line,"%d",&nIter);
+        free (line);
+        line	= NULL;
+        return nIter;
+    }
+    else
+    {
+        cout << "-(!) ERROR fgets: getNumIterFast()" << endl;
+        pause();
+        exit(EXIT_FAILURE);
+    }
+}
+
+
 
 int main( int argc, char **argv )
 {
@@ -58,8 +110,8 @@ int main( int argc, char **argv )
 
     // Initial variables
     // Covariance Initialization
-    double Q0 = 5;                // 100 for simulation & 1 for experiments
-    double R0 = 5;                    // 10 for simulation & 1 for experiments
+    double Q0 = 28;                // 100 for simulation & 1 for experiments
+    double R0 = 25;                    // 10 for simulation & 1 for experiments
     const bool internaldt=false;
 
     // Declarations
@@ -70,19 +122,19 @@ int main( int argc, char **argv )
     gettimeofday(&curtime, NULL);
 
     // Load experimental data (vision: 1700 ~ 4340 automatic reflection and shore features)
-    sense.set_altitude( argv[2], false, true );
-    sense.set_acceleration( argv[3], false, true );
+    sense.set_altitude( argv[2], false, false );
+    sense.set_acceleration( argv[3], false, false );
     sense.set_dt( argv[4], false );
-    sense.set_quaternion( argv[5], false, true );
-    sense.set_angular_velocity( argv[6], false, true );
-    sense.update();
+    sense.set_quaternion( argv[5], false, false );
+    sense.set_angular_velocity( argv[6], false, false );
+    //sense.update();
 
     clock_t startTime = clock();
 
     // State initialization
     // mu = [pos vel features bias]
     //    = [X    V  features  b  ]
-    mu.X[2] = -1 * sense.altitude;
+    //mu.X[2] = -1 * sense.altitude;
 
     Mat P = Mat::eye(9, 9, CV_64F);
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0) );
@@ -90,26 +142,42 @@ int main( int argc, char **argv )
     // Inverse depth
     mu.setb(cv::Vec3d(0,0,0));
 
-    double scaleW = 10;
-    double scaleH = 10;
-    int width=800;
-    int height=1800;
+    double scaleW = 1;
+    double scaleH = 1;
+    int width=1080;
+    int height=1920;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
     int iter_cnt = 0;
     int frame_cnt = 0;
-    while( 1 ) // -2 only when prerecorded data
+    int nextIter = 0;
+
+    FILE* fp = fopen("raw/clake_boat/fastinteg" , "r");
+    nextIter = getNumIterFast(fp);
+    imgsense.update();
+
+    while( 1 ) 
     {
         iter_cnt++;
-        //cout << "######  iteration: " << iter_cnt << "  ######" << endl;
-        int rv;
-        rv=imgsense.update();
+        int rv=-2;
+        if(nextIter == iter_cnt)
+        {
+            nextIter = getNumIterFast(fp);
+            rv = -1;
+        }
+
+        // TODO: max iter 573704 frame 2403
+
         if(rv==-1)
         {
+            cout << "FEAT UPDATE" << endl;
+            imgsense.update();
             frame_cnt++;
             int rf, nrf;
             imgsense.getNumFeatures( &rf, &nrf);
-            //cout << "rf: " << rf << " nrf: " << nrf << endl;
+            cout << "rf: " << rf << " nrf: " << nrf << endl;
         }
+
+        cout << "######  iteration: " << iter_cnt << "  ###### " << "frame: " << frame_cnt << endl;
 
         int nf;
         cv::Vec3d old_pos;
@@ -119,13 +187,15 @@ int main( int argc, char **argv )
         View estimateError;
         States f, kmh;
 
-
+        
          
         // Update sensors
         sense.update();
-         
+        cout << "dt_rt: " << sense.dt << endl;
         mu.update_features( imgsense, sense );
+
         nf=mu.getNumFeatures();
+        cout << "nf: " << endl;
         int pnf= mu_prev.getNumFeatures();
         if(nf==0)
         {
@@ -133,9 +203,9 @@ int main( int argc, char **argv )
             nf = mu.getNumFeatures();
         }
         // Set min and max depth
-        double minDepth = 0.01;
-        double maxDepth = 1000;
-        mu.setMinMaxDepth(minDepth, maxDepth); // TODO: inverse depth (rho?) ?? currently implemented as world frame depth. Need to Check
+        double minDepth = 0.1;
+        double maxDepth = 10000;
+        mu.setMinMaxDepth(minDepth, maxDepth); // inverse depth (rho?) in JH's code. currently implemented as world frame depth. Need to Check
 
         // Update dt
         prevtime=curtime;
@@ -146,9 +216,9 @@ int main( int argc, char **argv )
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
-        //cout << "acc: " << sense.acceleration << endl;
-        //cout << "dt: " << sense.dt << endl;
-        //cout << "quat: " << sense.quaternion << endl;
+        cout << "acc: " << sense.acceleration << endl;
+        cout << "dt_internal: " << sense.dt << endl;
+        cout << "qbw: " << sense.quaternion.coord << endl;
         f = mu.dynamics( sense );           // Motion model
         f*=sense.dt;
         //cout << "f: " << f.getNumFeatures() << endl;
@@ -156,27 +226,31 @@ int main( int argc, char **argv )
         mu+=f;
         if(rv==-1)
         {
+            cv::Vec3d curr_euler = sense.quaternion.euler();
+            cv::Vec3d rot180(0,0,3.14159);
+            Quaternion q_rot180;
+            euler2quaternion(0,0,3.14159, q_rot180);
+            cv::Mat rot_matx_180 = (cv::Mat)q_rot180.rotation();
+            cv::Mat new_euler = rot_matx_180 * (cv::Mat)curr_euler;
+            new_euler.at<double>(2,0) += 3.14159;
+            Quaternion new_quat;
+            euler2quaternion(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
+            sense.quaternion = new_quat;
+            cout << "qbw_rotated: " << sense.quaternion.coord << endl;
             measurementModel( old_pos, sense.altitude, imgsense.matches, 
                     sense.quaternion, meas, hmu, H, mu );
         }
-        //cout << "SEGFAULT loc 1" << endl;
         initG( G, nf, sense.dt );
-
-        //cout << "SEGFAULT loc 2" << endl;
         initQ( Q, nf, Q0, sense.dt );
-        
-        //cout << "SEGFAULT loc 3" << endl;
         initR( R, nf, R0 );
-
-        //cout << "SEGFAULT loc 4" << endl;
         resizeP( P, nf );
 
         //cout << "SEGFAULT loc 5" << endl;
-        //cout << "P: " << P.size() << endl;
-        //cout << "F: " << F.size() << endl;
-        //cout << "G: " << G.size() << endl;
-        //cout << "Q: " << Q.size() << endl;
-        //calcP( P, F, G, Q );
+        //cout << "P: " << P << endl;
+        //cout << "F: " << F << endl;
+        //cout << "G: " << G << endl;
+        //cout << "Q: " << Q << endl;
+        calcP( P, F, G, Q );
 
         //cout << "SEGFAULT loc 6" << endl;
         // EKF measurement update
@@ -188,27 +262,28 @@ int main( int argc, char **argv )
             estimateError.toMat(eeMat);
             kx = K*eeMat;
             kmh = States(kx);
-            mu+=kmh;
+            //mu+=kmh;
         }
 
         mu_prev.features = mu.features; 
         // Real time plotting.
-        printf("%f,%f,%f,%f,%f,%f\n", mu.X[0], mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
-        for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
-        {
-            printf("%d,%f,%f,%f\n", (*fi)->getID(), (*fi)->get_world_position()[0],
-                    (*fi)->get_world_position()[1], (*fi)->get_world_position()[2] );
-        }
-        printf("\n");
+        double tS = 1;
+        printf("xyzv: %f,%f,%f,%f,%f,%f\n", tS*mu.X[0], tS*mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
+        //for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
+        //{
+        //    printf("%d,%f,%f,%f\n", (*fi)->getID(), (*fi)->get_world_position()[0],
+        //            (*fi)->get_world_position()[1], (*fi)->get_world_position()[2] );
+        //}
+        //printf("\n");
         
-        //circle(rtplot, Point(mu.X[1]*scaleW+width/2,
-        //    height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
-        //imshow("drawing", rtplot);
-        //waitKey(1);
+        circle(rtplot, Point(mu.X[1]*scaleW+width/2,
+            height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
+        imshow("drawing", rtplot);
+        waitKey(100000);
+        
         kmh.clearContainers();
         f.clearContainers();
 
-          
     } //  while loop
 
         
@@ -267,7 +342,7 @@ updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H )
 {
     Mat kh = K*H;
     P = (Mat::eye(kh.size(), CV_64F) - K*H)*P;
-    P = (P.t() + P) / 2;
+    //P = (P.t() + P) / 2;
     return;
 }   
 
@@ -320,7 +395,8 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
     P = tmp1 + tmp2;
 */
     P = F*P*F.t() + G*Q*G.t();
-
+    //cout << P << endl;
+    //pause();
     return;
 }        /* -----  end of function calcP  ----- */
 
@@ -352,6 +428,8 @@ initR ( cv::Mat& R, int nf, double R0 )
         R.at<double>(5 + 6 * i, 5 + 6 * i) = 10. / 770 * R0;
         R.at<double>(6 + 6 * i, 6 + 6 * i) = 10. / 770 * R0;
     }
+    //cout << R << endl;
+    //pause();
     return;
 }        /* -----  end of function initR  ----- */
 /* 
@@ -363,8 +441,16 @@ initR ( cv::Mat& R, int nf, double R0 )
     void
 initQ ( cv::Mat& Q, int nf, double Q0, double dt )
 {
-    Q = Q0*Mat::eye(9+3*nf, 9+3*nf, CV_64F)*dt;
+    Q0 = Q0*dt*dt;
+    Q = Q0*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
+    Q.at<double>(0,0) *= 0.001*Q0;
+    Q.at<double>(1,1) *= 0.001*Q0;
+    Q.at<double>(2,2) *= 0.001*Q0;
+
     blockAssign(Q, QBIAS*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
+
+    //cout << Q << endl;
+    //pause();
     return;
 }        /* -----  end of function initq  ----- */
 
@@ -378,12 +464,14 @@ initQ ( cv::Mat& Q, int nf, double Q0, double dt )
 initG ( cv::Mat& G, int nf, double dt )
 {
     G = dt*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
+    /*
     G.at<double>(0, 0) = 0.5*dt*dt;
     G.at<double>(1, 1) = 0.5*dt*dt;
     G.at<double>(2, 2) = 0.5*dt*dt;
     G.at<double>(6, 6) = 0.5*dt*dt;
     G.at<double>(7, 7) = 0.5*dt*dt;
     G.at<double>(8, 8) = 0.5*dt*dt;
+    */
     return;
 }        /* -----  end of function initG  ----- */
 /* 

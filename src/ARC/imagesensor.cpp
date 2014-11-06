@@ -36,8 +36,7 @@ ImageSensor::get_projections ( )
     matches.clear();
     char str[20];
     strcpy( str, (isHex) ? "%d,%lx,%lx,%lx,%lx" : "%d,%lf,%lf,%lf,%lf" );
-
-    while(1)
+    while(rv!=-9)
     {
         projection pj;
         pj.reflection=NONREF; // Initialize to NONREF

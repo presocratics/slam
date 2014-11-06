@@ -89,6 +89,7 @@ void States::add( const States& a)
     void
 States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
 {
+
     features.clear();
     // Age each feature
     featIter fi=feats.begin(); 
