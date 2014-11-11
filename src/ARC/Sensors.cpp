@@ -10,7 +10,7 @@
     void
 Sensors::update ( )
 {
-    altitude = get_altitude( );
+    //altitude = get_altitude( );
     //std::cout << "got alt " << altitude << std::endl;
 
     acceleration = get_acceleration( );

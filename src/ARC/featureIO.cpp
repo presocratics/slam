@@ -94,22 +94,30 @@ FeatureIO::get_projections ( )
     int
 FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
 {
-    char line[MAXLINE];
+    char* line = new char[MAXLINE];
     va_list ap;
     va_start(ap,fmt);
 
     char *r;
     if( (r=fgets(line,1024,fp))==NULL && (errno != EWOULDBLOCK) )
         err_sys("fgets");
-    else if( r==NULL && (errno == EWOULDBLOCK) )
-    {
-        /* No values ready, continue. */
-        return -2;    
-    }
+    //else if( r==NULL && (errno == EWOULDBLOCK) )
+    //{
+    //    std::cout << "WOULDBLOCK" << std::endl;
+    //    /* No values ready, continue. */
+    //    return -2;    
+    //}
+    //else if(line[0]=='\n')
+    //{
+    //   /* reached newline. Stop reading. */
+    //    return -9;
+    //}
     else
     {
         int rv=vsscanf( line, fmt, ap );
         va_end(ap);
+        free(line);
+        line = NULL;
         return rv;
     }
     std::cout << "-(!) get val error" << std::endl;

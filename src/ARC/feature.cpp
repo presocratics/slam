@@ -17,7 +17,7 @@
  */
 // feature class cpp
 #include "feature.h"
-#define DINIT 5            /* Max initial depth */
+#define DINIT 100            /* Max initial depth */
 // constructor
 Feature::Feature( const Vec3d& pos, int n )
 {
@@ -41,10 +41,11 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
         double idepth;
         cv::Vec3d pibr;
 
-        add( atan2( match.source.y, 1) * 180 / M_PI,
-            sense.quaternion.euler()*180/M_PI, pibr );
-        idepth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
-        idepth = fmin( idepth, DINIT );
+        //add( atan2( match.source.y, 1) * 180 / M_PI,
+        //    sense.quaternion.euler()*180/M_PI, pibr );
+        //idepth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
+        //idepth = fmin( idepth, DINIT );
+        idepth = DINIT;
         set_body_position( match.source, 1/idepth );
     }
     else

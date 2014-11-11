@@ -127,14 +127,15 @@ int main( int argc, char **argv )
     sense.set_dt( argv[4], false );
     sense.set_quaternion( argv[5], false, false );
     sense.set_angular_velocity( argv[6], false, false );
-    //sense.update();
-
+    sense.update();
+    sense.altitude = sense.get_altitude();
+    
     clock_t startTime = clock();
 
     // State initialization
     // mu = [pos vel features bias]
     //    = [X    V  features  b  ]
-    //mu.X[2] = -1 * sense.altitude;
+    mu.X[2] = -1 * sense.altitude;
 
     Mat P = Mat::eye(9, 9, CV_64F);
     blockAssign( P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0) );
@@ -153,8 +154,7 @@ int main( int argc, char **argv )
 
     FILE* fp = fopen("raw/clake_boat/fastinteg" , "r");
     nextIter = getNumIterFast(fp);
-    imgsense.update();
-
+    
     while( 1 ) 
     {
         iter_cnt++;
@@ -169,12 +169,13 @@ int main( int argc, char **argv )
 
         if(rv==-1)
         {
-            cout << "FEAT UPDATE" << endl;
+            cout << "-----(A) CALL IMGSENSE UPDATE " << endl;
             imgsense.update();
             frame_cnt++;
             int rf, nrf;
             imgsense.getNumFeatures( &rf, &nrf);
             cout << "rf: " << rf << " nrf: " << nrf << endl;
+            sense.altitude = sense.get_altitude();
         }
 
         cout << "######  iteration: " << iter_cnt << "  ###### " << "frame: " << frame_cnt << endl;
@@ -187,15 +188,15 @@ int main( int argc, char **argv )
         View estimateError;
         States f, kmh;
 
-        
-         
         // Update sensors
-        sense.update();
+        if(iter_cnt!=1)
+            sense.update();
         cout << "dt_rt: " << sense.dt << endl;
         mu.update_features( imgsense, sense );
-
         nf=mu.getNumFeatures();
-        cout << "nf: " << endl;
+        cout << "nf: " <<  nf << endl;
+
+
         int pnf= mu_prev.getNumFeatures();
         if(nf==0)
         {
@@ -203,9 +204,10 @@ int main( int argc, char **argv )
             nf = mu.getNumFeatures();
         }
         // Set min and max depth
-        double minDepth = 0.1;
-        double maxDepth = 10000;
-        mu.setMinMaxDepth(minDepth, maxDepth); // inverse depth (rho?) in JH's code. currently implemented as world frame depth. Need to Check
+        double minDepth = 0.0001;
+        double maxDepth = 10;
+        mu.setMinMaxDepth(minDepth, maxDepth); // inverse depth in JH's code. currently implemented as world frame depth. 
+
 
         // Update dt
         prevtime=curtime;
@@ -224,6 +226,9 @@ int main( int argc, char **argv )
         //cout << "f: " << f.getNumFeatures() << endl;
         jacobianMotionModel(mu, sense, F );
         mu+=f;
+
+        //cout << "F: " << F << endl;
+        //pause();
         if(rv==-1)
         {
             cv::Vec3d curr_euler = sense.quaternion.euler();
@@ -269,18 +274,18 @@ int main( int argc, char **argv )
         // Real time plotting.
         double tS = 1;
         printf("xyzv: %f,%f,%f,%f,%f,%f\n", tS*mu.X[0], tS*mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
-        //for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
-        //{
-        //    printf("%d,%f,%f,%f\n", (*fi)->getID(), (*fi)->get_world_position()[0],
-        //            (*fi)->get_world_position()[1], (*fi)->get_world_position()[2] );
-        //}
-        //printf("\n");
+        for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
+        {
+            printf("%d,%f,%f,%f\n", (*fi)->getID(), (*fi)->get_body_position()[0],
+                    (*fi)->get_body_position()[1], (*fi)->get_body_position()[2] );
+        }
+        printf("\n");
         
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
         imshow("drawing", rtplot);
-        waitKey(100000);
-        
+        waitKey(1);
+        pause(); 
         kmh.clearContainers();
         f.clearContainers();
 
@@ -394,8 +399,8 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
     tmp2 *= G.t();
     P = tmp1 + tmp2;
 */
-    P = F*P*F.t() + G*Q*G.t();
-    //cout << P << endl;
+    //P = F*P*F.t() + G*Q*G.t();
+    //cout << "P: " <<  P << endl;
     //pause();
     return;
 }        /* -----  end of function calcP  ----- */
@@ -428,7 +433,7 @@ initR ( cv::Mat& R, int nf, double R0 )
         R.at<double>(5 + 6 * i, 5 + 6 * i) = 10. / 770 * R0;
         R.at<double>(6 + 6 * i, 6 + 6 * i) = 10. / 770 * R0;
     }
-    //cout << R << endl;
+    //cout << "R: " << R << endl;
     //pause();
     return;
 }        /* -----  end of function initR  ----- */
@@ -449,7 +454,7 @@ initQ ( cv::Mat& Q, int nf, double Q0, double dt )
 
     blockAssign(Q, QBIAS*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
 
-    //cout << Q << endl;
+    //cout << "Q" << Q << endl;
     //pause();
     return;
 }        /* -----  end of function initq  ----- */
@@ -583,7 +588,6 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out )
             0, 0, 0, -w[2], 0, w[0],
             0, 0, 0, w[1], -w[0], 0);
     blockAssign(Fb,Fb1,Point(0,0));
-
     Mat Fi = Mat::zeros(nf*3, nf*3, CV_64F);
     Mat FiTemp;
     Mat Fib = Mat::zeros(nf*3, 9, CV_64F);
@@ -604,7 +608,6 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out )
         double pib2 = mu.features[i]->get_body_position()[1];
         double pib3 = mu.features[i]->get_body_position()[2];
 
-
         FiTemp = (Mat_<double>(3, 3) <<
                     (pib * Matx31d( mu.V[2], w[0], -2*w[1]))(0,0),
                     w[2] + pib1*w[0],
@@ -616,11 +619,20 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out )
                     pib3*w[0],
                     2 * pib3*mu.V[2] - pib1*w[1] + pib2*w[0]);
         // work on Fib
-        Fib_ith = (Mat_<double>(3, 6) <<
-                    0, 0, 0, -pib3, 0, pib1*pib3,
-                    0, 0, 0, 0, -pib3, pib2*pib3,
-                    0, 0, 0, 0, 0, pow(pib3, 2));
+//        Fib_ith = (Mat_<double>(3, 6) <<
+//                    0, 0, 0, -pib3, 0, pib1*pib3,
+//                    0, 0, 0, 0, -pib3, pib2*pib3,
+//                    0, 0, 0, 0, 0, pow(pib3, 2));
 
+        /* new Fib 11/10/14 */
+        Fib_ith = (Mat_<double>(3, 6) <<
+                    0, 0, 0, pib1*pib3, -pib3, 0,
+                    0, 0, 0, pib2*pib3, 0, -pib3,
+                    0, 0, 0, pow(pib3, 2), 0, 0);
+
+
+        //cout << "Fib: " << Fib_ith << endl;
+        //pause();
         blockAssign(Fib, Fib_ith, Point(0, 3*i));
 
 

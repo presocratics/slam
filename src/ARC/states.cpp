@@ -97,7 +97,6 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
     {
         fi->second->incNoMatch();
     }
-
     cMatchIter match=imgsense.matches.begin();
     for( ; match!=imgsense.matches.end(); ++match )
     {
