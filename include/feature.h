@@ -21,6 +21,7 @@ struct inits {
     double inverse_depth;
     cv::Vec3d anchor;
     cv::Point2d pib;
+    bool isRef;
 };                /* ----------  end of struct inits  ---------- */
 
 typedef struct inits Inits;
@@ -67,6 +68,12 @@ class Feature{
             initial.pib = p;
             return ;
         }        /* -----  end of method Feature::set_initial_pib  ----- */
+            inline void
+        set_isRef(bool b)
+        {
+            initial.isRef = b;
+            return;
+        }
 
         /*
          *--------------------------------------------------------------------------------------

@@ -166,14 +166,13 @@ int main( int argc, char **argv )
         }
 
         // TODO: max iter 573704 frame 2403
-
+        int rf, nrf;
         if(rv==-1)
         {
-            cout << "-----(A) CALL IMGSENSE UPDATE " << endl;
             imgsense.update();
             frame_cnt++;
-            int rf, nrf;
             imgsense.getNumFeatures( &rf, &nrf);
+            mu.set_rf_nrf(rf, nrf);
             cout << "rf: " << rf << " nrf: " << nrf << endl;
             sense.altitude = sense.get_altitude();
         }
@@ -247,7 +246,7 @@ int main( int argc, char **argv )
         }
         initG( G, nf, sense.dt );
         initQ( Q, nf, Q0, sense.dt );
-        initR( R, nf, R0 );
+        initR( R, rf, nrf, R0 );
         resizeP( P, nf );
 
         //cout << "SEGFAULT loc 5" << endl;
@@ -263,11 +262,20 @@ int main( int argc, char **argv )
         {
             calcK( K, H, P, R ); // only when vision data is avail.
             updateP( P, K, H );
+            Mat tempMeas;
+            meas.toMat(tempMeas);
+            //cout << tempMeas << endl;
+            //pause();
+            cout << "hmu size: " << tempMeas.size() << endl;
+            cout << K.size() << endl;
+            //pause();
+            //cout << tempMeas << endl;
+            //pause();
             subtract(meas,hmu,estimateError);
             estimateError.toMat(eeMat);
             kx = K*eeMat;
             kmh = States(kx);
-            //mu+=kmh;
+            mu+=kmh;
         }
 
         mu_prev.features = mu.features; 
@@ -280,12 +288,13 @@ int main( int argc, char **argv )
                     (*fi)->get_body_position()[1], (*fi)->get_body_position()[2] );
         }
         printf("\n");
-        
+       
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
+        
         imshow("drawing", rtplot);
         waitKey(1);
-        pause(); 
+        //pause(); 
         kmh.clearContainers();
         f.clearContainers();
 
@@ -362,6 +371,10 @@ updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H )
     void
 calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R )
 {
+    //cout << "H size: " << H.size() << endl;
+    //cout << "P size: " << P.size() << endl;
+    //cout << "R size: " << R.size() << endl;
+    //pause();
     cv::Mat tmp=H*P;
     tmp *= H.t();
     tmp += R;
@@ -413,13 +426,13 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
  */
 
     void
-initR ( cv::Mat& R, int nf, double R0 )
+initR ( cv::Mat& R, int rf, int nrf, double R0 )
 {
     // for 2nd street data set
-    R = 0.1 / 770 * R0*Mat::eye(1+6*nf, 1+6*nf, CV_64F);
+    R = 0.1 / 770 * R0*Mat::eye(1+6*rf+4*nrf, 1+6*rf+4*nrf, CV_64F);
     // altimeter noise covariance
     R.at<double>(0, 0) = 0.0001*R0;
-    for (int i = 0; i < nf; i++)
+    for (int i = 0; i < rf+nrf; i++)
     {
         // current view measurement noise covariance
         R.at<double>(1 + 6 * i, 1 + 6 * i) = 0.1 / 770 * R0;
@@ -671,13 +684,13 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
     meas.altitude = alt;                            // altitude
     hmu.altitude = -mu.X[2];
 
-    H=cv::Mat::zeros(6*mu.getNumFeatures()+1,mu.getRows(),CV_64F);
-
+    H=cv::Mat::zeros(6*mu.rf+4*mu.nrf+1,mu.getRows(),CV_64F);
     Mat Hb;
     Mat Hi;
 
     cMatchIter match=matches.begin();
     Fiter feat=mu.features.begin();
+    int index = 1;
     for (int i=0; feat!=mu.features.end(); ++i,  ++feat, ++match)
     {
         cv::Vec3d dst;
@@ -686,6 +699,8 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
 
         jacobianH(mu.X, qbw, **feat, Hb, Hi);
 
+        cout << (*feat)->initial.isRef << endl;
+        
         meas.features.push_back(Vfeat( match->source, (*feat)->initial.pib, match->reflection ));
         hmu.features.push_back(Vfeat( (*feat)->get_body_position(), 
                     (*feat)->pib0Hat(old_pos, qbw), (*feat)->ppbHat(mu.X, qbw) ));
@@ -697,6 +712,14 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
         blockAssign( Hfeat, Hb, Point(0,2) );
         blockAssign( Hfeat, Hi, Point(9+3*i,2) );
             
-        blockAssign( H, Hfeat, Point(0,1+6*i) );
+        blockAssign( H, Hfeat, Point(0,index) );
+        if( (*feat)->initial.isRef )
+        {
+            index += 3;
+        }
+        else
+        {
+            index += 2;
+        }
     } // end for loop
 }

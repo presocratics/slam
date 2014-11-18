@@ -28,7 +28,8 @@ class States{
         Vec3d b;
         featMap feats;
         active features;
-
+        int rf;
+        int nrf;
 
         // accessor
         Vec3d getX();
@@ -47,6 +48,8 @@ class States{
         void add( const States& a);
         States dynamics( const Sensors& s );
         void setMinMaxDepth(double minD, double MaxD);
+        void set_rf_nrf(int r, int n);
+        
         //Operator
         States& operator*= ( const double& rhs );
         States& operator+= ( const States& rhs );

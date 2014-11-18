@@ -205,7 +205,7 @@ States::clearContainers ( )
  *  current depth is not in range of given min/max depth.
  * ------------------------------------------------------------
  */
-void 
+    void 
 States::setMinMaxDepth(double minD, double maxD)
 {
     for(Fiter fi=features.begin(); fi!=features.end(); ++fi)
@@ -223,3 +223,11 @@ States::setMinMaxDepth(double minD, double maxD)
 
     return;
 }      /* ----- end of method States::setMinMaxDepth ----- */
+
+    void
+States::set_rf_nrf(int r, int n)
+{
+    rf = r;
+    nrf = n;
+    return;
+}

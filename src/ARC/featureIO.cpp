@@ -33,23 +33,30 @@ FeatureIO::update ( )
 }        /* -----  end of method imageSensor::update  ----- */
 
 
+//    FILE *
+//FeatureIO::open_source ( const char *fn )
+//{
+//    char cmd[1024];
+//    sprintf(cmd, "tail -f -n+0 %s", fn);
+//
+//    FILE *fp = popen( cmd, "r");
+//    int fd = fileno(fp);
+//    int flags;
+//    flags = fcntl(fd, F_GETFL, 0);
+//    flags |= O_NONBLOCK;
+//    fcntl(fd, F_SETFL, flags);
+//
+//    return fp ;
+//}        /* -----  end of method imageSensor::open_source  ----- */
+
     FILE *
 FeatureIO::open_source ( const char *fn )
 {
-    char cmd[1024];
-    sprintf(cmd, "tail -f -n+0 %s", fn);
-
-    FILE *fp = popen( cmd, "r");
-    int fd = fileno(fp);
-    int flags;
-    flags = fcntl(fd, F_GETFL, 0);
-    flags |= O_NONBLOCK;
-    fcntl(fd, F_SETFL, flags);
-
+    FILE *fp;
+    if( (fp=fopen(fn,"r"))==NULL )
+        err_sys("fopen body");
     return fp ;
 }        /* -----  end of method imageSensor::open_source  ----- */
-
-
 /*
  *--------------------------------------------------------------------------------------
  *       Class:  ImageSensor
@@ -101,12 +108,12 @@ FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
     char *r;
     if( (r=fgets(line,1024,fp))==NULL && (errno != EWOULDBLOCK) )
         err_sys("fgets");
-    //else if( r==NULL && (errno == EWOULDBLOCK) )
-    //{
-    //    std::cout << "WOULDBLOCK" << std::endl;
-    //    /* No values ready, continue. */
-    //    return -2;    
-    //}
+    else if( r==NULL && (errno == EWOULDBLOCK) )
+    {
+        std::cout << "WOULDBLOCK" << std::endl;
+        /* No values ready, continue. */
+        return -2;    
+    }
     //else if(line[0]=='\n')
     //{
     //   /* reached newline. Stop reading. */
@@ -116,6 +123,7 @@ FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
     {
         int rv=vsscanf( line, fmt, ap );
         va_end(ap);
+     //   std::cout << line << std::endl;
         free(line);
         line = NULL;
         return rv;

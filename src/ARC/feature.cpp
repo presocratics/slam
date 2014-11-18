@@ -52,6 +52,8 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
     {
         set_body_position( match.source, get_body_position()[2] );
     }
+    
+    set_isRef(match.isRef());  
     setID( match.id );
     set_initial_anchor(anchor);
     set_initial_quaternion(sense.quaternion);
