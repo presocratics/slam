@@ -69,9 +69,9 @@ DT=$DATA/dt
 
 # run slam
 FASTOPTS="$BODY $ALT $ACC $DT $QBW $ANGVEL"
-#valgrind --leak-check=full ./bin/slam $FASTOPTS
-#stdbuf -eL -oL ./bin/slam $FASTOPTS 
-stdbuf -eL -oL ./bin/slam $FASTOPTS #| tee  $DISP &
+#valgrind --leak-check=full --log-file="valgrind_log" ./bin/slam $FASTOPTS
+stdbuf -eL -oL ./bin/slam $FASTOPTS 
+#stdbuf -eL -oL ./bin/slam $FASTOPTS #| tee  $DISP &
 
 # slam data to display
 #rosrun using_markers display_realtime $DISP  

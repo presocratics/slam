@@ -129,7 +129,7 @@ int main( int argc, char **argv )
     sense.set_angular_velocity( argv[6], false, false );
     sense.update();
     sense.altitude = sense.get_altitude();
-    
+
     clock_t startTime = clock();
 
     // State initialization
@@ -167,17 +167,19 @@ int main( int argc, char **argv )
 
         // TODO: max iter 573704 frame 2403
         int rf, nrf;
+        std::vector<int> refFlag; // flag for features with reflection.
         if(rv==-1)
         {
             imgsense.update();
             frame_cnt++;
-            imgsense.getNumFeatures( &rf, &nrf);
+            imgsense.getNumFeatures( &rf, &nrf, refFlag);
             mu.set_rf_nrf(rf, nrf);
-            cout << "rf: " << rf << " nrf: " << nrf << endl;
-            sense.altitude = sense.get_altitude();
+            //cout << "rf: " << rf << " nrf: " << nrf << endl;
+            if(iter_cnt!=1)
+                sense.altitude = sense.get_altitude();
         }
-
-        cout << "######  iteration: " << iter_cnt << "  ###### " << "frame: " << frame_cnt << endl;
+        
+        //cout << "######  iteration: " << iter_cnt << "  ###### " << "frame: " << frame_cnt << endl;
 
         int nf;
         cv::Vec3d old_pos;
@@ -189,12 +191,13 @@ int main( int argc, char **argv )
 
         // Update sensors
         if(iter_cnt!=1)
+        {
             sense.update();
-        cout << "dt_rt: " << sense.dt << endl;
+        }
+        //cout << "dt_rt: " << sense.dt << endl;
         mu.update_features( imgsense, sense );
         nf=mu.getNumFeatures();
-        cout << "nf: " <<  nf << endl;
-
+        //cout << "nf: " <<  nf << endl;
 
         int pnf= mu_prev.getNumFeatures();
         if(nf==0)
@@ -217,9 +220,9 @@ int main( int argc, char **argv )
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
-        cout << "acc: " << sense.acceleration << endl;
-        cout << "dt_internal: " << sense.dt << endl;
-        cout << "qbw: " << sense.quaternion.coord << endl;
+        //cout << "acc: " << sense.acceleration << endl;
+        //cout << "dt_internal: " << sense.dt << endl;
+        //cout << "qbw: " << sense.quaternion.coord << endl;
         f = mu.dynamics( sense );           // Motion model
         f*=sense.dt;
         //cout << "f: " << f.getNumFeatures() << endl;
@@ -240,13 +243,13 @@ int main( int argc, char **argv )
             Quaternion new_quat;
             euler2quaternion(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
             sense.quaternion = new_quat;
-            cout << "qbw_rotated: " << sense.quaternion.coord << endl;
+           // cout << "qbw_rotated: " << sense.quaternion.coord << endl;
             measurementModel( old_pos, sense.altitude, imgsense.matches, 
                     sense.quaternion, meas, hmu, H, mu );
         }
         initG( G, nf, sense.dt );
         initQ( Q, nf, Q0, sense.dt );
-        initR( R, rf, nrf, R0 );
+        initR( R, R0, refFlag );
         resizeP( P, nf );
 
         //cout << "SEGFAULT loc 5" << endl;
@@ -266,8 +269,8 @@ int main( int argc, char **argv )
             meas.toMat(tempMeas);
             //cout << tempMeas << endl;
             //pause();
-            cout << "hmu size: " << tempMeas.size() << endl;
-            cout << K.size() << endl;
+            //cout << "hmu size: " << tempMeas.size() << endl;
+            //cout << K.size() << endl;
             //pause();
             //cout << tempMeas << endl;
             //pause();
@@ -281,19 +284,22 @@ int main( int argc, char **argv )
         mu_prev.features = mu.features; 
         // Real time plotting.
         double tS = 1;
-        printf("xyzv: %f,%f,%f,%f,%f,%f\n", tS*mu.X[0], tS*mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
-        for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
-        {
-            printf("%d,%f,%f,%f\n", (*fi)->getID(), (*fi)->get_body_position()[0],
-                    (*fi)->get_body_position()[1], (*fi)->get_body_position()[2] );
-        }
-        printf("\n");
+        //printf("xyzv: %f,%f,%f,%f,%f,%f\n", tS*mu.X[0], tS*mu.X[1], mu.X[2], mu.V[0], mu.V[1], mu.V[2]);
+        //for( Fiter fi=mu.features.begin(); fi!=mu.features.end(); ++fi )
+        //{
+        //    printf("%d,%f,%f,%f\n", (*fi)->getID(), (*fi)->get_body_position()[0],
+        //            (*fi)->get_body_position()[1], (*fi)->get_body_position()[2] );
+        //}
+        //printf("\n");
        
         circle(rtplot, Point(mu.X[1]*scaleW+width/2,
             height/2-(mu.X[0]*scaleH + height/4 )), 3, Scalar(0, 10, 220));
-        
-        imshow("drawing", rtplot);
-        waitKey(1);
+       
+        if(frame_cnt%100==0)
+        {
+            imshow("drawing", rtplot);
+            waitKey(1);
+        }
         //pause(); 
         kmh.clearContainers();
         f.clearContainers();
@@ -305,8 +311,8 @@ int main( int argc, char **argv )
 
     cout << static_cast<double>(clock() - startTime) / CLOCKS_PER_SEC << " seconds." << endl;
 
-    //imshow("drawing", rtplot);
-    //waitKey(0);
+    imshow("drawing", rtplot);
+    waitKey(0);
     destroyAllWindows();
     return 0;
 }
@@ -355,7 +361,7 @@ resizeP ( cv::Mat& P, int nf )
 updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H )
 {
     Mat kh = K*H;
-    P = (Mat::eye(kh.size(), CV_64F) - K*H)*P;
+    P = (Mat::eye(kh.size(), CV_64F) - kh)*P;
     //P = (P.t() + P) / 2;
     return;
 }   
@@ -379,11 +385,17 @@ calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R )
     tmp *= H.t();
     tmp += R;
 
+    //cout << "1" << endl;
+
     K = P*H.t();
 
+    //cout << "2" << endl;
+    //cout << "Ksize " << K.size() << endl;
     K=K.t();
     tmp=tmp.t();
+    //cout << "3" << endl;
     solve(tmp, K, K);
+    //cout << "4" << endl;
     K=K.t();
     return;
 }        /* -----  end of function calcK  ----- */
@@ -426,14 +438,32 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
  */
 
     void
-initR ( cv::Mat& R, int rf, int nrf, double R0 )
+initR ( cv::Mat& R, double R0, std::vector<int> refFlag )
 {
+    vector<double> vecR;
     // for 2nd street data set
-    R = 0.1 / 770 * R0*Mat::eye(1+6*rf+4*nrf, 1+6*rf+4*nrf, CV_64F);
+    //R = 0.1 / 770 * R0*Mat::eye(1+6*rf+4*nrf, 1+6*rf+4*nrf, CV_64F);
     // altimeter noise covariance
-    R.at<double>(0, 0) = 0.0001*R0;
-    for (int i = 0; i < rf+nrf; i++)
+    //R.at<double>(0, 0) = 0.0001*R0;
+    vecR.push_back(0.0001*R0);
+
+    for (int i = 0; i < refFlag.size(); i++)
     {
+        // current view measurement noise covariance
+        vecR.push_back(0.1 / 770 * R0);
+        vecR.push_back(0.1 / 770 * R0);
+
+        // initial view measurement noise covariance
+        vecR.push_back(10. / 770 * R0);
+        vecR.push_back(10. / 770 * R0);
+
+        if(refFlag[i])
+        {
+            // reflection measurment noise covariance
+            vecR.push_back(10. / 770 * R0);
+            vecR.push_back(10. / 770 * R0);      
+        }
+        /*
         // current view measurement noise covariance
         R.at<double>(1 + 6 * i, 1 + 6 * i) = 0.1 / 770 * R0;
         R.at<double>(2 + 6 * i, 2 + 6 * i) = 0.1 / 770 * R0;
@@ -445,9 +475,11 @@ initR ( cv::Mat& R, int rf, int nrf, double R0 )
         // reflection measurment noise covariance
         R.at<double>(5 + 6 * i, 5 + 6 * i) = 10. / 770 * R0;
         R.at<double>(6 + 6 * i, 6 + 6 * i) = 10. / 770 * R0;
+        */
     }
     //cout << "R: " << R << endl;
     //pause();
+    R = Mat::diag((Mat)vecR);
     return;
 }        /* -----  end of function initR  ----- */
 /* 
@@ -698,8 +730,6 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
         (*feat)->set_world_position(dst);
 
         jacobianH(mu.X, qbw, **feat, Hb, Hi);
-
-        cout << (*feat)->initial.isRef << endl;
         
         meas.features.push_back(Vfeat( match->source, (*feat)->initial.pib, match->reflection ));
         hmu.features.push_back(Vfeat( (*feat)->get_body_position(), 

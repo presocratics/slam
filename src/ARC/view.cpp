@@ -14,9 +14,9 @@ View::toMat ( cv::Mat& R ) const
         bar.push_back(it->initial.x);
         bar.push_back(it->initial.y);
         /* do not add features with no reflection */
-        if(it->reflection.x != 0)
+        if(it->reflection.x != 0) // isRef
         {
-            std::cout << "adding refl" << std::endl;
+            //std::cout << "adding refl" << std::endl;
             bar.push_back(it->reflection.x);
             bar.push_back(it->reflection.y);
         }

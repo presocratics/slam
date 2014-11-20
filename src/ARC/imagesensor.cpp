@@ -32,7 +32,6 @@
     int
 ImageSensor::get_projections ( )
 {
-    std::cout << "IMGSENSE gp" << std::endl;
     int rv;
     matches.clear();
     char str[20];
@@ -61,13 +60,14 @@ ImageSensor::get_projections ( )
  *--------------------------------------------------------------------------------------
  */
     void
-ImageSensor::getNumFeatures ( int *refl, int *nonrefl ) const
+ImageSensor::getNumFeatures ( int *refl, int *nonrefl, std::vector<int>& refFlag ) const
 {
     *refl=0;
     *nonrefl=0;
     for( cMatchIter mi=matches.begin(); mi!=matches.end(); ++mi )
     {
         ( mi->isRef() ) ? ++(*refl) : ++(*nonrefl);
+        refFlag.push_back(mi->isRef() );
     }
 }		/* -----  end of method ImageSensor::getNumRef  ----- */
 

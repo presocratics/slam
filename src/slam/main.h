@@ -33,7 +33,7 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
         const Quaternion& qbw, View& meas, View& hmu, Mat& H, States& mu );
 void initG ( cv::Mat& G, int nf, double dt );
 void initQ ( cv::Mat& Q, int nf, double Q0, double dt );
-void initR ( cv::Mat& R, int rf, int nrf, double R0 );
+void initR ( cv::Mat& R, double R0, std::vector<int> refFlag );
 void calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q );
 void calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R );
 void updateP( cv::Mat& P, const cv::Mat& K, const cv::Mat& H );
