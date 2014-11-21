@@ -148,12 +148,15 @@ Feature::xib0Hat( const cv::Vec3d& pos, const Quaternion& qbw) const
     cv::Vec3d xibHat = this->xibHat();
     rv = rb2b(qbw)*xibHat;
     rv+=fromAnchor(pos);
+    std::cout << "xibHat: " << xibHat << std::endl;
+    std::cout << "rb2b: " << rb2b(qbw) << std:: endl;
     return rv;
 }
     cv::Vec3d 
 Feature::pib0Hat( const cv::Vec3d& pos, const Quaternion& qbw) const 
 {
     cv::Vec3d xib0Hat=this->xib0Hat(pos, qbw);
+    std:: cout << "xib0Hat" << xib0Hat << std::endl;
     return cv::Vec3d(
             xib0Hat[1] / xib0Hat[0],
             xib0Hat[2] / xib0Hat[0],

@@ -266,9 +266,9 @@ int main( int argc, char **argv )
             calcK( K, H, P, R ); // only when vision data is avail.
             updateP( P, K, H );
             Mat tempMeas;
-            meas.toMat(tempMeas);
-            //cout << tempMeas << endl;
-            //pause();
+            hmu.toMat(tempMeas);
+            cout << tempMeas << endl;
+            pause();
             //cout << "hmu size: " << tempMeas.size() << endl;
             //cout << K.size() << endl;
             //pause();
@@ -732,9 +732,17 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
         jacobianH(mu.X, qbw, **feat, Hb, Hi);
         
         meas.features.push_back(Vfeat( match->source, (*feat)->initial.pib, match->reflection ));
-        hmu.features.push_back(Vfeat( (*feat)->get_body_position(), 
-                    (*feat)->pib0Hat(old_pos, qbw), (*feat)->ppbHat(mu.X, qbw) ));
+        if( (*feat)->initial.isRef )
+        {           
+            hmu.features.push_back(Vfeat( (*feat)->get_body_position(), 
+            (*feat)->pib0Hat(old_pos, qbw), (*feat)->ppbHat(mu.X, qbw) ));
+        }
+        else
+        {
+            hmu.features.push_back(Vfeat( (*feat)->get_body_position(), 
+            (*feat)->pib0Hat(old_pos, qbw), cv::Vec3d(0,0,0) ));
 
+        }
         H.row(0).col(2).setTo(-1);
         // For each feature
         Mat Hfeat = Mat::zeros(6,mu.getRows(),CV_64F);
