@@ -143,8 +143,8 @@ int main( int argc, char **argv )
     // Inverse depth
     mu.setb(cv::Vec3d(0,0,0));
 
-    double scaleW = 1;
-    double scaleH = 1;
+    double scaleW = 0.1;
+    double scaleH = 0.1;
     int width=1080;
     int height=1920;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
@@ -152,18 +152,21 @@ int main( int argc, char **argv )
     int frame_cnt = 0;
     int nextIter = 0;
 
-    FILE* fp = fopen("raw/clake_boat/fastinteg" , "r");
-    nextIter = getNumIterFast(fp);
+    //FILE* fp = fopen("raw/clake_boat/fastinteg" , "r");
+    //FILE* fp = fopen("raw/nov13/fastinteg" , "r");
+    //nextIter = getNumIterFast(fp);
     
     while( 1 ) 
     {
         iter_cnt++;
+        if(iter_cnt == 19100)
+            pause();
         int rv=-2;
-        if(nextIter == iter_cnt)
-        {
-            nextIter = getNumIterFast(fp);
-            rv = -1;
-        }
+        //if(nextIter == iter_cnt)
+        //{
+        //    nextIter = getNumIterFast(fp);
+        //    rv = -1;
+        //}
 
         // TODO: max iter 573704 frame 2403
         int rf, nrf;
@@ -179,7 +182,7 @@ int main( int argc, char **argv )
                 sense.altitude = sense.get_altitude();
         }
         
-        //cout << "######  iteration: " << iter_cnt << "  ###### " << "frame: " << frame_cnt << endl;
+        cout << "######  iteration: " << iter_cnt << "  ###### " << "frame: " << frame_cnt << endl;
 
         int nf;
         cv::Vec3d old_pos;
@@ -193,6 +196,21 @@ int main( int argc, char **argv )
         if(iter_cnt!=1)
         {
             sense.update();
+            /*  
+            if(rv == -1)
+            {
+                //  ROTATED FOR QUADROTOR DATA
+                cv::Vec3d curr_euler = sense.quaternion.euler();
+                cv::Vec3d rot180(0,0,3.14159);
+                Quaternion q_rot180;
+                euler2quaternion(0,0,3.14159, q_rot180);
+                cv::Mat rot_matx_180 = (cv::Mat)q_rot180.rotation();
+                cv::Mat new_euler = rot_matx_180 * (cv::Mat)curr_euler;
+                new_euler.at<double>(2,0) += 3.14159;
+                Quaternion new_quat;
+                euler2quaternion(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
+                sense.quaternion = new_quat;
+            }*/
         }
         //cout << "dt_rt: " << sense.dt << endl;
         mu.update_features( imgsense, sense );
@@ -223,6 +241,7 @@ int main( int argc, char **argv )
         //cout << "acc: " << sense.acceleration << endl;
         //cout << "dt_internal: " << sense.dt << endl;
         //cout << "qbw: " << sense.quaternion.coord << endl;
+        //pause();
         f = mu.dynamics( sense );           // Motion model
         f*=sense.dt;
         //cout << "f: " << f.getNumFeatures() << endl;
@@ -233,6 +252,7 @@ int main( int argc, char **argv )
         //pause();
         if(rv==-1)
         {
+            /*  ROTATED FOR QUADROTOR DATA
             cv::Vec3d curr_euler = sense.quaternion.euler();
             cv::Vec3d rot180(0,0,3.14159);
             Quaternion q_rot180;
@@ -243,7 +263,9 @@ int main( int argc, char **argv )
             Quaternion new_quat;
             euler2quaternion(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
             sense.quaternion = new_quat;
-           // cout << "qbw_rotated: " << sense.quaternion.coord << endl;
+            //cout << "qbw_rotated: " << sense.quaternion.coord << endl;
+            pause();
+             */
             measurementModel( old_pos, sense.altitude, imgsense.matches, 
                     sense.quaternion, meas, hmu, H, mu );
         }
@@ -267,8 +289,8 @@ int main( int argc, char **argv )
             updateP( P, K, H );
             Mat tempMeas;
             hmu.toMat(tempMeas);
-            cout << tempMeas << endl;
-            pause();
+            //cout << tempMeas << endl;
+            //pause();
             //cout << "hmu size: " << tempMeas.size() << endl;
             //cout << K.size() << endl;
             //pause();

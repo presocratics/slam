@@ -18,6 +18,9 @@
 // feature class cpp
 #include "feature.h"
 #define DINIT 100            /* Max initial depth */
+
+
+
 // constructor
 Feature::Feature( const Vec3d& pos, int n )
 {
@@ -89,6 +92,11 @@ Feature::fromAnchor ( const cv::Vec3d& pos ) const
     cv::Matx33d
 Feature::rb2b ( const Quaternion& qbw ) const
 {
+    /* 
+    std::cout << "init_quat: " << initial.quaternion.coord << std::endl;
+    std::cout << "rb2b0: " << initial.quaternion.rotation().t() << std::endl;
+    std::cout << "rb2b_curr: " << qbw.rotation() << std::endl;
+     */ 
     return initial.quaternion.rotation().t() * qbw.rotation();
 }        /* -----  end of method Feature::rb2b  ----- */
 
@@ -148,15 +156,15 @@ Feature::xib0Hat( const cv::Vec3d& pos, const Quaternion& qbw) const
     cv::Vec3d xibHat = this->xibHat();
     rv = rb2b(qbw)*xibHat;
     rv+=fromAnchor(pos);
-    std::cout << "xibHat: " << xibHat << std::endl;
-    std::cout << "rb2b: " << rb2b(qbw) << std:: endl;
+    //std::cout << "xibHat: " << xibHat << std::endl;
+    //std::cout << "rb2b: " << rb2b(qbw) << std:: endl;
     return rv;
 }
     cv::Vec3d 
 Feature::pib0Hat( const cv::Vec3d& pos, const Quaternion& qbw) const 
 {
     cv::Vec3d xib0Hat=this->xib0Hat(pos, qbw);
-    std:: cout << "xib0Hat" << xib0Hat << std::endl;
+    //std:: cout << "xib0Hat" << xib0Hat << std::endl;
     return cv::Vec3d(
             xib0Hat[1] / xib0Hat[0],
             xib0Hat[2] / xib0Hat[0],

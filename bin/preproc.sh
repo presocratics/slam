@@ -8,7 +8,9 @@
 ## Configuration ##
 ###################
 #DATA=raw/clake2
-DATA=raw/clake_boat/fastForC/txt
+
+#DATA=raw/clake_boat/fastForC/txt
+DATA=raw/nov13
 #BODY=$DATA/bodyHist
 #BODY=$DATA/body2.txt
 #DT=data/dt.fifo
@@ -71,7 +73,7 @@ DT=$DATA/dt
 FASTOPTS="$BODY $ALT $ACC $DT $QBW $ANGVEL"
 #valgrind --leak-check=full --log-file="valgrind_log" ./bin/slam $FASTOPTS
 stdbuf -eL -oL ./bin/slam $FASTOPTS 
-#stdbuf -eL -oL ./bin/slam $FASTOPTS #| tee  $DISP &
+#stdbuf -eL -oL ./bin/slam $FASTOPTS | tee  $DISP &
 
 # slam data to display
 #rosrun using_markers display_realtime $DISP  
