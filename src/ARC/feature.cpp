@@ -19,6 +19,16 @@
 #include "feature.h"
 #define DINIT 100            /* Max initial depth */
 
+void
+euler2quaternion2 ( double phi, double theta, double psi, Quaternion& q )
+{
+    double q0 = sin(phi/2)*cos(theta/2)*cos(psi/2)-cos(phi/2)*sin(theta/2)*sin(psi/2);
+    double q1 = cos(phi/2)*sin(theta/2)*cos(psi/2)+sin(phi/2)*cos(theta/2)*sin(psi/2);
+    double q2 = cos(phi/2)*cos(theta/2)*sin(psi/2)-sin(phi/2)*sin(theta/2)*cos(psi/2);
+    double q3 = cos(phi/2)*cos(theta/2)*cos(psi/2)+sin(phi/2)*sin(theta/2)*sin(psi/2);
+    q.coord = cv::Vec4d(q0,q1,q2,q3);
+    return;
+}		/* -----  end of function euler2quaternion  ----- */
 
 
 // constructor
@@ -59,7 +69,17 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
     set_isRef(match.isRef());  
     setID( match.id );
     set_initial_anchor(anchor);
-    set_initial_quaternion(sense.quaternion);
+                cv::Vec3d curr_euler = sense.quaternion.euler();
+                cv::Vec3d rot180(0,0,3.14159);
+                Quaternion q_rot180;
+                euler2quaternion2(0,0,3.14159, q_rot180);
+                cv::Mat rot_matx_180 = (cv::Mat)q_rot180.rotation();
+                cv::Mat new_euler = rot_matx_180 * (cv::Mat)curr_euler;
+                new_euler.at<double>(2,0) += 3.14159;
+                Quaternion new_quat;
+                euler2quaternion2(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
+
+    set_initial_quaternion(new_quat);
     set_initial_pib(match.source);
     set_noMatch(0);
     return ;
@@ -139,6 +159,10 @@ Feature::xpbHat ( const cv::Vec3d& X, const Quaternion& qbw ) const
     temp = S * (Mat)qbw.rotation()*(Mat)this->xibHat();
     temp -= 2*n*n.t()*(Mat)X; 
     temp = (Mat)qbw.rotation().t() * temp;
+    //std::cout << "X: " << X << std::endl;
+    //std::cout << "s: " << S << std::endl;
+    //std::cout << "Rw2b: " << (Mat)qbw.rotation().t() << std::endl;
+    std::cout << "xpbHat: " << temp << std::endl;
     return (cv::Vec3d) temp ;
 }		/* -----  end of method Feature::xpbHat  ----- */
 
