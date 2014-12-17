@@ -162,7 +162,7 @@ Feature::xpbHat ( const cv::Vec3d& X, const Quaternion& qbw ) const
     //std::cout << "X: " << X << std::endl;
     //std::cout << "s: " << S << std::endl;
     //std::cout << "Rw2b: " << (Mat)qbw.rotation().t() << std::endl;
-    std::cout << "xpbHat: " << temp << std::endl;
+    //std::cout << "xpbHat: " << temp << std::endl;
     return (cv::Vec3d) temp ;
 }		/* -----  end of method Feature::xpbHat  ----- */
 

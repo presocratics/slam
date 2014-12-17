@@ -231,3 +231,15 @@ States::set_rf_nrf(int r, int n)
     nrf = n;
     return;
 }
+
+/* INCOMPLETE */
+    void
+States::toMat(Mat& outMat)
+{
+    std::vector<double> vec;
+    for(int i=0; i< 3; i++)
+    {
+        vec.push_back(X[i]);
+    }
+
+}

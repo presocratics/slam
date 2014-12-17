@@ -49,7 +49,8 @@ class States{
         States dynamics( const Sensors& s );
         void setMinMaxDepth(double minD, double MaxD);
         void set_rf_nrf(int r, int n);
-        
+        void toMat(Mat& outMat);
+
         //Operator
         States& operator*= ( const double& rhs );
         States& operator+= ( const States& rhs );
@@ -66,5 +67,6 @@ inline States operator+(States lhs, const States& rhs)
     lhs+=rhs;
     return lhs;
 }
+
 
 #endif
