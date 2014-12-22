@@ -290,11 +290,15 @@ int main( int argc, char **argv )
         {
             std::vector<double> hmu_matlab;
             get_hmu_matlab(hmu_matlab, frame_cnt+1750);
+            //cout << "P: " << P << endl;
+            //cout << "R: " << R << endl;
+            cout << "H: " << H << endl;
             calcK( K, H, P, R ); // only when vision data is avail.
+            //cout << "P" << P << endl;
             updateP( P, K, H );
             Mat tempMeas;
             hmu.toMat(tempMeas);
-            cout << tempMeas.size() << hmu_matlab.size() << endl;
+            //cout << tempMeas.size() << hmu_matlab.size() << endl;
             Mat hmuErr = tempMeas-(Mat)hmu_matlab;
             int ErrRow = -1;
             double maxErr = 0;
@@ -306,14 +310,13 @@ int main( int argc, char **argv )
                     ErrRow=i;
                 }
             }
-            cout << hmuErr << endl;
-            cout << "Error: " << maxErr << "  @ " << ErrRow << endl;
-            pause();
-            //cout << "hmu size: " << tempMeas.size() << endl;
-            cout << "K" << K << endl;
-            pause();
-            //cout << tempMeas << endl;
+            //cout << hmuErr << endl;
+            //cout << "Error: " << maxErr << "  @ " << ErrRow << endl;
             //pause();
+            //cout << "K" << K << endl;
+            //pause();
+            //cout << tempMeas << endl;
+            pause();
             subtract(meas,hmu,estimateError);
             estimateError.toMat(eeMat);
             kx = K*eeMat;
@@ -321,8 +324,8 @@ int main( int argc, char **argv )
             mu+=kmh;
         }
 
-        cout << mu.X << endl;
-        pause();
+        //cout << mu.X << endl;
+        //pause();
         mu_prev.features = mu.features; 
         // Real time plotting.
         double tS = 1;
@@ -385,6 +388,8 @@ resizeP ( cv::Mat& P, int nf )
         blockAssign(bigP, P, cv::Point(0,0));
         for( int i=9+3*nf_old; i<9+3*nf; i+=3 )
         {
+            bigP.at<double>( i, i ) = P0;
+            bigP.at<double>( i+1, i+1 ) = P0;
             bigP.at<double>( i+2, i+2 ) = P0;
         }
         P=bigP;
@@ -487,13 +492,13 @@ initR ( cv::Mat& R, double R0, std::vector<int> refFlag )
     //R = 0.1 / 770 * R0*Mat::eye(1+6*rf+4*nrf, 1+6*rf+4*nrf, CV_64F);
     // altimeter noise covariance
     //R.at<double>(0, 0) = 0.0001*R0;
-    vecR.push_back(0.0001*R0);
+    vecR.push_back(0.15*R0);
 
     for (int i = 0; i < refFlag.size(); i++)
     {
         // current view measurement noise covariance
-        vecR.push_back(0.1 / 770 * R0);
-        vecR.push_back(0.1 / 770 * R0);
+        vecR.push_back(0.01 / 770 * R0);
+        vecR.push_back(0.01 / 770 * R0);
 
         // initial view measurement noise covariance
         vecR.push_back(10. / 770 * R0);
@@ -502,8 +507,8 @@ initR ( cv::Mat& R, double R0, std::vector<int> refFlag )
         if(refFlag[i])
         {
             // reflection measurment noise covariance
-            vecR.push_back(10. / 770 * R0);
-            vecR.push_back(10. / 770 * R0);      
+            vecR.push_back(1. / 770 * R0);
+            vecR.push_back(1. / 770 * R0);      
         }
         /*
         // current view measurement noise covariance

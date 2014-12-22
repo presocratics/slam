@@ -21,7 +21,7 @@
 #include "imagesensor.hpp"
 
 #define QBIAS 0.002            /*  */
-#define P0 1            /*  */
+#define P0 2            /*  */
 #define DMIN 0.3            /*  */
 using namespace cv;
 
