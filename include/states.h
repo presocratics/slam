@@ -13,7 +13,7 @@
 #include "Sensors.hpp"
 #include "imagesensor.hpp"
 using namespace cv;
-#define GRAVITY -9.80665            /* Standard acceleration due to free fall m/s^2 */
+#define GRAVITY -9.8016            /* Standard acceleration due to free fall m/s^2 */
 #define DMIN 0.3            /*  */
 
 class States{
@@ -49,6 +49,7 @@ class States{
         States dynamics( const Sensors& s );
         void setMinMaxDepth(double minD, double MaxD);
         void set_rf_nrf(int r, int n);
+        void toMat(cv::Mat& Mat);
         
         //Operator
         States& operator*= ( const double& rhs );

@@ -231,3 +231,33 @@ States::set_rf_nrf(int r, int n)
     nrf = n;
     return;
 }
+
+    void
+States::toMat(cv::Mat& outmat)
+{
+    std::vector<double> outvec;
+    outvec.push_back(X[0]);
+    outvec.push_back(X[1]);
+    outvec.push_back(X[2]);
+
+    outvec.push_back(V[0]);
+    outvec.push_back(V[1]);
+    outvec.push_back(V[2]);
+
+    outvec.push_back(b[0]);
+    outvec.push_back(b[1]);
+    outvec.push_back(b[2]);
+
+    Fiter pib=features.begin();
+    for( int i=0; pib!=features.end(); ++pib,++i )
+    {
+        cv::Vec3d bp;
+        bp = (*pib)->get_body_position();
+        outvec.push_back(bp[0]);
+        outvec.push_back(bp[1]);
+        outvec.push_back(bp[2]);        
+    }
+
+    outmat = (cv::Mat)outvec;
+    return;
+}

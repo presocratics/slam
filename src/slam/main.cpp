@@ -143,8 +143,8 @@ int main( int argc, char **argv )
     // Inverse depth
     mu.setb(cv::Vec3d(0,0,0));
 
-    double scaleW = 0.1;
-    double scaleH = 0.1;
+    double scaleW = 1;
+    double scaleH = 1;
     int width=1080;
     int height=1920;
     Mat rtplot = Mat::zeros(width, height, CV_8UC3);
@@ -152,9 +152,9 @@ int main( int argc, char **argv )
     int frame_cnt = 0;
     int nextIter = 0;
 
-    //FILE* fp = fopen("raw/clake_boat/fastinteg" , "r");
+    FILE* fp = fopen("raw/clake_boat/fastinteg" , "r");
     //FILE* fp = fopen("raw/nov13/fastinteg" , "r");
-    //nextIter = getNumIterFast(fp);
+    nextIter = getNumIterFast(fp);
     
     while( 1 ) 
     {
@@ -162,11 +162,11 @@ int main( int argc, char **argv )
         if(iter_cnt == 19100)
             pause();
         int rv=-2;
-        //if(nextIter == iter_cnt)
-        //{
-        //    nextIter = getNumIterFast(fp);
-        //    rv = -1;
-        //}
+        if(nextIter == iter_cnt)
+        {
+            nextIter = getNumIterFast(fp);
+            rv = -1;
+        }
 
         // TODO: max iter 573704 frame 2403
         int rf, nrf;
@@ -196,9 +196,11 @@ int main( int argc, char **argv )
         if(iter_cnt!=1)
         {
             sense.update();
-            /*  
+              
             if(rv == -1)
             {
+                /* Attempted to use rotated data for vision update but doesnt
+                 * work...
                 //  ROTATED FOR QUADROTOR DATA
                 cv::Vec3d curr_euler = sense.quaternion.euler();
                 cv::Vec3d rot180(0,0,3.14159);
@@ -210,7 +212,9 @@ int main( int argc, char **argv )
                 Quaternion new_quat;
                 euler2quaternion(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
                 sense.quaternion = new_quat;
-            }*/
+                */
+                
+            }
         }
         //cout << "dt_rt: " << sense.dt << endl;
         mu.update_features( imgsense, sense );
@@ -243,16 +247,26 @@ int main( int argc, char **argv )
         //cout << "qbw: " << sense.quaternion.coord << endl;
         //pause();
         f = mu.dynamics( sense );           // Motion model
+        Mat fMat;
+        f.toMat(fMat);
+        //cout << "fMat:" << fMat << endl;
+        //pause();
         f*=sense.dt;
         //cout << "f: " << f.getNumFeatures() << endl;
         jacobianMotionModel(mu, sense, F );
+        
+        //Mat tempMu2;
+        //mu.toMat(tempMu2);
+        //cout << tempMu2 << endl;
+        //pause();
         mu+=f;
 
         //cout << "F: " << F << endl;
         //pause();
         if(rv==-1)
         {
-            /*  ROTATED FOR QUADROTOR DATA
+              
+            // ROTATED FOR QUADROTOR DATA
             cv::Vec3d curr_euler = sense.quaternion.euler();
             cv::Vec3d rot180(0,0,3.14159);
             Quaternion q_rot180;
@@ -264,10 +278,10 @@ int main( int argc, char **argv )
             euler2quaternion(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
             sense.quaternion = new_quat;
             //cout << "qbw_rotated: " << sense.quaternion.coord << endl;
-            pause();
-             */
+            //pause();
             measurementModel( old_pos, sense.altitude, imgsense.matches, 
                     sense.quaternion, meas, hmu, H, mu );
+            cout << H << endl;
         }
         initG( G, nf, sense.dt );
         initQ( Q, nf, Q0, sense.dt );
@@ -288,7 +302,7 @@ int main( int argc, char **argv )
             calcK( K, H, P, R ); // only when vision data is avail.
             updateP( P, K, H );
             Mat tempMeas;
-            hmu.toMat(tempMeas);
+            //hmu.toMat(tempMeas);
             //cout << tempMeas << endl;
             //pause();
             //cout << "hmu size: " << tempMeas.size() << endl;
@@ -300,6 +314,10 @@ int main( int argc, char **argv )
             estimateError.toMat(eeMat);
             kx = K*eeMat;
             kmh = States(kx);
+            //Mat tempMu;
+            //mu.toMat(tempMu);
+            //cout << tempMu << endl;
+            //pause();
             mu+=kmh;
         }
 
@@ -322,7 +340,8 @@ int main( int argc, char **argv )
             imshow("drawing", rtplot);
             waitKey(1);
         }
-        //pause(); 
+
+        pause(); 
         kmh.clearContainers();
         f.clearContainers();
 
@@ -365,7 +384,9 @@ resizeP ( cv::Mat& P, int nf )
         blockAssign(bigP, P, cv::Point(0,0));
         for( int i=9+3*nf_old; i<9+3*nf; i+=3 )
         {
-            bigP.at<double>( i+2, i+2 ) = P0;
+            bigP.at<double>( i+0, i+0 ) = 2*P0;
+            bigP.at<double>( i+1, i+1 ) = 2*P0;
+            bigP.at<double>( i+2, i+2 ) = 2*P0;
         }
         P=bigP;
     }
@@ -446,7 +467,7 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
     tmp2 *= G.t();
     P = tmp1 + tmp2;
 */
-    //P = F*P*F.t() + G*Q*G.t();
+    P = F*P*F.t() + G*Q*G.t();
     //cout << "P: " <<  P << endl;
     //pause();
     return;
@@ -771,15 +792,20 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const std::vector<p
         blockAssign( Hfeat, Mat::eye(2,2,CV_64F), Point(9+3*i,0) );
         blockAssign( Hfeat, Hb, Point(0,2) );
         blockAssign( Hfeat, Hi, Point(9+3*i,2) );
-            
+        if(!((*feat)->initial.isRef) )
+        {
+            Mat roi(Hfeat, Rect(0,0,3,mu.getRows()));
+            Hfeat = roi;
+        }
         blockAssign( H, Hfeat, Point(0,index) );
+
         if( (*feat)->initial.isRef )
         {
-            index += 3;
+            index += 6;
         }
         else
         {
-            index += 2;
+            index += 4;
         }
     } // end for loop
 }

@@ -145,6 +145,10 @@ Feature::xpbHat ( const cv::Vec3d& X, const Quaternion& qbw ) const
     cv::Vec3d 
 Feature::xibHat() const 
 {
+   // std:: cout << "xibHat" << cv::Vec3d( 1 / position.body[2],
+   //         position.body[0] / position.body[2],
+   //         position.body[1] / position.body[2]) << std::endl;
+
     return cv::Vec3d( 1 / position.body[2],
             position.body[0] / position.body[2],
             position.body[1] / position.body[2]);

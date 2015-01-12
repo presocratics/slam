@@ -9,8 +9,8 @@
 ###################
 #DATA=raw/clake2
 
-#DATA=raw/clake_boat/fastForC/txt
-DATA=raw/nov13
+DATA=raw/clake_boat/fastForC/txt
+#DATA=raw/nov13
 #BODY=$DATA/bodyHist
 #BODY=$DATA/body2.txt
 #DT=data/dt.fifo
