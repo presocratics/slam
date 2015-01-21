@@ -170,14 +170,16 @@ int main( int argc, char **argv )
     int nextIter = 0;
 
     FILE* fp = fopen("raw/clake_boat/fastinteg" , "r");
-    //FILE* fp = fopen("raw/nov13/fastinteg" , "r");
-   nextIter = getNumIterFast(fp);
-    
+    nextIter = getNumIterFast(fp);
+
     while( 1 ) 
     {
         iter_cnt++;
-        if(iter_cnt == 19100)
+        if(frame_cnt == 901)
+        {
+            cout << static_cast<double>(clock() - startTime) / CLOCKS_PER_SEC << " seconds." << endl;
             pause();
+        }
         int rv=-2;
         if(nextIter == iter_cnt)
         {
@@ -241,20 +243,17 @@ int main( int argc, char **argv )
 
         old_pos = mu.X; // Need this for fromAnchor in measurementModel
 
-        //cout << "acc: " << sense.acceleration << endl;
-        //cout << "dt_internal: " << sense.dt << endl;
-        //cout << "qbw: " << sense.quaternion.coord << endl;
-        //pause();
         f = mu.dynamics( sense );           // Motion model
         f*=sense.dt;
-        //cout << "f: " << f.getNumFeatures() << endl;
         jacobianMotionModel(mu, sense, F );
         mu+=f;
 
-        //cout << "F: " << F << endl;
-        //pause();
-        if(rv==-1)
+        if(rv==-1) // rv == -1 means vision data is available
         {
+            // special case: quadrotor imu is mounted backwards. we travel
+            // backwards and only rotate to correct orientation for measurement
+            // update. 
+            
             // ROTATED FOR QUADROTOR DATA
             cv::Vec3d curr_euler = sense.quaternion.euler();
             cv::Vec3d rot180(0,0,3.14159);
@@ -266,57 +265,24 @@ int main( int argc, char **argv )
             Quaternion new_quat;
             euler2quaternion(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
             sense.quaternion = new_quat;
-            //cout << "qbw_rotated: " << sense.quaternion.coord << endl;
-            //pause();
-             
             measurementModel( old_pos, sense.altitude, imgsense.matches, 
                     sense.quaternion, meas, hmu, H, mu );
         }
+
         initG( G, nf, sense.dt );
         initQ( Q, nf, Q0, sense.dt );
         initR( R, R0, refFlag );
         resizeP( P, nf );
-
-        //cout << "SEGFAULT loc 5" << endl;
-        //cout << "P: " << P << endl;
-        //cout << "F: " << F << endl;
-        //cout << "G: " << G << endl;
-        //cout << "Q: " << Q << endl;
         calcP( P, F, G, Q );
 
-        //cout << "SEGFAULT loc 6" << endl;
         // EKF measurement update
         if(rv == -1)
         {
-            std::vector<double> hmu_matlab;
-            get_hmu_matlab(hmu_matlab, frame_cnt+1750);
-            //cout << "P: " << P << endl;
-            //cout << "R: " << R << endl;
-            cout << "H: " << H << endl;
+
             calcK( K, H, P, R ); // only when vision data is avail.
-            //cout << "P" << P << endl;
             updateP( P, K, H );
             Mat tempMeas;
             hmu.toMat(tempMeas);
-            //cout << tempMeas.size() << hmu_matlab.size() << endl;
-            Mat hmuErr = tempMeas-(Mat)hmu_matlab;
-            int ErrRow = -1;
-            double maxErr = 0;
-            for(int i=0; i< hmuErr.rows; i++)
-            {
-                if(hmuErr.at<double>(i,0) > maxErr)
-                {
-                    maxErr=hmuErr.at<double>(i,0);
-                    ErrRow=i;
-                }
-            }
-            //cout << hmuErr << endl;
-            //cout << "Error: " << maxErr << "  @ " << ErrRow << endl;
-            //pause();
-            //cout << "K" << K << endl;
-            //pause();
-            //cout << tempMeas << endl;
-            pause();
             subtract(meas,hmu,estimateError);
             estimateError.toMat(eeMat);
             kx = K*eeMat;
@@ -324,8 +290,6 @@ int main( int argc, char **argv )
             mu+=kmh;
         }
 
-        //cout << mu.X << endl;
-        //pause();
         mu_prev.features = mu.features; 
         // Real time plotting.
         double tS = 1;
@@ -424,25 +388,15 @@ updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H )
     void
 calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R )
 {
-    //cout << "H size: " << H.size() << endl;
-    //cout << "P size: " << P.size() << endl;
-    //cout << "R size: " << R.size() << endl;
-    //pause();
     cv::Mat tmp=H*P;
     tmp *= H.t();
     tmp += R;
 
-    //cout << "1" << endl;
-
     K = P*H.t();
 
-    //cout << "2" << endl;
-    //cout << "Ksize " << K.size() << endl;
     K=K.t();
     tmp=tmp.t();
-    //cout << "3" << endl;
     solve(tmp, K, K);
-    //cout << "4" << endl;
     K=K.t();
     return;
 }        /* -----  end of function calcK  ----- */
@@ -456,24 +410,7 @@ calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R )
     void
 calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
 {
-/*  
-    cv::Mat tmp1, tmp2;
-    cout << "temp1 empty?: " << tmp1.empty() << endl;
-    // Put multiplication on multiple lines for less error
-    tmp1 = F*P;
-
-    cout << "temp1 empty?: " << tmp1.empty() << endl;
-    tmp1 *= F.t();
-    cout << "here" << endl;
-    tmp2 = G*Q;
-    
-    cout << "temp1 empty?: " << tmp1.empty() << endl;
-    tmp2 *= G.t();
-    P = tmp1 + tmp2;
-*/
-    //P = F*P*F.t() + G*Q*G.t();
-    //cout << "P: " <<  P << endl;
-    //pause();
+    P = F*P*F.t() + G*Q*G.t();
     return;
 }        /* -----  end of function calcP  ----- */
 
@@ -488,10 +425,6 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
 initR ( cv::Mat& R, double R0, std::vector<int> refFlag )
 {
     vector<double> vecR;
-    // for 2nd street data set
-    //R = 0.1 / 770 * R0*Mat::eye(1+6*rf+4*nrf, 1+6*rf+4*nrf, CV_64F);
-    // altimeter noise covariance
-    //R.at<double>(0, 0) = 0.0001*R0;
     vecR.push_back(0.15*R0);
 
     for (int i = 0; i < refFlag.size(); i++)
@@ -510,22 +443,7 @@ initR ( cv::Mat& R, double R0, std::vector<int> refFlag )
             vecR.push_back(1. / 770 * R0);
             vecR.push_back(1. / 770 * R0);      
         }
-        /*
-        // current view measurement noise covariance
-        R.at<double>(1 + 6 * i, 1 + 6 * i) = 0.1 / 770 * R0;
-        R.at<double>(2 + 6 * i, 2 + 6 * i) = 0.1 / 770 * R0;
-
-        // initial view measurement noise covariance
-        R.at<double>(3 + 6 * i, 3 + 6 * i) = 10. / 770 * R0;
-        R.at<double>(4 + 6 * i, 4 + 6 * i) = 10. / 770 * R0;
-
-        // reflection measurment noise covariance
-        R.at<double>(5 + 6 * i, 5 + 6 * i) = 10. / 770 * R0;
-        R.at<double>(6 + 6 * i, 6 + 6 * i) = 10. / 770 * R0;
-        */
     }
-    //cout << "R: " << R << endl;
-    //pause();
     R = Mat::diag((Mat)vecR);
     return;
 }        /* -----  end of function initR  ----- */
@@ -545,9 +463,6 @@ initQ ( cv::Mat& Q, int nf, double Q0, double dt )
     Q.at<double>(2,2) *= 0.001*Q0;
 
     blockAssign(Q, QBIAS*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
-
-    //cout << "Q" << Q << endl;
-    //pause();
     return;
 }        /* -----  end of function initq  ----- */
 
@@ -560,15 +475,7 @@ initQ ( cv::Mat& Q, int nf, double Q0, double dt )
     void
 initG ( cv::Mat& G, int nf, double dt )
 {
-    G = dt*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
-    /*
-    G.at<double>(0, 0) = 0.5*dt*dt;
-    G.at<double>(1, 1) = 0.5*dt*dt;
-    G.at<double>(2, 2) = 0.5*dt*dt;
-    G.at<double>(6, 6) = 0.5*dt*dt;
-    G.at<double>(7, 7) = 0.5*dt*dt;
-    G.at<double>(8, 8) = 0.5*dt*dt;
-    */
+    G = Mat::eye(9+3*nf, 9+3*nf, CV_64F);
     return;
 }        /* -----  end of function initG  ----- */
 /* 
@@ -712,11 +619,6 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out )
                     -pib3*w[1],
                     pib3*w[0],
                     2 * pib3*mu.V[2] - pib1*w[1] + pib2*w[0]);
-        // work on Fib
-//        Fib_ith = (Mat_<double>(3, 6) <<
-//                    0, 0, 0, -pib3, 0, pib1*pib3,
-//                    0, 0, 0, 0, -pib3, pib2*pib3,
-//                    0, 0, 0, 0, 0, pow(pib3, 2));
 
         /* new Fib 11/10/14 */
         Fib_ith = (Mat_<double>(3, 6) <<
@@ -725,14 +627,8 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out )
                     0, 0, 0, pow(pib3, 2), 0, 0);
 
 
-        //cout << "Fib: " << Fib_ith << endl;
-        //pause();
         blockAssign(Fib, Fib_ith, Point(0, 3*i));
 
-
-        // work on Fi
-
-        // work on Fi_ith -> LHS of line 40
         Fi_ith_1 = Mat::zeros(3, 3 * (i), CV_64F);
         Fi_ith_2 = FiTemp;
         Fi_ith_3 = Mat::zeros(3, 3 * (nf-i-1), CV_64F);

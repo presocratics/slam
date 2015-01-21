@@ -49,7 +49,7 @@ class States{
         States dynamics( const Sensors& s );
         void setMinMaxDepth(double minD, double MaxD);
         void set_rf_nrf(int r, int n);
-        void toMat(Mat& outMat);
+        void toMat(cv::Mat& outMat);
 
         //Operator
         States& operator*= ( const double& rhs );
