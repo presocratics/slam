@@ -1,6 +1,7 @@
 #include "states.h"
 #define DMIN 0.3            /*  */
 
+/*
     States&
 States::operator*= ( const double& rhs )
 {
@@ -32,7 +33,7 @@ States::States ( const cv::Mat& kx ) :
             kx.at<double>(10+3*i,0), kx.at<double>(11+3*i,0) ), 0 )); 
     }
     return ;
-}		/* -----  end of method States::States  ----- */
+}	*/	/* -----  end of method States::States  ----- */
 
 // accessor
 Vec3d States::getX() { return X; }
@@ -52,6 +53,7 @@ States& States::setV(const Vec3d& vel) {
     return *this;
 }
 
+/*
 States& States::addFeature(const Feature& f)
 {
     Feature *ft = new Feature;
@@ -60,6 +62,7 @@ States& States::addFeature(const Feature& f)
     feats.insert( featPair(ft->getID(), ft) );
     return *this;
 }
+*/
 
 States& States::setb(const Vec3d& bias)
 {
@@ -67,6 +70,7 @@ States& States::setb(const Vec3d& bias)
     return *this;
 }
 
+/*
 void States::add( const States& a)
 {
     if( a.getNumFeatures()!=this->getNumFeatures() )
@@ -85,7 +89,9 @@ void States::add( const States& a)
     }
     this->b += a.b;
 }
+*/
 
+/*
     void
 States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
 {
@@ -120,7 +126,7 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
         features.push_back(f);
     }
     return ;
-}		/* -----  end of method States::update_features  ----- */
+}	*/	/* -----  end of method States::update_features  ----- */
 
 /*
  *--------------------------------------------------------------------------------------
@@ -137,22 +143,23 @@ States::dynamics ( const Sensors& s )
     cv::Vec3d w;
     Matx33d Rb2w, Rw2b; 
 
-    Rb2w = s.quaternion.rotation();
+    Rb2w = s.quat.get_value().rotation();
     Rw2b = Rb2w.t();
 
-    w =cv::Vec3d(s.angular_velocity);
+    w =s.ang.get_value();
 
-    Vec3d gw(0,0,GRAVITY); 
-    A = Matx33d( 0, -w[2], w[1],
+    cv::Vec3d gw(0,0,GRAVITY); 
+    A = cv::Matx33d( 0, -w[2], w[1],
             w[2], 0, -w[0],
             -w[1], w[0], 0 );
     
     // Generalized matrix multiplication
     gemm( Rb2w, V, 1, Mat(), 0, predicted_state.X );
 
-    gemm( -A, V, 1, s.acceleration, 1, predicted_state.V );
+    gemm( -A, V, 1, s.acc.get_value(), 1, predicted_state.V );
     gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
 
+    /*
     Fiter pib=features.begin();
     for( int i=0; pib!=features.end(); ++pib,++i )
     {
@@ -166,25 +173,29 @@ States::dynamics ( const Sensors& s )
         );
         predicted_state.addFeature(fi);
     }
+    */
     V-=b;
     b=cv::Vec3d(0,0,0);
     return predicted_state;
 }		/* -----  end of method States::dynamics  ----- */
 
 
+/*
     int
 States::getRows ( ) const
 {
     return 9+3*getNumFeatures() ;
-}		/* -----  end of method States::getRows  ----- */
+}	*/	/* -----  end of method States::getRows  ----- */
 
 
+/*
     int
 States::getNumFeatures ( ) const
 {
     return features.size();
-}		/* -----  end of method States::getNumFeatures  ----- */
+}	*/	/* -----  end of method States::getNumFeatures  ----- */
 
+/*
     void
 States::clearContainers ( )
 {
@@ -196,7 +207,7 @@ States::clearContainers ( )
     feats.clear();
     features.clear();
     return ;
-}		/* -----  end of method States::clearContainers  ----- */
+}	*/	/* -----  end of method States::clearContainers  ----- */
 
 /* 
  * ------------------------------------------------------------
@@ -205,6 +216,7 @@ States::clearContainers ( )
  *  current depth is not in range of given min/max depth.
  * ------------------------------------------------------------
  */
+/*
     void 
 States::setMinMaxDepth(double minD, double maxD)
 {
@@ -222,8 +234,9 @@ States::setMinMaxDepth(double minD, double maxD)
     }
 
     return;
-}      /* ----- end of method States::setMinMaxDepth ----- */
+} */     /* ----- end of method States::setMinMaxDepth ----- */
 
+/*
     void
 States::set_rf_nrf(int r, int n)
 {
@@ -231,7 +244,9 @@ States::set_rf_nrf(int r, int n)
     nrf = n;
     return;
 }
+*/
 
+/*
     void
 States::toMat(cv::Mat& outmat)
 {
@@ -261,3 +276,4 @@ States::toMat(cv::Mat& outmat)
     outmat = (cv::Mat)outvec;
     return;
 }
+*/

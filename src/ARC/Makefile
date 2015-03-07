@@ -1,9 +1,9 @@
 SRC = feature.cpp featureIO.cpp imagesensor.cpp ourerr.cpp \
-		Quaternion.cpp Sensors.cpp states.cpp view.cpp
+		Quaternion.cpp Sensors.cpp view.cpp states.cpp
 OBJ = $(SRC:.cpp=.o)
 OUT = libARC.a
 IDIR = ../../include
-CXXFLAGS = -Wall -Werror -std=c++03 -pedantic-errors
+CXXFLAGS = -Wall -Werror -std=c++11 -pedantic-errors
 CXXFLAGS += -g
 CXXFLAGS += $(shell pkg-config --cflags opencv)
 CXXFLAGS += -I$(IDIR)

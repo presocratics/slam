@@ -45,6 +45,7 @@ Feature::Feature( const cv::Vec3d& anchor, const Sensors& sense, const projectio
 }        /* -----  end of method Feature::Feature  ----- */
 
 
+/*
     void
 Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense, 
         const projection& match, const bool extant )
@@ -69,8 +70,10 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
     set_isRef(match.isRef());  
     setID( match.id );
     set_initial_anchor(anchor);
+   */
 
     /* Rotating 180 for quadrotor data */
+/*
                 cv::Vec3d curr_euler = sense.quaternion.euler();
                 cv::Vec3d rot180(0,0,3.14159);
                 Quaternion q_rot180;
@@ -85,7 +88,7 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
     set_initial_pib(match.source);
     set_noMatch(0);
     return ;
-}        /* -----  end of method Feature::initialize  ----- */
+}   */     /* -----  end of method Feature::initialize  ----- */
 
 // accessor
 
