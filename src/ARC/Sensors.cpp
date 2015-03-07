@@ -1,13 +1,13 @@
 #include "Sensors.hpp"
 #include "ourerr.hpp"
-#define EPS 0.02 // Maximum delta to consider part of the same timestep.
+#define EPS 0.01 // Maximum delta to consider part of the same timestep.
 
     void
 Sensors::update ( )
 {
     if (time==-1)
     {
-        scanf("%lf,%[^,],%s", &time, type, vals);
+        scanf("%lf,%[^,\n],%s", &time, type, vals);
     }
     t=time;
 
@@ -27,15 +27,15 @@ Sensors::update ( )
         }
         else if (!strcmp(type, "IMG"))
         {
-            sscanf(vals, "%lf,%lf,%lf", &val3[0], &val3[1], &val3[2]);
-            img.set_value(time, val3);
+            img.set_value(time, 0);
         }
         else if (!strcmp(type, "QUAT"))
         {
             sscanf(vals, "%lf,%lf,%lf,%lf", &val4[0], &val4[1], &val4[2], &val4[3]);
             quat.set_value(time, val4);
         }
-        scanf("%lf,%[^,],%s", &time, type, vals);
+        fflush(stdin);
+        scanf("%lf,%[^,\n],%s", &time, type, vals);
     }
     return ;
 }		/* -----  end of method Sensors::update  ----- */
