@@ -33,9 +33,9 @@ class Sensor
         Sensor () {timestamp=0;}                             /* constructor */
 
         /* ====================  ACCESSORS     ======================================= */
-        double get_timestamp ( ) { return timestamp; }
-        double get_dt ( ) { return dt; }
-        T get_value() { return value; }
+        double get_timestamp ( ) const { return timestamp; }
+        double get_dt ( ) const { return dt; }
+        T get_value() const { return value; } 
 
         /* ====================  MUTATORS      ======================================= */
         void set_value( double ts, T v )
