@@ -5,6 +5,8 @@
  *
  *    Description:  Reads euler angles frome STDIN and writes corresponding
  *    quaternion to STDOUT.
+ *    TODO: Determine type of input. How are the angles defined?
+ *    
  *    Input expected as a triple x,y,z
  *
  *        Version:  1.0
@@ -18,6 +20,7 @@
  * =====================================================================================
  */
 
+#include <cstring>
 #include <cmath>
 #include <iostream>
 #include <cstdio>
@@ -46,13 +49,15 @@ int main( int argc, char **argv )
 {
     char *line;
     double *quaternion;
+    int degrees;
 
-    if( argc!=1 )
-    {
-        printf("Usage: %s\n\
-Reads Euler angles as triple x,y,z from STDIN.\n", argv[0] );
+    if (argc>1 && !strcmp(argv[1],"-h")) {
+        printf("Usage: %s [-d]\n\
+Reads Euler angles as triple x,y,z from STDIN in radians unless -d used.\n", argv[0] );
         exit(EXIT_FAILURE);
     }
+    degrees=0;
+    if (argc>1 && (!strcmp(argv[1], "-d"))) degrees=1;
     line	= (char *) calloc ( (size_t)(MAXLINE), sizeof(char) );
     if ( line==NULL ) {
         fprintf ( stderr, "\ndynamic memory allocation failed\n" );
@@ -69,6 +74,11 @@ Reads Euler angles as triple x,y,z from STDIN.\n", argv[0] );
     {
         double phi, theta, psi;
         sscanf( line, "%lf,%lf,%lf", &phi, &theta, &psi );
+        if (degrees) {
+            phi*=M_PI/180;
+            theta*=M_PI/180;
+            psi*=M_PI/180;
+        }
         euler2quaternion( phi, theta, psi, quaternion );
         printf("%.15lf,%.15lf,%.15lf,%.15lf\n", quaternion[0], quaternion[1], quaternion[2], quaternion[3] );
     }
