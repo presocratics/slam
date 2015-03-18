@@ -78,8 +78,7 @@ int main( int argc, char **argv )
     }
 
     /* Intialize */
-    //const double Q0=28; // 100 for simulation and 1 for experiments
-    const double Q0=1; // 100 for simulation and 1 for experiments
+    const double Q0=25; // 100 for simulation and 1 for experiments
     //const double R0=25; // 10 for simulation and 1 for experiments
     const double R0=1; // 10 for simulation and 1 for experiments
     States mu, mu_prev;
@@ -279,12 +278,12 @@ initG ( cv::Mat& G, int nf, double dt )
     void
 initQ ( cv::Mat& Q, int nf, double Q0, double dt )
 {
-    Q0 = Q0*dt*dt;
+    Q0*=dt*dt;
     Q = Q0*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
     Q.at<double>(0,0) *= 0.001*Q0;
     Q.at<double>(1,1) *= 0.001*Q0;
     Q.at<double>(2,2) *= 0.001*Q0;
 
-    blockAssign(Q, QBIAS*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
+    blockAssign(Q, QBIAS*dt*dt*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
     return;
 }        /* -----  end of function initq  ----- */

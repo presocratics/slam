@@ -21,12 +21,13 @@
 //#include "imagesensor.hpp"
 #include "Sensor.hpp"
 
-#define QBIAS 0.002            /*  */
+#define QBIAS 1e-5            /*  */
 #define P0 2            /*  */
 #define DMIN 0.3            /*  */
 
 void blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl );
 void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, double dt );
 void initG ( cv::Mat& G, int nf, double dt );
+void initQ ( cv::Mat& Q, int nf, double Q0, double dt );
 
 #endif
