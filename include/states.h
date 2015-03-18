@@ -13,7 +13,9 @@
 #include "Sensors.hpp"
 #include "imagesensor.hpp"
 using namespace cv;
-#define GRAVITY -9.80665            /* Standard acceleration due to free fall m/s^2 */
+//#define GRAVITY -9.80665            /* Standard acceleration due to free fall m/s^2 */
+#define GRAVITY -9.801591009565607
+
 #define DMIN 0.3            /*  */
 
 class States{

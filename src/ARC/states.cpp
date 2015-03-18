@@ -1,14 +1,13 @@
 #include "states.h"
 #define DMIN 0.3            /*  */
 
-/*
     States&
 States::operator*= ( const double& rhs )
 {
     this->X*=rhs;
     this->V*=rhs;
-    for( Fiter fi=this->features.begin(); fi!=this->features.end(); ++fi ) 
-        (*fi)->set_body_position( (*fi)->get_body_position()*rhs );
+    //for( Fiter fi=this->features.begin(); fi!=this->features.end(); ++fi ) 
+     //   (*fi)->set_body_position( (*fi)->get_body_position()*rhs );
     return *this;
 }
 // constructor
@@ -19,6 +18,7 @@ States::operator+= ( const States& rhs )
     this->add(rhs);
     return *this;
 }
+/*
 
 States::States ( const cv::Mat& kx ) :
     X(cv::Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) ),
@@ -70,16 +70,18 @@ States& States::setb(const Vec3d& bias)
     return *this;
 }
 
-/*
 void States::add( const States& a)
 {
+    /*
     if( a.getNumFeatures()!=this->getNumFeatures() )
     {
         std::cerr << "add: feature mismatch" << std::endl;
         exit(EXIT_FAILURE);
     }
+    */
     this->X += a.X;
     this->V += a.V;
+    /*
     for(int i = 0; i<getNumFeatures(); i++ )
     {
         this->features[i]->set_body_position( this->features[i]->get_body_position() +
@@ -87,9 +89,9 @@ void States::add( const States& a)
         this->features[i]->set_world_position( this->features[i]->get_world_position() +
                 a.features[i]->get_world_position() );
     }
+    */
     this->b += a.b;
 }
-*/
 
 /*
     void
@@ -146,7 +148,7 @@ States::dynamics ( const Sensors& s )
     Rb2w = s.quat.get_value().rotation();
     Rw2b = Rb2w.t();
 
-    w =s.ang.get_value();
+    w =200*s.ang.get_value();
 
     cv::Vec3d gw(0,0,GRAVITY); 
     A = cv::Matx33d( 0, -w[2], w[1],
@@ -155,9 +157,9 @@ States::dynamics ( const Sensors& s )
     
     // Generalized matrix multiplication
     gemm( Rb2w, V, 1, Mat(), 0, predicted_state.X );
-
-    gemm( -A, V, 1, s.acc.get_value(), 1, predicted_state.V );
-    gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
+    //gemm( -A, V, 1, 200*s.acc.get_value(), 1, predicted_state.V );
+    predicted_state.V=200*s.acc.get_value()-b;
+    //gemm( Rw2b, gw, 1, predicted_state.V, 1, predicted_state.V);
 
     /*
     Fiter pib=features.begin();
@@ -174,18 +176,17 @@ States::dynamics ( const Sensors& s )
         predicted_state.addFeature(fi);
     }
     */
-    V-=b;
-    b=cv::Vec3d(0,0,0);
+    predicted_state.b=cv::Vec3d(0,0,0);
     return predicted_state;
 }		/* -----  end of method States::dynamics  ----- */
 
 
-/*
     int
 States::getRows ( ) const
 {
-    return 9+3*getNumFeatures() ;
-}	*/	/* -----  end of method States::getRows  ----- */
+    return 9;
+    //return 9+3*getNumFeatures() ;
+}		/* -----  end of method States::getRows  ----- */
 
 
 /*
