@@ -5,11 +5,11 @@
 #include <cv.h>
 #include "Sensor.hpp"
 #include "Quaternion.hpp"
-#define EPS 0.01 // Maximum delta to consider part of the same timestep.
-#define UPDATE_ACC 1
-#define UPDATE_ANG 1<<1
-#define UPDATE_QUAT 1<<2
-#define UPDATE_IMG 1<<3
+#define EPS 0.005 // Maximum delta to consider part of the same timestep.
+#define UPDATE_ACC 0x1
+#define UPDATE_ANG 0x2
+#define UPDATE_QUAT 0x4
+#define UPDATE_IMG 0x8
 /*
  * =====================================================================================
  *        Class:  Sensors
