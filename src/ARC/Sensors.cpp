@@ -4,7 +4,7 @@
     int
 Sensors::update ( )
 {
-    int rv;
+    int rv=0;
     int updated=0;
     if (time==-1)
     {
@@ -19,28 +19,27 @@ Sensors::update ( )
         cv::Vec4d val4;
         if (!strcmp(type, "ACC"))
         {
-            updated+=UPDATE_ACC;
+            updated|=UPDATE_ACC;
             sscanf(vals, "%lf,%lf,%lf", &val3[0], &val3[1], &val3[2]);
             acc.set_value(time, val3);
         }
         else if (!strcmp(type, "ANG"))
         {
-            updated+=UPDATE_ANG;
+            updated|=UPDATE_ANG;
             sscanf(vals, "%lf,%lf,%lf", &val3[0], &val3[1], &val3[2]);
             ang.set_value(time, val3);
         }
         else if (!strcmp(type, "IMG"))
         {
-            updated+=UPDATE_IMG;
+            updated|=UPDATE_IMG;
             img.set_value(time, 0);
         }
         else if (!strcmp(type, "QUAT"))
         {
-            updated+=UPDATE_QUAT;
+            updated|=UPDATE_QUAT;
             sscanf(vals, "%lf,%lf,%lf,%lf", &val4[0], &val4[1], &val4[2], &val4[3]);
             quat.set_value(time, val4);
         }
-        fflush(stdin);
         rv=scanf("%lf,%[^,\n],%s", &time, type, vals);
     }
     return updated;
