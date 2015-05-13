@@ -18,13 +18,13 @@ States::operator+= ( const States& rhs )
     this->add(rhs);
     return *this;
 }
-/*
 
 States::States ( const cv::Mat& kx ) :
     X(cv::Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) ),
     V( cv::Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) ),
     b( cv::Vec3d( kx.at<double>(6,0), kx.at<double>(7,0), kx.at<double>(8,0) ) )
 {
+    /*
     int nf;
     nf = (kx.rows-9)/3;
     for( int i=0; i<nf; ++i )
@@ -32,8 +32,9 @@ States::States ( const cv::Mat& kx ) :
         addFeature(Feature( cv::Vec3d( kx.at<double>(9+3*i,0), 
             kx.at<double>(10+3*i,0), kx.at<double>(11+3*i,0) ), 0 )); 
     }
+    */
     return ;
-}	*/	/* -----  end of method States::States  ----- */
+}		/* -----  end of method States::States  ----- */
 
 // accessor
 Vec3d States::getX() { return X; }
@@ -93,7 +94,6 @@ void States::add( const States& a)
     this->b += a.b;
 }
 
-/*
     void
 States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
 {
@@ -101,12 +101,12 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
     features.clear();
     // Age each feature
     featIter fi=feats.begin(); 
-    for( ; fi!=feats.end(); ++fi )
+    for (; fi!=feats.end(); ++fi)
     {
         fi->second->incNoMatch();
     }
     cMatchIter match=imgsense.matches.begin();
-    for( ; match!=imgsense.matches.end(); ++match )
+    for (; match!=imgsense.matches.end(); ++match)
     {
         Feature *f;
         fi=feats.find(match->id);
@@ -128,7 +128,7 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
         features.push_back(f);
     }
     return ;
-}	*/	/* -----  end of method States::update_features  ----- */
+}		/* -----  end of method States::update_features  ----- */
 
 /*
  *--------------------------------------------------------------------------------------
@@ -148,9 +148,10 @@ States::dynamics ( const Sensors& s )
     Rb2w = s.quat.get_value().rotation();
     Rw2b = Rb2w.t();
 
-    w =200*s.ang.get_value();
+    //w =200*s.ang.get_value();
+    w =s.ang.get_value();
 
-    cv::Vec3d gw(0,0,GRAVITY); 
+    cv::Vec3d gw(0,0,-GRAVITY); 
     A = cv::Matx33d( 0, -w[2], w[1],
             w[2], 0, -w[0],
             -w[1], w[0], 0 );
@@ -158,7 +159,10 @@ States::dynamics ( const Sensors& s )
     // Generalized matrix multiplication
     gemm( Rb2w, V, 1, Mat(), 0, predicted_state.X );
     //gemm( -A, V, 1, 200*s.acc.get_value(), 1, predicted_state.V );
-    predicted_state.V=200*s.acc.get_value()-b;
+    gemm( -A, V, 1, s.acc.get_value(), 1, predicted_state.V );
+    gemm( Rw2b, gw, 1, predicted_state.V, 1, predicted_state.V);
+    //predicted_state.V=200*s.acc.get_value()-b;
+    //predicted_state.V=s.acc.get_value()-b;
     //gemm( Rw2b, gw, 1, predicted_state.V, 1, predicted_state.V);
 
     /*
@@ -184,17 +188,16 @@ States::dynamics ( const Sensors& s )
     int
 States::getRows ( ) const
 {
-    return 9;
-    //return 9+3*getNumFeatures() ;
+    return 9+3*getNumFeatures() ;
 }		/* -----  end of method States::getRows  ----- */
 
 
-/*
     int
 States::getNumFeatures ( ) const
 {
-    return features.size();
-}	*/	/* -----  end of method States::getNumFeatures  ----- */
+    return 0;
+    //return features.size();
+}		/* -----  end of method States::getNumFeatures  ----- */
 
 /*
     void

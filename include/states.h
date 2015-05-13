@@ -9,7 +9,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include <stdio.h>
 #include <iostream>
-//#include "feature.h"
+#include "feature.h"
 #include "Sensors.hpp"
 #include "imagesensor.hpp"
 using namespace cv;
@@ -28,8 +28,8 @@ class States{
         Vec3d X;
         Vec3d V;
         Vec3d b;
-        //featMap feats;
-        //active features;
+        featMap feats;
+        active features;
         int rf;
         int nrf;
 

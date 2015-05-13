@@ -15,10 +15,10 @@
 #include <sys/time.h>
 #include "Quaternion.hpp"
 #include "Sensors.hpp"
-//#include "feature.h"
+#include "feature.h"
 #include "states.h"
 #include "view.hpp"
-//#include "imagesensor.hpp"
+#include "imagesensor.hpp"
 #include "Sensor.hpp"
 
 #define QBIAS 1e-5            /*  */

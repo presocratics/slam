@@ -64,24 +64,17 @@ help ( const char *str)
 int main( int argc, char **argv )
 {
     /* Handle input */
-    if (argc>1)
-    {
-        if (!strcmp(argv[1],"-h" ))
-        {
-            help(argv[0]);
-            exit(EXIT_FAILURE);
-        }
-        else
-        {
-            //TODO: get meas filename
-        }
+    if (argc<2 || !strcmp(argv[1],"-h")) {
+        help(argv[0]);
+        exit(EXIT_FAILURE);
     }
 
-    /* Intialize */
+    /* Initialize */
     const double Q0=25; 
     const double R0=25;
     States mu, mu_prev;
     Sensors sense;
+    ImageSensor imgsense( argv[1], false );
 
     mu.X[2] = -1; /* Constant altitude for now */
 
@@ -91,15 +84,18 @@ int main( int argc, char **argv )
 
     mu.setb(cv::Vec3d(0,0,0));
 
-    const double scaleW=1;
-    const double scaleH=1;
+    const double scaleW=.6;
+    const double scaleH=.6;
     const int width=640;
     const int height=480;
     cv::Mat rtplot=cv::Mat::zeros(height, width, CV_8UC3);
 
+    /* Set initial conditions */
+    sense.update();
 
     /* Enter main loop */
     int u;
+    int iter=0;
     while ((u=sense.update())!=-1)
     {
         double dt;
@@ -123,14 +119,27 @@ int main( int argc, char **argv )
             // Read in new features
             // Update features in mu
             // SetMinMaxDepth (should this happen during update features?)
-
         }
+        /*
+        if ((iter++%14)==0) {
+            // Read in new features
+            imgsense.update();
+            matchIter m=imgsense.matches.begin();
+            for (;m!=imgsense.matches.end();++m) {
+                cout << m->source << endl;
+            }
+            // Update features in mu
+            //mu.update_features(imgsense, sense);
+        }
+        */
         
+        dt=0.02;
         old_pos=mu.X;
         f=mu.dynamics(sense);
-        f*=dt;
+        f*=dt; // TODO: why isn't this inside dynamics?
         mu+=f;
 
+        /*
         jacobianMotionModel(mu, sense, F, dt);
 
         if (u & UPDATE_IMG) 
@@ -156,13 +165,13 @@ int main( int argc, char **argv )
             mu+=kmh;
         }
 
+                    */
         circle(rtplot, cv::Point(mu.X[0]*scaleW+width/2,
                     height/2+(-mu.X[1]*scaleH)), .1, cv::Scalar(0,10,220));
         //cv::imshow("foo", rtplot);
         //cv::waitKey(2);
         //std::cout << sense.acc.get_dt() << ",ACC,"<< sense.acc.get_value() << std::endl;
         //std::cout << sense.quat.get_dt() << ",QUAT,"<< sense.quat.get_value().coord << std::endl;
-        std::cout << mu.V <<std::endl;
         //std::cout << F <<std::endl;
         //std::cout << sense.quat.get_value().coord << std::endl;
         //std::cout << sense.quat.get_value().rotation() << std::endl;
@@ -198,10 +207,11 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
     cv::Vec3d w;
 
     qbw = sense.quat.get_value();
-    w=200*sense.ang.get_value();
+    //w=200*sense.ang.get_value();
+    w=sense.ang.get_value();
     nf=mu.getNumFeatures();
 
-    Mat Fb = cv::Mat::zeros(9,9,CV_64F);
+    Mat Fb = cv::Mat::zeros(6,6,CV_64F);
     Mat Fb1 = (Mat_<double>(6, 6) << 0, 0, 0, 
             pow(qbw.coord[0], 2) - pow(qbw.coord[1], 2) - pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
             2 * qbw.coord[0]*qbw.coord[1] - 2 * qbw.coord[2]*qbw.coord[3],
@@ -280,8 +290,8 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
 
     blockAssign(F_out, cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
     F_out.at<double>(3, 6) = -1*dt;
-    F_out.at<double>(4, 7) = -1 * dt;
-    F_out.at<double>(5, 8) = -1 * dt;
+    F_out.at<double>(4, 7) = -1*dt;
+    F_out.at<double>(5, 8) = -1*dt;
 }
 
 /************************************************************************************************
