@@ -47,6 +47,7 @@
 using std::cout; 
 using std::cerr; 
 using std::endl;
+using std::vector;
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -72,11 +73,13 @@ int main( int argc, char **argv )
     /* Initialize */
     const double Q0=25; 
     const double R0=25;
+    const double d_min=0.1;
+    const double d_max=10e3;
     States mu, mu_prev;
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
 
-    mu.X[2] = -1; /* Constant altitude for now */
+    mu.X[2] = -2.281; /* Constant altitude for now */
 
     cv::Mat P=cv::Mat::eye(9,9,CV_64F);
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
@@ -91,13 +94,12 @@ int main( int argc, char **argv )
     cv::Mat rtplot=cv::Mat::zeros(height, width, CV_8UC3);
 
     /* Set initial conditions */
-    sense.update();
+    int u;
+    u=sense.update();
 
     /* Enter main loop */
-    int u;
     int iter=0;
-    while ((u=sense.update())!=-1)
-    {
+    do {
         double dt;
         cv::Vec3d old_pos;
         cv::Mat G, Q, R, K, H, F;
@@ -117,8 +119,22 @@ int main( int argc, char **argv )
         }
         if (u & UPDATE_IMG) {
             // Read in new features
+            imgsense.update();
+            mu.update_features(imgsense, sense);
+            for ( Fiter pib=mu.features.begin();
+                    pib!=mu.features.end(); ++pib) {
+                //cout << (*pib)->get_body_position() << endl;
+                // SetMinMaxDepth (TODO: this happen during update features)
+                cv::Vec3d pos=(*pib)->get_body_position();
+                if (pos[2]<1/d_max) {
+                    pos[2]=1/d_max;
+                    (*pib)->set_body_position(pos);
+                } else if (pos[2]>1/d_min) {
+                    pos[2]=1/d_min;
+                    (*pib)->set_body_position(pos);
+                }
+            }
             // Update features in mu
-            // SetMinMaxDepth (should this happen during update features?)
         }
         /*
         if ((iter++%14)==0) {
@@ -135,7 +151,12 @@ int main( int argc, char **argv )
         
         dt=0.02;
         old_pos=mu.X;
+        cout << endl;
         f=mu.dynamics(sense);
+        for ( Fiter pib=f.features.begin();
+                pib!=f.features.end(); ++pib) {
+            cout << "f: " << (*pib)->get_body_position() << endl;
+        }
         f*=dt; // TODO: why isn't this inside dynamics?
         mu+=f;
 
@@ -170,12 +191,14 @@ int main( int argc, char **argv )
                     height/2+(-mu.X[1]*scaleH)), .1, cv::Scalar(0,10,220));
         //cv::imshow("foo", rtplot);
         //cv::waitKey(2);
+        //std::cout << mu.X << std::endl;
+        cout << "--" << endl;
         //std::cout << sense.acc.get_dt() << ",ACC,"<< sense.acc.get_value() << std::endl;
         //std::cout << sense.quat.get_dt() << ",QUAT,"<< sense.quat.get_value().coord << std::endl;
         //std::cout << F <<std::endl;
         //std::cout << sense.quat.get_value().coord << std::endl;
         //std::cout << sense.quat.get_value().rotation() << std::endl;
-    }
+    } while ((u=sense.update())!=-1);
     cv::imshow("foo", rtplot);
     cv::waitKey(0);
     return 0;
