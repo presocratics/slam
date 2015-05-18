@@ -71,6 +71,7 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
     set_initial_anchor(anchor);
 
     /* Rotating 180 for quadrotor data */
+    /*
                 cv::Vec3d curr_euler = sense.quat.get_value().euler();
                 cv::Vec3d rot180(0,0,3.14159);
                 Quaternion q_rot180;
@@ -82,6 +83,7 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
                 euler2quaternion2(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
 
     set_initial_quaternion(new_quat);
+                */
     set_initial_pib(match.source);
     set_noMatch(0);
     return ;
