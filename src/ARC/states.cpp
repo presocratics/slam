@@ -98,8 +98,8 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
                 match!=imgsense.matches.end(); ++match) {
             if (fi->getID()==match->id) {
                 fi->set_noMatch(0);
-                // TODO: Can we pop the match off of imgsense here?
                 found=true;
+                // TODO: Can we pop the match off of imgsense here?
                 break;
             }
         }
@@ -114,6 +114,9 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
                 fi!=features.end(); ++fi) {
             if (fi->get_noMatch()!=0) {
                 *fi = Feature( X, sense, *match);
+                found=true;
+                break;
+            } else if (fi->getID()==match->id) {
                 found=true;
                 break;
             }
@@ -190,8 +193,7 @@ States::getRows ( ) const
     int
 States::getNumFeatures ( ) const
 {
-    return 0;
-    //return features.size();
+    return features.size();
 }		/* -----  end of method States::getNumFeatures  ----- */
 
 /*
