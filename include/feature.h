@@ -219,7 +219,7 @@ class Feature{
 typedef std::pair<int,Feature*> featPair;
 typedef std::map<int,Feature*> featMap;
 typedef featMap::iterator featIter;
-typedef std::vector<Feature*> active;
+typedef std::vector<Feature> active;
 typedef active::iterator Fiter;
 typedef active::const_iterator cFiter;
 

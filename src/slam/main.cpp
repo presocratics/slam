@@ -96,6 +96,8 @@ int main( int argc, char **argv )
     /* Set initial conditions */
     int u;
     u=sense.update();
+    imgsense.update();
+    mu.update_features(imgsense, sense);
 
     /* Enter main loop */
     int iter=0;
@@ -125,13 +127,13 @@ int main( int argc, char **argv )
                     pib!=mu.features.end(); ++pib) {
                 //cout << (*pib)->get_body_position() << endl;
                 // SetMinMaxDepth (TODO: this happen during update features)
-                cv::Vec3d pos=(*pib)->get_body_position();
+                cv::Vec3d pos=pib->get_body_position();
                 if (pos[2]<1/d_max) {
                     pos[2]=1/d_max;
-                    (*pib)->set_body_position(pos);
+                    pib->set_body_position(pos);
                 } else if (pos[2]>1/d_min) {
                     pos[2]=1/d_min;
-                    (*pib)->set_body_position(pos);
+                    pib->set_body_position(pos);
                 }
             }
             // Update features in mu
@@ -153,12 +155,12 @@ int main( int argc, char **argv )
         old_pos=mu.X;
         cout << endl;
         f=mu.dynamics(sense);
-        for ( Fiter pib=f.features.begin();
-                pib!=f.features.end(); ++pib) {
-            cout << "f: " << (*pib)->get_body_position() << endl;
-        }
         f*=dt; // TODO: why isn't this inside dynamics?
         mu+=f;
+        for ( Fiter pib=mu.features.begin();
+                pib!=mu.features.end(); ++pib) {
+            cout << "fdt: " << pib->get_body_position() << endl;
+        }
 
         /*
         jacobianMotionModel(mu, sense, F, dt);
