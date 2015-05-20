@@ -10,6 +10,7 @@
 #define UPDATE_ANG 0x2
 #define UPDATE_QUAT 0x4
 #define UPDATE_IMG 0x8
+#define UPDATE_ALT 0x10
 /*
  * =====================================================================================
  *        Class:  Sensors
@@ -33,6 +34,7 @@ class Sensors
         Sensor<Quaternion> quat;
         Sensor<cv::Vec3d> acc;
         Sensor<cv::Vec3d> ang;
+        Sensor<double> alt;
         Sensor<int> img;
 
     protected:
