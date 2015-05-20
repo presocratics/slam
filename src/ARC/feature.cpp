@@ -84,6 +84,7 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
 
     set_initial_quaternion(new_quat);
                 */
+    set_initial_quaternion(sense.quat.get_value());
     set_initial_pib(match.source);
     set_noMatch(0);
     return ;
