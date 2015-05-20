@@ -125,6 +125,16 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
             features.emplace_back(X, sense, *match);
         }
     }
+    // Determine rf, nrf
+    rf=nrf=0;
+    for (Fiter fi=features.begin();
+            fi!=features.end(); ++fi) {
+        if (fi->initial.isRef) {
+            rf++;
+        } else {
+            nrf++;
+        }
+    }
     // TODO: shrink features vector if necessary
     return ;
 }		/* -----  end of method States::update_features  ----- */
