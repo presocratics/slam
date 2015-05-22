@@ -45,6 +45,11 @@ class Sensor
             value=v;
         }
 
+        void set_value( T v )
+        {
+            value=v;
+        }
+
         /* ====================  OPERATORS     ======================================= */
 
     protected:
