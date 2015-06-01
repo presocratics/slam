@@ -1,7 +1,7 @@
 #ifndef  view_INC
 #define  view_INC
 #include <cv.h>
-
+#include "featureIO.h"
 /*
  * =====================================================================================
  *        Class:  Vfeat
@@ -14,9 +14,16 @@ struct vfeat
         vfeat ( const cv::Point2d& cur, const cv::Point2d& init, const cv::Point2d&
                 refl ) : current(cur), initial(init), reflection(refl) { }
 
+        vfeat ( const cv::Point2d& cur, const cv::Point2d& init ) :
+            current(cur), initial(init), reflection(NONREF) { }
+
         vfeat ( const cv::Vec3d& cur, const cv::Vec3d& init, const cv::Vec3d& refl ) :
                 current(cv::Point2d(cur[0],cur[1])), initial(cv::Point2d(init[0],init[1])),
                 reflection(cv::Point2d(refl[0],refl[1])) { }
+
+        vfeat ( const cv::Vec3d& cur, const cv::Vec3d& init ) :
+                current(cv::Point2d(cur[0],cur[1])), initial(cv::Point2d(init[0],init[1])),
+                reflection(NONREF) { }
 
         cv::Point2d current, initial, reflection;
 }; /* -----  end of class Vfeat  ----- */
