@@ -48,6 +48,47 @@ using std::cout;
 using std::cerr; 
 using std::endl;
 using std::vector;
+using cv::Mat;
+using cv::Rect;
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  readMat
+ *  Description:  
+ * =====================================================================================
+ */
+    void
+hexToVec ( const char *fn, vector<double>& out )
+{
+    union u_tag {
+        uint64_t ival;
+        double dval;
+    } uval;
+
+    FILE *fp;
+    char *line;
+    size_t sz=32;
+
+    line = (char *) calloc(sz, sizeof(char) );
+    if (line==NULL) {
+        fprintf(stderr, "\ndynamic memory allocation failed\n" );
+        exit(EXIT_FAILURE);
+    }
+
+    if ((fp=fopen(fn, "r"))==NULL)
+        err_sys("fopen");
+
+    while (fgets(line, sz, fp)!=NULL) {
+        sscanf(line, "%lx", &uval.ival);
+        out.push_back(uval.dval);
+    }
+    fclose(fp);
+    free (line);
+    line	= NULL;
+
+
+    return ;
+}		/* -----  end of function readMat  ----- */
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -84,6 +125,7 @@ int main( int argc, char **argv )
     cv::Mat P=cv::Mat::eye(9,9,CV_64F);
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
+    resizeP(P,40);
 
     mu.setb(cv::Vec3d(0,0,0));
 
@@ -103,7 +145,6 @@ int main( int argc, char **argv )
     int nf;
     do {
         double dt;
-        cv::Vec3d old_pos;
         cv::Mat G, Q, R, K, H, F;
         Mat kx, eeMat;
         States f, kmh;
@@ -118,14 +159,8 @@ int main( int argc, char **argv )
             fprintf(stderr, "No update, so what are we doing here?\n");
             exit(EXIT_FAILURE);
         }
-        if (u & UPDATE_IMG) {
-            // TODO clake clone only Rotate quat by 180
-            cv::Vec4d q=sense.quat.get_value().coord;
-            sense.quat.get_value().coord[0]=-q[1];
-            sense.quat.get_value().coord[1]=q[0];
-            sense.quat.get_value().coord[2]=-q[3];
-            sense.quat.get_value().coord[3]=q[2];
-
+        if (u & UPDATE_IMG ) {
+            meascount++;
             // Read in new features
             imgsense.update();
             mu.update_features(imgsense, sense);
@@ -143,41 +178,55 @@ int main( int argc, char **argv )
             }
             // TODO clake clone only Restore quat
             nf=mu.getNumFeatures();
-            sense.quat.get_value().coord=q;
             resizeP(P,nf);
         }
         dt=0.02;
         
-        old_pos=mu.X;
-        cout << endl;
-        f=mu.dynamics(sense);
+        //cout << endl;
         jacobianMotionModel(mu, sense, F, dt);
-        f*=dt; // TODO: why isn't this inside dynamics?
-        mu+=f;
+        f=mu.dynamics(sense);
 
-        /*
-        for (size_t i=0; i<mu.features.size(); ++i) {
-            cout << mu.features[i].get_body_position() << endl;
-        }
-        */
-
-        if (u & UPDATE_IMG && iter!=0) 
+        Vec3d old_pos=mu.X;
+        mu+=f*dt;
+        //if(iter>0)
+        //if (u & UPDATE_IMG && iter>0)
         {
             // TODO clake clone only Rotate quat by 180
+            // TODO: Remove this, just in place to match matlab
             cv::Vec4d q=sense.quat.get_value().coord;
             sense.quat.set_value(Quaternion(cv::Vec4d(-q[1],q[0],-q[3],q[2])));
+            //
             // Set initial.quaternion to current quat
-            // TODO: Remove this, just in place to match matlab
-            if (meascount++==0) { 
+            // TODO: for clake only?
+            if (meascount==1) { 
                 for (Fiter it=mu.features.begin();
                         it!=mu.features.end(); ++it) {
                     it->initial.quaternion=sense.quat.get_value();
                 }
 
             }
+
             measurementModel(old_pos, sense.alt.get_value(), imgsense.matches,
-                    sense.quat.get_value(), meas, hmu, H, mu);
-            cout << H(cv::Rect(0,0,3,9)) << endl;
+                   sense.quat.get_value(), meas, hmu, H, mu);
+            /*
+            // Compare mu from c++ and matlab
+            vector<double> Hvec;
+            char fn[100];
+            cout << "iter: " << iter << " meascount: " << meascount << endl;
+            sprintf(fn, "../slam.hb/matlab/clake/H/H%d.txt", meascount-2);
+            hexToVec(fn, Hvec);
+            Mat mmH(Hvec);
+            mmH=mmH.reshape(0,H.cols);
+            mmH=mmH.t();
+            cout << mmH.size() << " " << H.size() << endl;
+            cout << mmH(Rect(0,2,3,3)) << endl;
+            */
+            cout << "iter: " << iter <<  " meascount: " << meascount <<endl;
+            cout << H(Rect(0,3,3,2)) << endl;
+            
+            
+
+
             /*
             for (size_t i=0; i<meas.features.size(); ++i) {
                 cout << "cur: " << hmu.features[i].current << endl;
@@ -188,9 +237,10 @@ int main( int argc, char **argv )
             // TODO clake clone only Restore quat
             sense.quat.get_value().coord=q;
             
-            resizeP(P,nf);
+            //resizeP(P,nf);
         }
 
+        /*
         initG(G, nf, dt);
         initQ(Q, nf, Q0, dt);
         std::vector<int> rf;
@@ -203,35 +253,42 @@ int main( int argc, char **argv )
         }
         initR(R, R0, rf);
         calcP(P,F,G,Q);
+        */
 
-        if (u & UPDATE_IMG && iter++!=0) 
+        if (u & UPDATE_IMG && iter!=0) 
         {
+        /*
             calcK(K,H,P,R);
-            //updateP(P,K,H);
-            //subtract(meas,hmu,estimateError);
-            //estimateError.toMat(eeMat);
-            //cout << "K" << K.size() << endl;
-            //cout << "eeMat" << eeMat.size() << endl;
-            //kx=K*eeMat;
-            //kmh=States(kx);
-            //mu+=kmh;
+            updateP(P,K,H);
+            subtract(meas,hmu,estimateError);
+
+            estimateError.toMat(eeMat);
+            Mat hmuMat;
+            hmu.toMat(hmuMat);
+            kx=K*eeMat;
+            kmh=States(kx);
+            //cout << "kmhV: " << kmh.V << endl;
+            mu+=kmh;
+        */
         }
 
-        //circle(rtplot, cv::Point(mu.X[0]*scaleW+width/2,
-         //           height/2+(-mu.X[1]*scaleH)), .1, cv::Scalar(0,10,220));
+        //circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
+         //           height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
         //cv::imshow("foo", rtplot);
         //cv::waitKey(1);
-        //std::cout << mu.X << std::endl;
-        cout << "--" << endl;
+        //
+        //std::cout << "V: " << mu.V << std::endl;
+        //cout << "--" << endl;
         //cout << sense.alt.get_value() << endl;
         //std::cout << sense.acc.get_dt() << ",ACC,"<< sense.acc.get_value() << std::endl;
         //std::cout << sense.quat.get_dt() << ",QUAT,"<< sense.quat.get_value().coord << std::endl;
         //std::cout << F <<std::endl;
         //std::cout << sense.quat.get_value().coord << std::endl;
         //std::cout << sense.quat.get_value().rotation() << std::endl;
+        ++iter;
     } while ((u=sense.update())!=-1);
-    cv::imshow("foo", rtplot);
-    cv::waitKey(0);
+    //cv::imshow("foo", rtplot);
+    //cv::waitKey(0);
     return 0;
 }
 
@@ -280,7 +337,7 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
             0, 0, 0, w[1], -w[0], 0);
     blockAssign(Fb,Fb1,Point(0,0));
     Mat Fi = Mat::zeros(nf*3, nf*3, CV_64F);
-    Mat Fib = Mat::zeros(nf*3, 9, CV_64F);
+    Mat Fib = Mat::zeros(nf*3, 6, CV_64F);
 
     for (int i = 0; i<nf; i++)
     {
@@ -301,15 +358,27 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
         double pib3 = mu.features[i].get_body_position()[2];
 
         FiTemp = (Mat_<double>(3, 3) <<
+                    pib3*mu.V[0]-2*pib1*w[2] +pib2*w[1],
+                    w[0]+pib1*w[1],
+                    pib1*mu.V[0] - mu.V[1],
+                    -w[0]-pib2*w[2],
+                    pib3*mu.V[0]-pib1*w[2]+2*pib2*w[1],
+                    pib2*mu.V[0]-mu.V[2],
+                    -pib3*w[2],
+                    pib3*w[1],
+                    2*pib3*mu.V[0]-pib1*w[2]+pib2*w[1]);
+
+        /*
                     (pib * Matx31d( mu.V[2], w[0], -2*w[1]))(0,0),
                     w[2] + pib1*w[0],
-                    pib1*mu.V[2] - mu.V[0],
+                    pib1*mu.V[0] - mu.V[1],
                     -w[2] - pib2*w[1], 
                     pib3*mu.V[2] - pib1*w[1] + 2 * pib2*w[0],
                     pib2*mu.V[2] - mu.V[1],
                     -pib3*w[1],
                     pib3*w[0],
                     2 * pib3*mu.V[2] - pib1*w[1] + pib2*w[0]);
+                    */
 
         /* new Fib 11/10/14 */
         Fib_ith = (Mat_<double>(3, 6) <<
@@ -320,13 +389,13 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
 
         blockAssign(Fib, Fib_ith, Point(0, 3*i));
 
-        Fi_ith_1 = Mat::zeros(3, 3 * (i), CV_64F);
-        Fi_ith_2 = FiTemp;
-        Fi_ith_3 = Mat::zeros(3, 3 * (nf-i-1), CV_64F);
-        blockAssign(Fi_ith, Fi_ith_1, Point(0,0));
-        blockAssign(Fi_ith, Fi_ith_2, Point(Fi_ith_1.cols,0));
-        blockAssign(Fi_ith, Fi_ith_3, Point(Fi_ith_1.cols+FiTemp.cols,0));
-        blockAssign(Fi, Fi_ith, Point(0,3*i));
+        //Fi_ith_1 = Mat::zeros(3, 3 * (i), CV_64F);
+        //Fi_ith_2 = FiTemp;
+        //Fi_ith_3 = Mat::zeros(3, 3 * (nf-i-1), CV_64F);
+        //blockAssign(Fi_ith, Fi_ith_1, Point(0,0));
+        //blockAssign(Fi_ith, Fi_ith_2, Point(Fi_ith_1.cols,0));
+        //blockAssign(Fi_ith, Fi_ith_3, Point(Fi_ith_1.cols+FiTemp.cols,0));
+        blockAssign(Fi, FiTemp, Point(3*i,3*i));
     }  
     Mat temp1 = Mat::eye(mu.getRows(), mu.getRows(), CV_64F);
     F_out.setTo(0);
@@ -335,10 +404,10 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
     blockAssign(F_out, Fi,Point(Fib.cols,Fb.rows));
     F_out = dt*F_out + temp1;
 
-    blockAssign(F_out, cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
-    F_out.at<double>(3, 6) = -1*dt;
-    F_out.at<double>(4, 7) = -1*dt;
-    F_out.at<double>(5, 8) = -1*dt;
+    //blockAssign(F_out, cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
+    F_out.at<double>(3, 6+3*nf) = -1*dt; // use 6,7,8 for bias up front
+    F_out.at<double>(4, 7+3*nf) = -1*dt;
+    F_out.at<double>(5, 8+3*nf) = -1*dt;
 }
 
 /************************************************************************************************
@@ -347,40 +416,35 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
 * TODO: which output matrix? Just set to zeros then...
 **************************************************************************************************/
 void measurementModel( const cv::Vec3d& old_pos, double alt, const vector<projection>& matches,
-        const Quaternion& qbw, View& meas, View& hmu, Mat& H, States& mu )
+        const Quaternion& qbw, View& meas, View& hmu, Mat& H, const States& mu )
 {
     meas.altitude = alt;                            // altitude
     hmu.altitude = -mu.X[2];
     H=cv::Mat::zeros(1+6*mu.rf+4*mu.nrf,mu.getRows(),CV_64F);
-    cout << H.rows << "x" << H.cols << endl;
     H.row(0).col(2).setTo(-1);
     Mat Hb;
     Mat Hi;
 
     cMatchIter match=matches.begin();
-    Fiter feat=mu.features.begin();
+    cFiter feat=mu.features.begin();
     int index = 1;
     for (int i=0; feat!=mu.features.end(); ++i,  ++feat, ++match)
     {
-        cv::Vec3d dst;
-        add(mu.X,(Mat)qbw.rotation()*(Mat)feat->xibHat(), dst );
-        feat->set_world_position(dst);
-
         jacobianH(mu.X, qbw, *feat, Hb, Hi);
         //cout << "Hi: " << Hi << endl;
         //cout << "Hb: " << Hb << endl;
         
-        meas.features.push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
         //cout << "bp: " << feat->get_body_position() << endl;
         if( feat->initial.isRef )
         {           
+            meas.features.push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
             hmu.features.push_back(Vfeat( feat->get_body_position(), 
             feat->pib0Hat(old_pos, qbw), feat->ppbHat(mu.X, qbw) ));
         }
         else
         {
-            hmu.features.push_back(Vfeat( feat->get_body_position(), 
-            feat->pib0Hat(old_pos, qbw), feat->ppbHat(mu.X, qbw) ));
+            meas.features.push_back(Vfeat( match->source, feat->initial.pib ));
+            hmu.features.push_back(Vfeat( feat->get_body_position(), feat->pib0Hat(old_pos, qbw) ));
 
         }
         H.row(0).col(2).setTo(-1);
@@ -433,7 +497,7 @@ initQ ( cv::Mat& Q, int nf, double Q0, double dt )
     Q.at<double>(1,1) *= 0.1*Q0;
     Q.at<double>(2,2) *= 0.1*Q0;
 
-    blockAssign(Q, QBIAS*dt*dt*cv::Mat::eye(3,3, CV_64F), cv::Point(6,6) );
+    blockAssign(Q, QBIAS*dt*dt*cv::Mat::eye(3,3, CV_64F), cv::Point(6+3*nf,6+3*nf) );
     return;
 }        /* -----  end of function initq  ----- */
 
@@ -502,6 +566,15 @@ resizeP ( cv::Mat& P, int nf )
         }
         P=bigP;
     }
+    // TODO this is for bias at end only and clake only since it depends on 40
+    // features
+    P.row(6).col(6)=2;
+    P.row(7).col(7)=2;
+    P.row(8).col(8)=2;
+
+    P.row(9+3*nf-1).col(9+3*nf-1)=1e-4;
+    P.row(9+3*nf-2).col(9+3*nf-2)=1e-4;
+    P.row(9+3*nf-3).col(9+3*nf-3)=1e-4;
     return;
 }        /* -----  end of function resizeP  ----- */
 
@@ -528,7 +601,6 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
 calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R )
 {
     cv::Mat tmp=H*P;
-    cout << "diag(P):" << P.diag() << endl;
     tmp *= H.t();
     tmp += R;
 
@@ -587,6 +659,7 @@ void jacobianH( const cv::Vec3d& X, const Quaternion& qbw, const Feature& feat, 
     double qb0w2 = qb0w.coord[1];
     double qb0w3 = qb0w.coord[2];
     double qb0w4 = qb0w.coord[3];
+
 
     Hb = (Mat_<double>(4, 6) <<
         -(2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4)) / ((2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(xb0w2 - xbw2) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(xb0w3 - xbw3) - ((pow(qbw1 , 2) - pow(qbw2 , 2) - pow(qbw3 , 2) + pow(qbw4 , 2))*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw2 + 2 * qbw3*qbw4) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(2 * qbw1*qbw3 - 2 * qbw2*qbw4)) / pib3 + (xb0w1 - xbw1)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) - (pib1*((2 * qbw1*qbw2 - 2 * qbw3*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) - (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(pow(qbw1 , 2) - pow(qbw2 , 2) + pow(qbw3 , 2) - pow(qbw4 , 2)) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(2 * qbw1*qbw4 + 2 * qbw2*qbw3))) / pib3 + (pib2*((2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(pow(qbw1 , 2) + pow(qbw2 , 2) - pow(qbw3 , 2) - pow(qbw4 , 2)) - (2 * qbw1*qbw3 + 2 * qbw2*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw4 - 2 * qbw2*qbw3))) / pib3) - ((pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2))*(((2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4))*(pow(qbw1 , 2) - pow(qbw2 , 2) - pow(qbw3 , 2) + pow(qbw4 , 2)) - (2 * qbw1*qbw2 + 2 * qbw3*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) + pow((qb0w3) , 2) - pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w4)+2 * (qb0w2)*(qb0w3))*(2 * qbw1*qbw3 - 2 * qbw2*qbw4)) / pib3 - (2 * (qb0w1)*(qb0w4)+2 * (qb0w2)*(qb0w3))*(xb0w3 - xbw3) - (2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4))*(xb0w1 - xbw1) + (xb0w2 - xbw2)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) + pow((qb0w3) , 2) - pow((qb0w4) , 2)) + (pib1*((pow(qbw1 , 2) - pow(qbw2 , 2) + pow(qbw3 , 2) - pow(qbw4 , 2))*(pow((qb0w1) , 2) - pow((qb0w2) , 2) + pow((qb0w3) , 2) - pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw2 - 2 * qbw3*qbw4) + (2 * (qb0w1)*(qb0w4)+2 * (qb0w2)*(qb0w3))*(2 * qbw1*qbw4 + 2 * qbw2*qbw3))) / pib3 + (pib2*((2 * qbw1*qbw4 - 2 * qbw2*qbw3)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) + pow((qb0w3) , 2) - pow((qb0w4) , 2)) - (2 * (qb0w1)*(qb0w4)+2 * (qb0w2)*(qb0w3))*(pow(qbw1 , 2) + pow(qbw2 , 2) - pow(qbw3 , 2) - pow(qbw4 , 2)) + (2 * (qb0w1)*(qb0w2)-2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw3 + 2 * qbw2*qbw4))) / pib3)) / pow(((2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(xb0w2 - xbw2) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(xb0w3 - xbw3) - ((pow(qbw1 , 2) - pow(qbw2 , 2) - pow(qbw3 , 2) + pow(qbw4 , 2))*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw2 + 2 * qbw3*qbw4) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(2 * qbw1*qbw3 - 2 * qbw2*qbw4)) / pib3 + (xb0w1 - xbw1)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) - (pib1*((2 * qbw1*qbw2 - 2 * qbw3*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) - (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(pow(qbw1 , 2) - pow(qbw2 , 2) + pow(qbw3 , 2) - pow(qbw4 , 2)) + (2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(2 * qbw1*qbw4 + 2 * qbw2*qbw3))) / pib3 + (pib2*((2 * (qb0w1)*(qb0w3)-2 * (qb0w2)*(qb0w4))*(pow(qbw1 , 2) + pow(qbw2 , 2) - pow(qbw3 , 2) - pow(qbw4 , 2)) - (2 * qbw1*qbw3 + 2 * qbw2*qbw4)*(pow((qb0w1) , 2) - pow((qb0w2) , 2) - pow((qb0w3) , 2) + pow((qb0w4) , 2)) + (2 * (qb0w1)*(qb0w2)+2 * (qb0w3)*(qb0w4))*(2 * qbw1*qbw4 - 2 * qbw2*qbw3))) / pib3) , 2),
