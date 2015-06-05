@@ -23,18 +23,16 @@ States::operator+= ( const States& rhs )
 
 States::States ( const cv::Mat& kx ) :
     X(cv::Vec3d( kx.at<double>(0,0), kx.at<double>(1,0), kx.at<double>(2,0)) ),
-    V( cv::Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) ),
-    b( cv::Vec3d( kx.at<double>(6,0), kx.at<double>(7,0), kx.at<double>(8,0) ) )
+    V( cv::Vec3d( kx.at<double>(3,0), kx.at<double>(4,0), kx.at<double>(5,0)) )
+    //b( cv::Vec3d( kx.at<double>(6,0), kx.at<double>(7,0), kx.at<double>(8,0) ) )
 {
-    /*
     int nf;
     nf = (kx.rows-9)/3;
     for( int i=0; i<nf; ++i )
     {
-        addFeature(Feature( cv::Vec3d( kx.at<double>(9+3*i,0), 
-            kx.at<double>(10+3*i,0), kx.at<double>(11+3*i,0) ), 0 )); 
+        addFeature(Feature( cv::Vec3d( kx.at<double>(6+3*i,0), 
+            kx.at<double>(7+3*i,0), kx.at<double>(8+3*i,0) ), 0 )); 
     }
-    */
     return ;
 }		/* -----  end of method States::States  ----- */
 
@@ -112,11 +110,16 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
         bool found=false;
         for (Fiter fi=features.begin();
                 fi!=features.end(); ++fi) {
-            if (fi->get_noMatch()!=0) {
-                *fi = Feature( X, sense, *match);
+            if (fi->getID()==match->id) {
                 found=true;
                 break;
-            } else if (fi->getID()==match->id) {
+            }
+        }
+        if (found==true) continue;
+        for (Fiter fi=features.begin();
+                fi!=features.end(); ++fi) {
+            if (fi->get_noMatch()!=0) {
+                *fi = Feature( X, sense, *match);
                 found=true;
                 break;
             }
