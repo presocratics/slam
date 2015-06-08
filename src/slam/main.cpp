@@ -138,18 +138,46 @@ int main( int argc, char **argv )
     /* Set initial conditions */
     int u;
     u=sense.update();
+    if (!(u & UPDATE_IMG)) {
+        fprintf(stderr, "No image measurement at first time step.\n");
+        exit(EXIT_FAILURE);
+    }
+    imgsense.update();
+    mu.update_features(imgsense, sense);
+    for ( Fiter pib=mu.features.begin();
+            pib!=mu.features.end(); ++pib) {
+        // SetMinMaxDepth (TODO: this happen during update features)
+        cv::Vec3d pos=pib->get_body_position();
+        if (pos[2]<1/d_max) {
+            pos[2]=1/d_max;
+            pib->set_body_position(pos);
+        } else if (pos[2]>1/d_min) {
+            pos[2]=1/d_min;
+            pib->set_body_position(pos);
+        }
+        pib->initial.quaternion=sense.quat.get_value();
+    }
+
 
     /* Enter main loop */
-    int iter=0;
-    int meascount=0;
+    int iter=1;
+    int meascount=1;
     int nf;
-    do {
+    while (u!=-1) {
         double dt;
         cv::Mat G, Q, R, K, H, F;
         Mat kx, eeMat;
         States f, kmh;
         View meas, hmu, estimateError;
+    cout << mu.X << endl;
+    cout << mu.V << endl;
+    for (Fiter it=mu.features.begin();
+            it!=mu.features.end(); ++it) {
+        cout << it->get_body_position() << endl;
+    }
+    cout << endl;
 
+        u=sense.update();
         if (u & UPDATE_ACC) dt=sense.acc.get_dt();
         else if (u & UPDATE_ANG) dt=sense.ang.get_dt();
         else if (u & UPDATE_QUAT) dt=sense.quat.get_dt();
@@ -190,6 +218,7 @@ int main( int argc, char **argv )
         mu+=f*dt;
         //if(iter>0)
         //if (u & UPDATE_IMG && iter>0)
+        if(0)
         {
             // TODO clake clone only Rotate quat by 180
             // TODO: Remove this, just in place to match matlab
@@ -198,13 +227,6 @@ int main( int argc, char **argv )
             //
             // Set initial.quaternion to current quat
             // TODO: for clake only?
-            if (meascount==1) { 
-                for (Fiter it=mu.features.begin();
-                        it!=mu.features.end(); ++it) {
-                    it->initial.quaternion=sense.quat.get_value();
-                }
-
-            }
 
             measurementModel(old_pos, sense.alt.get_value(), imgsense.matches,
                    sense.quat.get_value(), meas, hmu, H, mu);
@@ -222,7 +244,7 @@ int main( int argc, char **argv )
             cout << mmH(Rect(0,2,3,3)) << endl;
             */
             cout << "iter: " << iter <<  " meascount: " << meascount <<endl;
-            cout << H(Rect(0,3,3,2)) << endl;
+            //cout << H(Rect(0,3,3,2)) << endl;
             
             
 
@@ -286,7 +308,7 @@ int main( int argc, char **argv )
         //std::cout << sense.quat.get_value().coord << std::endl;
         //std::cout << sense.quat.get_value().rotation() << std::endl;
         ++iter;
-    } while ((u=sense.update())!=-1);
+    } 
     //cv::imshow("foo", rtplot);
     //cv::waitKey(0);
     return 0;
