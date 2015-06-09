@@ -117,7 +117,7 @@ int main( int argc, char **argv )
     const double d_min=0.1;
     const double d_max=10e3;
     States mu, mu_prev;
-    Sensors sense;
+    Sensors sense, sense_next;
     ImageSensor imgsense( argv[1], false );
 
     mu.X[2] = -2.281; /* Constant altitude for now */
@@ -136,8 +136,12 @@ int main( int argc, char **argv )
     cv::Mat rtplot=cv::Mat::zeros(height, width, CV_8UC3);
 
     /* Set initial conditions */
-    int u;
-    u=sense.update();
+    cv::Vec3d old_pos;
+    int u, u_next;
+    u_next=sense_next.update();
+    u=u_next;
+    sense=sense_next;
+    u_next=sense_next.update();
     if (!(u & UPDATE_IMG)) {
         fprintf(stderr, "No image measurement at first time step.\n");
         exit(EXIT_FAILURE);
@@ -155,13 +159,12 @@ int main( int argc, char **argv )
             pos[2]=1/d_min;
             pib->set_body_position(pos);
         }
-        pib->initial.quaternion=sense.quat.get_value();
     }
-
+    old_pos=mu.X;
 
     /* Enter main loop */
-    int iter=1;
-    int meascount=1;
+    int iter=0;
+    int meascount=0;
     int nf;
     while (u!=-1) {
         double dt;
@@ -169,15 +172,10 @@ int main( int argc, char **argv )
         Mat kx, eeMat;
         States f, kmh;
         View meas, hmu, estimateError;
-    cout << mu.X << endl;
-    cout << mu.V << endl;
-    for (Fiter it=mu.features.begin();
-            it!=mu.features.end(); ++it) {
-        cout << it->get_body_position() << endl;
-    }
-    cout << endl;
-
-        u=sense.update();
+        u=u_next;
+        sense=sense_next;
+        
+        u_next=sense_next.update();
         if (u & UPDATE_ACC) dt=sense.acc.get_dt();
         else if (u & UPDATE_ANG) dt=sense.ang.get_dt();
         else if (u & UPDATE_QUAT) dt=sense.quat.get_dt();
@@ -188,6 +186,7 @@ int main( int argc, char **argv )
             exit(EXIT_FAILURE);
         }
         if (u & UPDATE_IMG ) {
+            old_pos=mu.X;
             meascount++;
             // Read in new features
             imgsense.update();
@@ -214,11 +213,9 @@ int main( int argc, char **argv )
         jacobianMotionModel(mu, sense, F, dt);
         f=mu.dynamics(sense);
 
-        Vec3d old_pos=mu.X;
         mu+=f*dt;
         //if(iter>0)
-        //if (u & UPDATE_IMG && iter>0)
-        if(0)
+        if (u_next & UPDATE_IMG)
         {
             // TODO clake clone only Rotate quat by 180
             // TODO: Remove this, just in place to match matlab
@@ -227,23 +224,34 @@ int main( int argc, char **argv )
             //
             // Set initial.quaternion to current quat
             // TODO: for clake only?
+            // TODO: This is a sorta silly condition to test, but I think the
+            // matlab implementation is in error and this can be removed for
+            // production.
+            for (Fiter it=mu.features.begin();
+                    it!=mu.features.end(); ++it) {
+                if (it->initial.anchor==old_pos)
+                    it->initial.quaternion=sense.quat.get_value();
+            }
+
 
             measurementModel(old_pos, sense.alt.get_value(), imgsense.matches,
                    sense.quat.get_value(), meas, hmu, H, mu);
-            /*
             // Compare mu from c++ and matlab
             vector<double> Hvec;
             char fn[100];
             cout << "iter: " << iter << " meascount: " << meascount << endl;
-            sprintf(fn, "../slam.hb/matlab/clake/H/H%d.txt", meascount-2);
+            sprintf(fn, "../slam.hb/matlab/clake/H/H%d.txt", meascount);
             hexToVec(fn, Hvec);
             Mat mmH(Hvec);
             mmH=mmH.reshape(0,H.cols);
             mmH=mmH.t();
-            cout << mmH.size() << " " << H.size() << endl;
-            cout << mmH(Rect(0,2,3,3)) << endl;
-            */
-            cout << "iter: " << iter <<  " meascount: " << meascount <<endl;
+            Mat HMat;
+            Mat diff;
+            const double thresh=1e-7;
+            absdiff(H,mmH,diff);
+            diff=diff>thresh;
+            cout << countNonZero(diff) << endl;
+            //cout << mmH(Rect(0,3,3,2)) << endl;
             //cout << H(Rect(0,3,3,2)) << endl;
             
             
@@ -257,7 +265,7 @@ int main( int argc, char **argv )
             }
             */
             // TODO clake clone only Restore quat
-            sense.quat.get_value().coord=q;
+            sense.quat.set_value(Quaternion(q));
             
             //resizeP(P,nf);
         }
