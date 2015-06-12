@@ -120,7 +120,7 @@ int main( int argc, char **argv )
     Sensors sense, sense_next;
     ImageSensor imgsense( argv[1], false );
 
-    mu.X[2] = -2.281; /* Constant altitude for now */
+    mu.X[2] = -2.281; /* TODO: Is this needed? */
 
     cv::Mat P=cv::Mat::eye(9,9,CV_64F);
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
@@ -147,7 +147,7 @@ int main( int argc, char **argv )
         exit(EXIT_FAILURE);
     }
     imgsense.update();
-    mu.update_features(imgsense, sense);
+    mu.update_features(imgsense, sense,P);
     for ( Fiter pib=mu.features.begin();
             pib!=mu.features.end(); ++pib) {
         // SetMinMaxDepth (TODO: this happen during update features)
@@ -190,7 +190,7 @@ int main( int argc, char **argv )
             meascount++;
             // Read in new features
             imgsense.update();
-            mu.update_features(imgsense, sense);
+            mu.update_features(imgsense, sense, P);
             for ( Fiter pib=mu.features.begin();
                     pib!=mu.features.end(); ++pib) {
                 // SetMinMaxDepth (TODO: this happen during update features)
@@ -205,8 +205,9 @@ int main( int argc, char **argv )
             }
             // TODO clake clone only Restore quat
             nf=mu.getNumFeatures();
-            resizeP(P,nf);
+            //resizeP(P,nf);
         }
+        nf=40;
         dt=0.02;
         
         //cout << endl;
@@ -214,7 +215,8 @@ int main( int argc, char **argv )
         f=mu.dynamics(sense);
 
         mu+=f*dt;
-        //if(iter>0)
+
+
         if (u_next & UPDATE_IMG)
         {
             // TODO clake clone only Rotate quat by 180
@@ -229,65 +231,59 @@ int main( int argc, char **argv )
             // production.
             for (Fiter it=mu.features.begin();
                     it!=mu.features.end(); ++it) {
-                if (it->initial.anchor==old_pos)
+                if (it->initial.anchor==old_pos) {
                     it->initial.quaternion=sense.quat.get_value();
+                }
             }
 
 
             measurementModel(old_pos, sense.alt.get_value(), imgsense.matches,
                    sense.quat.get_value(), meas, hmu, H, mu);
-            // Compare mu from c++ and matlab
-            vector<double> Hvec;
-            char fn[100];
-            cout << "iter: " << iter << " meascount: " << meascount << endl;
-            sprintf(fn, "../slam.hb/matlab/clake/H/H%d.txt", meascount);
-            hexToVec(fn, Hvec);
-            Mat mmH(Hvec);
-            mmH=mmH.reshape(0,H.cols);
-            mmH=mmH.t();
-            Mat HMat;
-            Mat diff;
-            const double thresh=1e-7;
-            absdiff(H,mmH,diff);
-            diff=diff>thresh;
-            cout << countNonZero(diff) << endl;
-            //cout << mmH(Rect(0,3,3,2)) << endl;
-            //cout << H(Rect(0,3,3,2)) << endl;
-            
-            
-
-
-            /*
-            for (size_t i=0; i<meas.features.size(); ++i) {
-                cout << "cur: " << hmu.features[i].current << endl;
-                cout << "ini: " << hmu.features[i].initial << endl;
-                cout << "ref: " << hmu.features[i].reflection << endl;
-            }
-            */
             // TODO clake clone only Restore quat
             sense.quat.set_value(Quaternion(q));
             
             //resizeP(P,nf);
         }
 
-        /*
         initG(G, nf, dt);
         initQ(Q, nf, Q0, dt);
-        std::vector<int> rf;
-        for (size_t i=0; i<meas.features.size(); ++i) {
-            if (meas.features[i].reflection==NONREF) {
-                rf.push_back(0);
-            } else {
-                rf.push_back(1);
+        //cout << "iter: " << iter << " meascount: " << meascount << endl;
+        //cout << mu.features[28].getID() << endl;
+        //cout << P(Rect(32,0,3,3)) << endl;
+        calcP(P,F,G,Q);
+
+        /*
+        vector<double> Pvec;
+        char fn[100];
+        sprintf(fn, "../slam.hb/matlab/clake/P/P%d.txt", iter);
+        hexToVec(fn, Pvec);
+        Mat mmP(Pvec);
+        mmP=mmP.reshape(0,P.cols);
+        mmP=mmP.t();
+        Mat diff;
+        absdiff(mmP,P,diff);
+        const double thresh=1e-7;
+        for (size_t i=0; i<diff.rows; ++i) {
+            for (size_t j=0; j<diff.cols; ++j) {
+                double d=diff.at<double>(i,j);
+                if (d>thresh)
+                    printf("(%d,%d): %g\n", i, j, d);
             }
         }
-        initR(R, R0, rf);
-        calcP(P,F,G,Q);
         */
 
-        if (u & UPDATE_IMG && iter!=0) 
+        if (u_next & UPDATE_IMG ) 
         {
-        /*
+            std::vector<int> rf;
+            for (size_t i=0; i<meas.features.size(); ++i) {
+                if (meas.features[i].reflection==NONREF) {
+                    rf.push_back(0);
+                } else {
+                    rf.push_back(1);
+                }
+            }
+            initR(R, R0, rf);
+            
             calcK(K,H,P,R);
             updateP(P,K,H);
             subtract(meas,hmu,estimateError);
@@ -299,24 +295,31 @@ int main( int argc, char **argv )
             kmh=States(kx);
             //cout << "kmhV: " << kmh.V << endl;
             mu+=kmh;
-        */
+        vector<double> muvec;
+        char fn[100];
+        sprintf(fn, "../slam.hb/matlab/clake/muf/muf%d.txt", meascount);
+        hexToVec(fn, muvec);
+        Mat mmmu(muvec);
+        States mlmu(mmmu);
+        //cout << "iter: " << iter << " meascount: " << meascount << endl;
+        cout << mu.X-mlmu.X << endl;
         }
 
-        //circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
-         //           height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
-        //cv::imshow("foo", rtplot);
-        //cv::waitKey(1);
+        circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
+                    height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
+        cv::imshow("foo", rtplot);
+        if (meascount!=880)
+            cv::waitKey(1);
+        else
+            cv::waitKey(0);
         //
-        //std::cout << "V: " << mu.V << std::endl;
+        //std::cout << "X: " << mu.X << std::endl;
         //cout << "--" << endl;
-        //cout << sense.alt.get_value() << endl;
-        //std::cout << sense.acc.get_dt() << ",ACC,"<< sense.acc.get_value() << std::endl;
-        //std::cout << sense.quat.get_dt() << ",QUAT,"<< sense.quat.get_value().coord << std::endl;
-        //std::cout << F <<std::endl;
-        //std::cout << sense.quat.get_value().coord << std::endl;
-        //std::cout << sense.quat.get_value().rotation() << std::endl;
+        // TODO: clake only
+        if (meascount==880) break;
         ++iter;
     } 
+    //cout << "iter: " << iter << " meascount: " << meascount << endl;
     //cv::imshow("foo", rtplot);
     //cv::waitKey(0);
     return 0;
