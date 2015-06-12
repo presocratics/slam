@@ -86,7 +86,7 @@ void States::add( const States& a)
 }
 
     void
-States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
+States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv::Mat& P )
 {
     // Go through current features and mark the ones that are inactive.
     for (Fiter fi=features.begin();
@@ -116,10 +116,14 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense )
             }
         }
         if (found==true) continue;
-        for (Fiter fi=features.begin();
-                fi!=features.end(); ++fi) {
+        int i=0;
+        Fiter fi=features.begin();
+        for (; fi!=features.end(); ++fi, ++i) {
             if (fi->get_noMatch()!=0) {
                 *fi = Feature( X, sense, *match);
+                P.rowRange(6+3*i,6+3*i+3).setTo(0);
+                P.colRange(6+3*i,6+3*i+3).setTo(0);
+                P(Rect(6+3*i,6+3*i,3,3))=2*Mat::eye(3,3,CV_64F);
                 found=true;
                 break;
             }

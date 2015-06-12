@@ -40,7 +40,7 @@ class States{
 
         // mutator
         void clearContainers();
-        void update_features( const ImageSensor& imgsense, const Sensors& sense );
+        void update_features( const ImageSensor& imgsense, const Sensors& sense, cv::Mat& P );
         States& setX(const Vec3d& pos);
         States& setV(const Vec3d& vel);
         States& addFeature(const Feature& f);
