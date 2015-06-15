@@ -1,4 +1,4 @@
-all: slam sensor-emu sensor-emu-stamp-feature multitap img2body lpf euler2qbw rmbias downsample getdt ARC rotate mean
+all: slam sensor-emu sensor-emu-stamp-feature multitap img2body lpf euler2qbw rmbias downsample getdt ARC rotate mean wrap
 ARC:
 	$(MAKE) -C src/ARC $(MFLAGS)
 lpf:
@@ -25,6 +25,8 @@ rotate:
 	$(MAKE) -C src/rotate $(MFLAGS)
 mean:
 	$(MAKE) -C src/mean $(MFLAGS)
+wrap:
+	$(MAKE) -C src/wrap $(MFLAGS)
 
 clean:
 	$(MAKE) clean -C src/slam
@@ -36,3 +38,4 @@ clean:
 	$(MAKE) clean -C src/ARC
 	$(MAKE) clean -C src/rotate
 	$(MAKE) clean -C src/mean
+	$(MAKE) clean -C src/wrap
