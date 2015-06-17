@@ -233,8 +233,16 @@ int main( int argc, char **argv )
             kx=K*eeMat;
             kmh=States(kx);
             mu+=kmh;
-        cout << mu.X << endl;
         }
+	printf("%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f\n",mu.X[0],mu.X[1],mu.X[2],mu.V[0],mu.V[1],mu.V[2]);
+	for (Fiter fi=mu.features.begin();
+		fi!=mu.features.end(); ++fi) {
+		int id=fi->getID();
+		cv::Vec3d pos=fi->get_body_position();
+		printf("%d,%0.9f,%0.9f,%0.9f\n", id, pos[0], pos[1], pos[2]);
+	}
+	printf("\n");
+
 
         //circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
         //           height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
