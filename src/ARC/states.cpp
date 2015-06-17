@@ -89,9 +89,19 @@ void States::add( const States& a)
 States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv::Mat& P )
 {
     // Go through current features and mark the ones that are inactive.
+    const double d_min=0.1;
+    const double d_max=10e3;
+
     for (Fiter fi=features.begin();
             fi!=features.end(); ++fi) {
         bool found=false;
+        cv::Vec3d pos=fi->get_body_position();
+        if (pos[2]<1/d_max) {
+            pos[2]=1/d_max;
+        } else if (pos[2]>1/d_min) {
+            pos[2]=1/d_min;
+        }
+        fi->set_body_position(pos);
         for (cMatchIter match=imgsense.matches.begin();
                 match!=imgsense.matches.end(); ++match) {
             if (fi->getID()==match->id) {
@@ -213,85 +223,3 @@ States::getNumFeatures ( ) const
     return features.size();
 }		/* -----  end of method States::getNumFeatures  ----- */
 
-/*
-    void
-States::clearContainers ( )
-{
-    for( featIter fi=feats.begin();
-            fi!=feats.end(); ++fi )
-    {
-        delete fi->second;
-    }
-    feats.clear();
-    features.clear();
-    return ;
-}	*/	/* -----  end of method States::clearContainers  ----- */
-
-/* 
- * ------------------------------------------------------------
- *  setMinMaxDepth
- *  iterates through active features and re-initialize depths if
- *  current depth is not in range of given min/max depth.
- * ------------------------------------------------------------
- */
-/*
-    void 
-States::setMinMaxDepth(double minD, double maxD)
-{
-    for(Fiter fi=features.begin(); fi!=features.end(); ++fi)
-    {
-        if((*fi)->get_body_position()[2] > maxD)
-        {
-            (*fi)->set_body_position(cv::Point3d((*fi)->get_body_position()[0], (*fi)->get_body_position()[1], maxD));
-        }
-        else if((*fi)->get_body_position()[2] < minD)
-        {
-            (*fi)->set_body_position(cv::Point3d((*fi)->get_body_position()[0], (*fi)->get_body_position()[1], minD));
-            //std::cout << "reset to minDepth" << std::endl;
-        }
-    }
-
-    return;
-} */     /* ----- end of method States::setMinMaxDepth ----- */
-
-/*
-    void
-States::set_rf_nrf(int r, int n)
-{
-    rf = r;
-    nrf = n;
-    return;
-}
-*/
-
-/*
-    void
-States::toMat(cv::Mat& outmat)
-{
-    std::vector<double> outvec;
-    outvec.push_back(X[0]);
-    outvec.push_back(X[1]);
-    outvec.push_back(X[2]);
-
-    outvec.push_back(V[0]);
-    outvec.push_back(V[1]);
-    outvec.push_back(V[2]);
-
-    outvec.push_back(b[0]);
-    outvec.push_back(b[1]);
-    outvec.push_back(b[2]);
-
-    Fiter pib=features.begin();
-    for( int i=0; pib!=features.end(); ++pib,++i )
-    {
-        cv::Vec3d bp;
-        bp = (*pib)->get_body_position();
-        outvec.push_back(bp[0]);
-        outvec.push_back(bp[1]);
-        outvec.push_back(bp[2]);        
-    }
-
-    outmat = (cv::Mat)outvec;
-    return;
-}
-*/

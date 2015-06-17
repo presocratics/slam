@@ -114,8 +114,6 @@ int main( int argc, char **argv )
     /* Initialize */
     const double Q0=25; 
     const double R0=25;
-    const double d_min=0.1;
-    const double d_max=10e3;
     States mu, mu_prev;
     Sensors sense, sense_next;
     ImageSensor imgsense( argv[1], false );
@@ -148,18 +146,6 @@ int main( int argc, char **argv )
     }
     imgsense.update();
     mu.update_features(imgsense, sense,P);
-    for ( Fiter pib=mu.features.begin();
-            pib!=mu.features.end(); ++pib) {
-        // SetMinMaxDepth (TODO: this happen during update features)
-        cv::Vec3d pos=pib->get_body_position();
-        if (pos[2]<1/d_max) {
-            pos[2]=1/d_max;
-            pib->set_body_position(pos);
-        } else if (pos[2]>1/d_min) {
-            pos[2]=1/d_min;
-            pib->set_body_position(pos);
-        }
-    }
     old_pos=mu.X;
 
     /* Enter main loop */
@@ -191,26 +177,12 @@ int main( int argc, char **argv )
             meascount++;
             // Read in new features
             mu.update_features(imgsense, sense, P);
-            for ( Fiter pib=mu.features.begin();
-                    pib!=mu.features.end(); ++pib) {
-                // SetMinMaxDepth (TODO: this happen during update features)
-                cv::Vec3d pos=pib->get_body_position();
-                if (pos[2]<1/d_max) {
-                    pos[2]=1/d_max;
-                    pib->set_body_position(pos);
-                } else if (pos[2]>1/d_min) {
-                    pos[2]=1/d_min;
-                    pib->set_body_position(pos);
-                }
-            }
-            // TODO clake clone only Restore quat
             nf=mu.getNumFeatures();
             //resizeP(P,nf);
         }
         nf=40;
         dt=0.02;
         
-        //cout << endl;
         jacobianMotionModel(mu, sense, F, dt);
         f=mu.dynamics(sense);
 
@@ -252,26 +224,6 @@ int main( int argc, char **argv )
         //cout << P(Rect(32,0,3,3)) << endl;
         calcP(P,F,G,Q);
 
-        /*
-        vector<double> Pvec;
-        char fn[100];
-        sprintf(fn, "../slam.hb/matlab/clake/P/P%d.txt", iter);
-        hexToVec(fn, Pvec);
-        Mat mmP(Pvec);
-        mmP=mmP.reshape(0,P.cols);
-        mmP=mmP.t();
-        Mat diff;
-        absdiff(mmP,P,diff);
-        const double thresh=1e-7;
-        for (size_t i=0; i<diff.rows; ++i) {
-            for (size_t j=0; j<diff.cols; ++j) {
-                double d=diff.at<double>(i,j);
-                if (d>thresh)
-                    printf("(%d,%d): %g\n", i, j, d);
-            }
-        }
-        */
-
         if (u & UPDATE_IMG ) 
         {
             std::vector<int> rf;
@@ -295,29 +247,17 @@ int main( int argc, char **argv )
             kmh=States(kx);
             //cout << "kmhV: " << kmh.V << endl;
             mu+=kmh;
-        //vector<double> muvec;
-        //char fn[100];
-        //sprintf(fn, "../slam.hb/matlab/clake/muf/muf%d.txt", meascount);
-        //hexToVec(fn, muvec);
-        //Mat mmmu(muvec);
-        //States mlmu(mmmu);
-        //cout << "iter: " << iter << " meascount: " << meascount << endl;
-        //cv::Vec3d diff=mu.X-mlmu.X;
-        //printf("%g,%g,%g\n", diff[0], diff[1], diff[2]);
+        cout << mu.X << endl;
         }
 
-        circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
-                   height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
-        cv::imshow("foo", rtplot);
-            cv::waitKey(1);
-        //std::cout << "X: " << mu.X << std::endl;
-        //cout << "--" << endl;
+        //circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
+        //           height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
         // TODO: clake only
         ++iter;
     } 
-    cout << "iter: " << iter << " meascount: " << meascount << endl;
-    cv::imshow("foo", rtplot);
-    cv::waitKey(0);
+    //cout << "iter: " << iter << " meascount: " << meascount << endl;
+    //cv::imshow("foo", rtplot);
+    //cv::waitKey(0);
     return 0;
 }
 
