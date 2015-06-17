@@ -112,28 +112,27 @@ int main( int argc, char **argv )
     }
 
     /* Initialize */
-    const double Q0=25; 
-    const double R0=25;
-    States mu, mu_prev;
-    Sensors sense, sense_next;
-    ImageSensor imgsense( argv[1], false );
-
-    mu.X[2] = -2.281; /* TODO: Is this needed? */
-
-    cv::Mat P=cv::Mat::eye(9,9,CV_64F);
-    blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
-    blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
-    resizeP(P,40);
-
-    mu.setb(cv::Vec3d(0,0,0));
-
     const double scaleW=.6;
     const double scaleH=.6;
     const int width=640;
     const int height=480;
     cv::Mat rtplot=cv::Mat::zeros(height, width, CV_8UC3);
 
+    const double Q0=25; 
+    const double R0=25;
+    States mu, mu_prev;
+    Sensors sense, sense_next;
+    ImageSensor imgsense( argv[1], false );
+
+    cv::Mat P=cv::Mat::eye(9,9,CV_64F);
+    blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
+    blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
+    resizeP(P,40);
+
+
     /* Set initial conditions */
+    mu.X[2] = -2.281; /* TODO: Is this needed? */
+    mu.setb(cv::Vec3d(0,0,0));
     cv::Vec3d old_pos;
     int u, u_next;
     u_next=sense_next.update();
@@ -214,9 +213,6 @@ int main( int argc, char **argv )
 
         initG(G, nf, dt);
         initQ(Q, nf, Q0, dt);
-        //cout << "iter: " << iter << " meascount: " << meascount << endl;
-        //cout << mu.features[28].getID() << endl;
-        //cout << P(Rect(32,0,3,3)) << endl;
         calcP(P,F,G,Q);
 
         if (u & UPDATE_IMG ) 
@@ -240,14 +236,12 @@ int main( int argc, char **argv )
             hmu.toMat(hmuMat);
             kx=K*eeMat;
             kmh=States(kx);
-            //cout << "kmhV: " << kmh.V << endl;
             mu+=kmh;
         cout << mu.X << endl;
         }
 
         //circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
         //           height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
-        // TODO: clake only
         ++iter;
     } 
     //cout << "iter: " << iter << " meascount: " << meascount << endl;
