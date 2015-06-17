@@ -114,8 +114,6 @@ int main( int argc, char **argv )
     /* Initialize */
     const double Q0=25; 
     const double R0=25;
-    const double d_min=0.1;
-    const double d_max=10e3;
     States mu, mu_prev;
     Sensors sense, sense_next;
     ImageSensor imgsense( argv[1], false );
@@ -179,14 +177,12 @@ int main( int argc, char **argv )
             // Read in new features
             imgsense.update();
             mu.update_features(imgsense, sense, P);
-            // TODO clake clone only Restore quat
             nf=mu.getNumFeatures();
             //resizeP(P,nf);
         }
         nf=40;
         dt=0.02;
         
-        //cout << endl;
         jacobianMotionModel(mu, sense, F, dt);
         f=mu.dynamics(sense);
 
@@ -228,26 +224,6 @@ int main( int argc, char **argv )
         //cout << P(Rect(32,0,3,3)) << endl;
         calcP(P,F,G,Q);
 
-        /*
-        vector<double> Pvec;
-        char fn[100];
-        sprintf(fn, "../slam.hb/matlab/clake/P/P%d.txt", iter);
-        hexToVec(fn, Pvec);
-        Mat mmP(Pvec);
-        mmP=mmP.reshape(0,P.cols);
-        mmP=mmP.t();
-        Mat diff;
-        absdiff(mmP,P,diff);
-        const double thresh=1e-7;
-        for (size_t i=0; i<diff.rows; ++i) {
-            for (size_t j=0; j<diff.cols; ++j) {
-                double d=diff.at<double>(i,j);
-                if (d>thresh)
-                    printf("(%d,%d): %g\n", i, j, d);
-            }
-        }
-        */
-
         if (u_next & UPDATE_IMG ) 
         {
             std::vector<int> rf;
@@ -271,14 +247,7 @@ int main( int argc, char **argv )
             kmh=States(kx);
             //cout << "kmhV: " << kmh.V << endl;
             mu+=kmh;
-        vector<double> muvec;
-        char fn[100];
-        sprintf(fn, "../slam.hb/matlab/clake/muf/muf%d.txt", meascount);
-        hexToVec(fn, muvec);
-        Mat mmmu(muvec);
-        States mlmu(mmmu);
-        //cout << "iter: " << iter << " meascount: " << meascount << endl;
-        cout << mu.X-mlmu.X << endl;
+        cout << mu.X << endl;
         }
 
         circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
@@ -288,9 +257,6 @@ int main( int argc, char **argv )
             cv::waitKey(1);
         else
             cv::waitKey(0);
-        //
-        //std::cout << "X: " << mu.X << std::endl;
-        //cout << "--" << endl;
         // TODO: clake only
         if (meascount==880) break;
         ++iter;
