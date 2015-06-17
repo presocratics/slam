@@ -176,7 +176,15 @@ int main( int argc, char **argv )
             imgsense.update();
             meascount++;
             // Read in new features
+            // TODO clake clone only Rotate quat by 180
+            // TODO: Remove this, just in place to match matlab
+            cv::Vec4d q=sense.quat.get_value().coord;
+            sense.quat.set_value(Quaternion(cv::Vec4d(-q[1],q[0],-q[3],q[2])));
+
             mu.update_features(imgsense, sense, P);
+            
+            // TODO clake clone only Restore quat
+            sense.quat.set_value(Quaternion(q));
             nf=mu.getNumFeatures();
             //resizeP(P,nf);
         }
@@ -195,19 +203,6 @@ int main( int argc, char **argv )
             // TODO: Remove this, just in place to match matlab
             cv::Vec4d q=sense.quat.get_value().coord;
             sense.quat.set_value(Quaternion(cv::Vec4d(-q[1],q[0],-q[3],q[2])));
-            //
-            // Set initial.quaternion to current quat
-            // TODO: for clake only?
-            // TODO: This is a sorta silly condition to test, but I think the
-            // matlab implementation is in error and this can be removed for
-            // production.
-            for (Fiter it=mu.features.begin();
-                    it!=mu.features.end(); ++it) {
-                if (it->initial.anchor==old_pos) {
-                    it->initial.quaternion=sense.quat.get_value();
-                }
-            }
-
 
             measurementModel(old_pos, sense.alt.get_value(), imgsense.matches,
                    sense.quat.get_value(), meas, hmu, H, mu);
