@@ -121,7 +121,7 @@ int main( int argc, char **argv )
     const double Q0=25; 
     const double R0=25;
     States mu, mu_prev;
-    Sensors sense, sense_next;
+    Sensors sense;
     ImageSensor imgsense( argv[1], false );
 
     cv::Mat P=cv::Mat::eye(9,9,CV_64F);
@@ -133,12 +133,10 @@ int main( int argc, char **argv )
     /* Set initial conditions */
     mu.X[2] = -2.281; /* TODO: Is this needed? */
     mu.setb(cv::Vec3d(0,0,0));
+
     cv::Vec3d old_pos;
-    int u, u_next;
-    u_next=sense_next.update();
-    u=u_next;
-    sense=sense_next;
-    u_next=sense_next.update();
+    int u;
+    u=sense.update();
     if (!(u & UPDATE_IMG)) {
         fprintf(stderr, "No image measurement at first time step.\n");
         exit(EXIT_FAILURE);
@@ -157,10 +155,8 @@ int main( int argc, char **argv )
         Mat kx, eeMat;
         States f, kmh;
         View meas, hmu, estimateError;
-        u=u_next;
-        sense=sense_next;
         
-        u_next=sense_next.update();
+        u=sense.update();
         if (u & UPDATE_ACC) dt=sense.acc.get_dt();
         else if (u & UPDATE_ANG) dt=sense.ang.get_dt();
         else if (u & UPDATE_QUAT) dt=sense.quat.get_dt();
