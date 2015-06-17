@@ -16,6 +16,6 @@ BEGIN {
     } else if (-diff>maxdel && diff<0) {
         n+=1;
     }
-    print $1+360*n;
+    printf("%0.9f\n", $1+360*n);
     prev=$1;
 }
