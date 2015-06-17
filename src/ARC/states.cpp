@@ -89,9 +89,19 @@ void States::add( const States& a)
 States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv::Mat& P )
 {
     // Go through current features and mark the ones that are inactive.
+    const double d_min=0.1;
+    const double d_max=10e3;
+
     for (Fiter fi=features.begin();
             fi!=features.end(); ++fi) {
         bool found=false;
+        cv::Vec3d pos=fi->get_body_position();
+        if (pos[2]<1/d_max) {
+            pos[2]=1/d_max;
+        } else if (pos[2]>1/d_min) {
+            pos[2]=1/d_min;
+        }
+        fi->set_body_position(pos);
         for (cMatchIter match=imgsense.matches.begin();
                 match!=imgsense.matches.end(); ++match) {
             if (fi->getID()==match->id) {

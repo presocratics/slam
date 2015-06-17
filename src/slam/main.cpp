@@ -148,18 +148,6 @@ int main( int argc, char **argv )
     }
     imgsense.update();
     mu.update_features(imgsense, sense,P);
-    for ( Fiter pib=mu.features.begin();
-            pib!=mu.features.end(); ++pib) {
-        // SetMinMaxDepth (TODO: this happen during update features)
-        cv::Vec3d pos=pib->get_body_position();
-        if (pos[2]<1/d_max) {
-            pos[2]=1/d_max;
-            pib->set_body_position(pos);
-        } else if (pos[2]>1/d_min) {
-            pos[2]=1/d_min;
-            pib->set_body_position(pos);
-        }
-    }
     old_pos=mu.X;
 
     /* Enter main loop */
@@ -191,18 +179,6 @@ int main( int argc, char **argv )
             // Read in new features
             imgsense.update();
             mu.update_features(imgsense, sense, P);
-            for ( Fiter pib=mu.features.begin();
-                    pib!=mu.features.end(); ++pib) {
-                // SetMinMaxDepth (TODO: this happen during update features)
-                cv::Vec3d pos=pib->get_body_position();
-                if (pos[2]<1/d_max) {
-                    pos[2]=1/d_max;
-                    pib->set_body_position(pos);
-                } else if (pos[2]>1/d_min) {
-                    pos[2]=1/d_min;
-                    pib->set_body_position(pos);
-                }
-            }
             // TODO clake clone only Restore quat
             nf=mu.getNumFeatures();
             //resizeP(P,nf);
