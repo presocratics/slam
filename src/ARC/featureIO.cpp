@@ -96,6 +96,9 @@ FeatureIO::get_projections ( )
  * Note that this would not work if vsscanf were used in the calling function in
  * this way.
  *
+ * Returns -1 on newline (end of input set).
+ * Returns -2 on EOF.
+ *
  *--------------------------------------------------------------------------------------
  */
     int
@@ -106,24 +109,15 @@ FeatureIO::get_val ( FILE* fp, const char *str, const char *fmt, ... )
     va_start(ap,fmt);
 
     char *r;
-    if( (r=fgets(line,1024,fp))==NULL && (errno != EWOULDBLOCK) )
-        err_sys("fgets");
-    else if( r==NULL && (errno == EWOULDBLOCK) )
-    {
-        std::cout << "WOULDBLOCK" << std::endl;
-        /* No values ready, continue. */
-        return -2;    
-    }
-    //else if(line[0]=='\n')
-    //{
-    //   /* reached newline. Stop reading. */
-    //    return -9;
-    //}
-    else
-    {
+    if ((r=fgets(line,1024,fp))==NULL) {
+        if (feof(fp)) {
+            return -2;
+        } else {
+            err_msg("fgets");
+        }
+    } else {
         int rv=vsscanf( line, fmt, ap );
         va_end(ap);
-     //   std::cout << line << std::endl;
         free(line);
         line = NULL;
         return rv;

@@ -187,9 +187,9 @@ int main( int argc, char **argv )
         }
         if (u & UPDATE_IMG ) {
             old_pos=mu.X;
+            imgsense.update();
             meascount++;
             // Read in new features
-            imgsense.update();
             mu.update_features(imgsense, sense, P);
             for ( Fiter pib=mu.features.begin();
                     pib!=mu.features.end(); ++pib) {
@@ -217,7 +217,7 @@ int main( int argc, char **argv )
         mu+=f*dt;
 
 
-        if (u_next & UPDATE_IMG)
+        if (u & UPDATE_IMG)
         {
             // TODO clake clone only Rotate quat by 180
             // TODO: Remove this, just in place to match matlab
@@ -272,7 +272,7 @@ int main( int argc, char **argv )
         }
         */
 
-        if (u_next & UPDATE_IMG ) 
+        if (u & UPDATE_IMG ) 
         {
             std::vector<int> rf;
             for (size_t i=0; i<meas.features.size(); ++i) {
@@ -295,33 +295,29 @@ int main( int argc, char **argv )
             kmh=States(kx);
             //cout << "kmhV: " << kmh.V << endl;
             mu+=kmh;
-        vector<double> muvec;
-        char fn[100];
-        sprintf(fn, "../slam.hb/matlab/clake/muf/muf%d.txt", meascount);
-        hexToVec(fn, muvec);
-        Mat mmmu(muvec);
-        States mlmu(mmmu);
+        //vector<double> muvec;
+        //char fn[100];
+        //sprintf(fn, "../slam.hb/matlab/clake/muf/muf%d.txt", meascount);
+        //hexToVec(fn, muvec);
+        //Mat mmmu(muvec);
+        //States mlmu(mmmu);
         //cout << "iter: " << iter << " meascount: " << meascount << endl;
-        cout << mu.X-mlmu.X << endl;
+        //cv::Vec3d diff=mu.X-mlmu.X;
+        //printf("%g,%g,%g\n", diff[0], diff[1], diff[2]);
         }
 
         circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
-                    height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
+                   height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
         cv::imshow("foo", rtplot);
-        if (meascount!=880)
             cv::waitKey(1);
-        else
-            cv::waitKey(0);
-        //
         //std::cout << "X: " << mu.X << std::endl;
         //cout << "--" << endl;
         // TODO: clake only
-        if (meascount==880) break;
         ++iter;
     } 
-    //cout << "iter: " << iter << " meascount: " << meascount << endl;
-    //cv::imshow("foo", rtplot);
-    //cv::waitKey(0);
+    cout << "iter: " << iter << " meascount: " << meascount << endl;
+    cv::imshow("foo", rtplot);
+    cv::waitKey(0);
     return 0;
 }
 
