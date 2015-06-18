@@ -46,6 +46,12 @@ Sensors::update ( )
             sscanf(vals, "%lf", &val3[0]);
             alt.set_value(time, val3[0]);
         }
+        else if (!strcmp(type, "INIT"))
+        {
+            updated|=UPDATE_INIT;
+            sscanf(vals, "%lf,%lf,%lf", &val3[0], &val3[1], &val3[2]);
+            init.set_value(time, val3);
+        }
         rv=scanf("%lf,%[^,\n],%s", &time, type, vals);
     }
     return updated;

@@ -131,12 +131,17 @@ int main( int argc, char **argv )
 
 
     /* Set initial conditions */
-    mu.X[2] = -2.281; /* TODO: Is this needed? */
     mu.setb(cv::Vec3d(0,0,0));
 
     cv::Vec3d old_pos;
     int u;
     u=sense.update();
+    if (u & UPDATE_INIT) {
+        cv::Vec3d pos=sense.init.get_value();
+        mu.X[0]=pos[1];
+        mu.X[1]=pos[0];
+        mu.X[2]=pos[2];
+    }
     if (!(u & UPDATE_IMG)) {
         fprintf(stderr, "No image measurement at first time step.\n");
         exit(EXIT_FAILURE);
@@ -233,12 +238,12 @@ int main( int argc, char **argv )
             kx=K*eeMat;
             kmh=States(kx);
             mu+=kmh;
-        cout << mu.X << endl;
         }
 
         //circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
         //           height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
         ++iter;
+        printf("%0.9f,%0.9f\n", mu.X[1],mu.X[0]);
     } 
     //cout << "iter: " << iter << " meascount: " << meascount << endl;
     //cv::imshow("foo", rtplot);

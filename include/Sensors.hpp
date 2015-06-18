@@ -11,6 +11,7 @@
 #define UPDATE_QUAT 0x4
 #define UPDATE_IMG 0x8
 #define UPDATE_ALT 0x10
+#define UPDATE_INIT 0x20
 /*
  * =====================================================================================
  *        Class:  Sensors
@@ -36,6 +37,7 @@ class Sensors
         Sensor<cv::Vec3d> ang;
         Sensor<double> alt;
         Sensor<int> img;
+        Sensor<cv::Vec3d> init;
 
     protected:
         /* ====================  METHODS       ======================================= */
