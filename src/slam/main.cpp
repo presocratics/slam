@@ -114,7 +114,7 @@ int main( int argc, char **argv )
     /* Initialize */
     const double Q0=25; 
     const double R0=25;
-    States mu;
+    States mu, mu_prev;
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
 
@@ -127,6 +127,7 @@ int main( int argc, char **argv )
     cv::Vec3d old_pos;
     int u;
 
+    mu.setb(cv::Vec3d(0,0,0));
     u=sense.update();
     if (u & UPDATE_INIT) {
         cv::Vec3d pos=sense.init.get_value();
@@ -139,7 +140,7 @@ int main( int argc, char **argv )
         exit(EXIT_FAILURE);
     }
     imgsense.update();
-    mu.update_features(imgsense, sense, P);
+    mu.update_features(imgsense, sense,P);
     old_pos=mu.X;
 
     /* Enter main loop */
@@ -567,8 +568,9 @@ calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R )
 updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H )
 {
     Mat kh = K*H;
-    P = (Mat::eye(kh.size(), CV_64F) - kh)*P;
-    P = (P.t() + P) / 2;
+    Mat ikh;
+    ikh = (Mat::eye(kh.size(), CV_64F) - kh)*P;
+    P = (ikh.t() + ikh) / 2;
     return;
 }   
 
