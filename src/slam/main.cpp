@@ -112,15 +112,9 @@ int main( int argc, char **argv )
     }
 
     /* Initialize */
-    const double scaleW=.6;
-    const double scaleH=.6;
-    const int width=640;
-    const int height=480;
-    cv::Mat rtplot=cv::Mat::zeros(height, width, CV_8UC3);
-
     const double Q0=25; 
     const double R0=25;
-    States mu, mu_prev;
+    States mu;
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
 
@@ -129,12 +123,10 @@ int main( int argc, char **argv )
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
     resizeP(P,40);
 
-
     /* Set initial conditions */
-    mu.setb(cv::Vec3d(0,0,0));
-
     cv::Vec3d old_pos;
     int u;
+
     u=sense.update();
     if (u & UPDATE_INIT) {
         cv::Vec3d pos=sense.init.get_value();
@@ -147,7 +139,7 @@ int main( int argc, char **argv )
         exit(EXIT_FAILURE);
     }
     imgsense.update();
-    mu.update_features(imgsense, sense,P);
+    mu.update_features(imgsense, sense, P);
     old_pos=mu.X;
 
     /* Enter main loop */
@@ -193,9 +185,7 @@ int main( int argc, char **argv )
         
         jacobianMotionModel(mu, sense, F, dt);
         f=mu.dynamics(sense);
-
         mu+=f*dt;
-
 
         if (u & UPDATE_IMG)
         {
@@ -240,14 +230,9 @@ int main( int argc, char **argv )
             mu+=kmh;
         }
 
-        //circle(rtplot, cv::Point(mu.X[1]*scaleW+width/2,
-        //           height/2+(-mu.X[0]*scaleH)), .1, cv::Scalar(0,10,220));
         ++iter;
         printf("%0.9f,%0.9f\n", mu.X[1],mu.X[0]);
     } 
-    //cout << "iter: " << iter << " meascount: " << meascount << endl;
-    //cv::imshow("foo", rtplot);
-    //cv::waitKey(0);
     return 0;
 }
 
