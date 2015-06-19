@@ -232,7 +232,13 @@ int main( int argc, char **argv )
         }
 
         ++iter;
-        printf("%0.9f,%0.9f\n", mu.X[1],mu.X[0]);
+        printf("%0.9f,%0.9f,%0.9f\n", mu.X[1],mu.X[0],mu.X[2]);
+        for (Fiter it=mu.features.begin();
+                it!=mu.features.end(); ++it) {
+            cv::Vec3d pos=it->get_body_position();
+            printf("%0.9f,%0.9f,%0.9f\n", pos[1],pos[0],pos[2]);
+        }
+        printf("\n");
     } 
     return 0;
 }
