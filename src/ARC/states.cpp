@@ -79,8 +79,8 @@ void States::add( const States& a)
     {
         this->features[i].set_body_position( this->features[i].get_body_position() +
                 a.features[i].get_body_position() );
-        this->features[i].set_world_position( this->features[i].get_world_position() +
-                a.features[i].get_world_position() );
+        //this->features[i].set_world_position( this->features[i].get_world_position() +
+         //       a.features[i].get_world_position() );
     }
     this->b += a.b;
 }
@@ -111,7 +111,9 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv:
                 break;
             }
         }
-        if (found==false) fi->set_noMatch(1);
+        if (found==false) {
+            fi->set_noMatch(1);
+        }
     }
     // Go through the new features and replace inactive features with new
     // features. Expand the vector if necessary.

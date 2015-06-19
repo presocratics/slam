@@ -230,18 +230,17 @@ int main( int argc, char **argv )
             kmh=States(kx);
             mu+=kmh;
         }
-	printf("%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f\n",mu.X[0],mu.X[1],mu.X[2],mu.V[0],mu.V[1],mu.V[2]);
-	for (Fiter fi=mu.features.begin();
-		fi!=mu.features.end(); ++fi) {
-		int id=fi->getID();
-		cv::Vec3d pos=fi->get_body_position();
-		printf("%d,%0.9f,%0.9f,%0.9f\n", id, pos[0], pos[1], pos[2]);
-	}
-	printf("\n");
+        printf("%0.9f,%0.9f\n", mu.X[1],mu.X[0]);
+        for (Fiter fi=mu.features.begin();
+            fi!=mu.features.end(); ++fi) {
+            int id=fi->getID();
+            cv::Vec3d pos=fi->get_world_position(mu.X,sense.quat.get_value());
+            printf("%d,%0.9f,%0.9f,%0.9f\n", id, pos[1], pos[0], pos[2]);
+        }
+        printf("\n");
 
 
         ++iter;
-        printf("%0.9f,%0.9f\n", mu.X[1],mu.X[0]);
     } 
     return 0;
 }
