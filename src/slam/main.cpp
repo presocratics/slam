@@ -121,7 +121,7 @@ int main( int argc, char **argv )
     cv::Mat P=cv::Mat::eye(9,9,CV_64F);
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
-    resizeP(P,40);
+    //resizeP(P,40);
 
     /* Set initial conditions */
     cv::Vec3d old_pos;
@@ -181,7 +181,7 @@ int main( int argc, char **argv )
             nf=mu.getNumFeatures();
             //resizeP(P,nf);
         }
-        nf=40;
+        nf=mu.getNumFeatures();
         dt=0.02;
         
         jacobianMotionModel(mu, sense, F, dt);
@@ -231,6 +231,7 @@ int main( int argc, char **argv )
             mu+=kmh;
         }
         printf("%0.9f,%0.9f\n", mu.X[1],mu.X[0]);
+        /*
         for (Fiter fi=mu.features.begin();
             fi!=mu.features.end(); ++fi) {
             int id=fi->getID();
@@ -238,6 +239,7 @@ int main( int argc, char **argv )
             printf("%d,%0.9f,%0.9f,%0.9f\n", id, pos[1], pos[0], pos[2]);
         }
         printf("\n");
+        */
 
 
         ++iter;
@@ -245,23 +247,6 @@ int main( int argc, char **argv )
     return 0;
 }
 
-/*
- * ===  FUNCTION  ======================================================================
- *         Name:  blockAssign
- *  Description:  Writes a submatrix to dst at the starting point tl
- * =====================================================================================
- */
-    void
-blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl )
-{
-    cv::Rect roi;
-    cv::Mat sub_dst;
-
-    roi = cv::Rect(tl, block.size());
-    sub_dst = dst(roi);
-    block.copyTo(sub_dst);
-    return;
-}        /* -----  end of function blockAssign  ----- */
 
 void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, double dt )
 {
