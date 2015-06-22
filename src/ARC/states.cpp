@@ -88,10 +88,9 @@ void States::add( const States& a)
     void
 States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv::Mat& P )
 {
-    // Go through current features and mark the ones that are inactive.
     const double d_min=0.1;
     const double d_max=10e3;
-
+    // Go through current features and mark the ones that are inactive.
     for (Fiter fi=features.begin();
             fi!=features.end(); ++fi) {
         bool found=false;
@@ -107,7 +106,6 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv:
             if (fi->getID()==match->id) {
                 fi->set_noMatch(0);
                 found=true;
-                // TODO: Can we pop the match off of imgsense here?
                 break;
             }
         }
@@ -142,8 +140,66 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv:
         }
         if (found==false) {
             features.emplace_back(X, sense, *match);
+            // Expand the P vector.
+            int nf=features.size();
+            cv::Mat bigP=cv::Mat::zeros(9+3*nf,9+3*nf,CV_64F);
+            blockAssign(bigP, P, cv::Point(0,0));
+
+            // Move the bias vals out to the edge
+            cv::Mat biasrow,biascol,newbiasrow,newbiascol;
+            biasrow=bigP(cv::Rect(0,6+3*(nf-1),6+3*(nf-1),3));
+            biascol=bigP(cv::Rect(6+3*(nf-1),0,3,6+3*(nf-1)));
+            newbiasrow=bigP(cv::Rect(0,6+3* nf,6+3*(nf-1),3));
+            newbiascol=bigP(cv::Rect(6+3*nf, 0,3,6+3*(nf-1)));
+            biasrow.copyTo(newbiasrow);
+            biascol.copyTo(newbiascol);
+            // Move the bias diagonal to the new edge diagonal;
+            cv::Mat biasdiag, newbiasdiag;
+            biasdiag=bigP(cv::Rect(6+3*(nf-1),6+3*(nf-1),3,3));
+            newbiasdiag=bigP(cv::Rect(6+3*nf,6+3*nf,3,3));
+            biasdiag.copyTo(newbiasdiag);
+            // Initialize the new features
+            biasrow.setTo(0);
+            biascol.setTo(0);
+            blockAssign(biasdiag,2*cv::Mat::eye(3,3,CV_64F),cv::Point(0,0));
+            P=bigP;
         }
     }
+    // Go through the features vector, look for any features that were lost and
+    // not replaced. Remove them from the features vector and contract P.
+    Fiter fi=features.begin();
+    int i=0;
+    while (fi!=features.end()) {
+        int nf=features.size();
+        if (fi->get_noMatch()==0) {
+            ++fi;
+            ++i;
+            continue;
+        }
+        // Zero out the row and column of the feature
+        P.rowRange(6+3*i,6+3*i+3).setTo(0);
+        P.colRange(6+3*i,6+3*i+3).setTo(0);
+
+        cv::Mat lowleft, upright, lowright;
+        lowleft=P(cv::Rect(0,6+3*i+3,6+3*i,(9+3*nf)-(6+3*i+3)));
+        upright=P(cv::Rect(6+3*i+3,0,(9+3*nf)-(6+3*i+3),6+3*i));
+        lowright=P(cv::Rect(6+3*i+3,6+3*i+3,(9+3*nf)-(6+3*i+3),(9+3*nf)-(6+3*i+3)));
+
+        // Shift values in lower left rows up
+        blockAssign(P,lowleft,cv::Point(0,6+3*i));
+        // Shift values in upper right to the left
+        blockAssign(P,upright,cv::Point(6+3*i,0));
+        // Shift values in lower right up and left
+        blockAssign(P,lowright,cv::Point(6+3*i,6+3*i));
+
+        // Contract ROI
+        P=P(cv::Rect(0,0,9+3*(nf-1),9+3*(nf-1)));
+
+        // Remove feature from features vector.
+        fi=features.erase(fi);
+        ++i;
+    }
+            
     // Determine rf, nrf
     rf=nrf=0;
     for (Fiter fi=features.begin();
@@ -154,7 +210,6 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv:
             nrf++;
         }
     }
-    // TODO: shrink features vector if necessary
     return ;
 }		/* -----  end of method States::update_features  ----- */
 

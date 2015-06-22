@@ -12,6 +12,7 @@
 #include "feature.h"
 #include "Sensors.hpp"
 #include "imagesensor.hpp"
+#include "arc.hpp"
 using namespace cv;
 #define GRAVITY 9.801591009565607
 
