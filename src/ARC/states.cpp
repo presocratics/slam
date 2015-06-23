@@ -221,7 +221,7 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv:
  *--------------------------------------------------------------------------------------
  */
     States
-States::dynamics ( const Sensors& s )
+States::dynamics ( const Sensors& s, double dt )
 {
     States predicted_state;
     Matx33d A;
@@ -263,7 +263,7 @@ States::dynamics ( const Sensors& s )
     }
     predicted_state.V-=b;
     predicted_state.b=cv::Vec3d(0,0,0);
-    return predicted_state;
+    return predicted_state*dt;
 }		/* -----  end of method States::dynamics  ----- */
 
 

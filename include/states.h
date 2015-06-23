@@ -47,7 +47,7 @@ class States{
         States& addFeature(const Feature& f);
         States& setb(const Vec3d& bias);
         void add( const States& a);
-        States dynamics( const Sensors& s );
+        States dynamics( const Sensors& s, double dt );
         void setMinMaxDepth(double minD, double MaxD);
         void set_rf_nrf(int r, int n);
         void toMat(cv::Mat& outMat);

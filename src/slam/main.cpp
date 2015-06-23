@@ -185,8 +185,8 @@ int main( int argc, char **argv )
         dt=0.02;
         
         jacobianMotionModel(mu, sense, F, dt);
-        f=mu.dynamics(sense);
-        mu+=f*dt;
+        f=mu.dynamics(sense,dt);
+        mu+=f;
 
         if (u & UPDATE_IMG)
         {
