@@ -112,7 +112,7 @@ int main( int argc, char **argv )
     }
 
     /* Initialize */
-    const double Q0=25; 
+    const double Q0=5; 
     const double R0=25;
     States mu, mu_prev;
     Sensors sense;
@@ -181,7 +181,6 @@ int main( int argc, char **argv )
             nf=mu.getNumFeatures();
         }
         nf=mu.getNumFeatures();
-        dt=0.02;
         
         jacobianMotionModel(mu, sense, F, dt);
         f=mu.dynamics(sense,dt);
@@ -267,9 +266,12 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
             0, 0, 0,
             2 * qbw.coord[0]*qbw.coord[2] - 2 * qbw.coord[1]*qbw.coord[3], 2 * qbw.coord[0]*qbw.coord[3] + 2 * qbw.coord[1]*qbw.coord[2], -pow(qbw.coord[0] , 2)
             - pow(qbw.coord[1] , 2) + pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
-            0, 0, 0, 0, w[2], -w[1], // TODO: These all go to zero when using CORRIMU Span data
-            0, 0, 0, -w[2], 0, w[0],
-            0, 0, 0, w[1], -w[0], 0);
+            0, 0, 0, 0, 0,0, 
+            0, 0, 0, 0,0,0,
+            0, 0, 0, 0,0,0);
+            //0, 0, 0, 0, w[2], -w[1], // TODO: These all go to zero when using CORRIMU Span data
+            //0, 0, 0, -w[2], 0, w[0],
+            //0, 0, 0, w[1], -w[0], 0);
     blockAssign(Fb,Fb1,Point(0,0));
     Mat Fi = Mat::zeros(nf*3, nf*3, CV_64F);
     Mat Fib = Mat::zeros(nf*3, 6, CV_64F);

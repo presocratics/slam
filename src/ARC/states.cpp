@@ -230,7 +230,6 @@ States::dynamics ( const Sensors& s, double dt )
     Rb2w = s.quat.get_value().rotation();
     Rw2b = Rb2w.t();
 
-    //w =200*s.ang.get_value();
     w =s.ang.get_value();
 
     cv::Vec3d gw(0,0,-GRAVITY); 
@@ -240,11 +239,10 @@ States::dynamics ( const Sensors& s, double dt )
     
     // Generalized matrix multiplication
     gemm( Rb2w, V, 1, Mat(), 0, predicted_state.X );
-    //gemm( -A, V, 1, 200*s.acc.get_value(), 1, predicted_state.V );
-    gemm( -A, V, 1, s.acc.get_value(), 1, predicted_state.V );
-    gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
+    //gemm( -A, V, 1, s.acc.get_value(), 1, predicted_state.V );
+    //gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
     //predicted_state.V=200*s.acc.get_value()-b;
-    //predicted_state.V=s.acc.get_value()-b;
+    predicted_state.V=s.acc.get_value();
     //gemm( Rw2b, gw, 1, predicted_state.V, 1, predicted_state.V);
 
     Fiter pib=features.begin();
