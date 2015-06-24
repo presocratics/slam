@@ -197,7 +197,6 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv:
 
         // Remove feature from features vector.
         fi=features.erase(fi);
-        ++i;
     }
             
     // Determine rf, nrf

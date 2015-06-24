@@ -113,7 +113,7 @@ int main( int argc, char **argv )
 
     /* Initialize */
     const double Q0=25; 
-    const double R0=25;
+    const double R0=3;
     States mu, mu_prev;
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
@@ -179,7 +179,6 @@ int main( int argc, char **argv )
             // TODO clake clone only Restore quat
             sense.quat.set_value(Quaternion(q));
             nf=mu.getNumFeatures();
-            //resizeP(P,nf);
         }
         nf=mu.getNumFeatures();
         dt=0.02;
@@ -199,8 +198,6 @@ int main( int argc, char **argv )
                    sense.quat.get_value(), meas, hmu, H, mu);
             // TODO clake clone only Restore quat
             sense.quat.set_value(Quaternion(q));
-            
-            //resizeP(P,nf);
         }
 
         initG(G, nf, dt);
@@ -363,16 +360,25 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const vector<projec
     Mat Hb;
     Mat Hi;
 
-    cMatchIter match=matches.begin();
     cFiter feat=mu.features.begin();
     int index = 1;
-    for (int i=0; feat!=mu.features.end(); ++i,  ++feat, ++match)
+    for (int i=0; feat!=mu.features.end(); ++i, ++feat)
     {
+        // find corresponding match
+        bool found=false;
+        cMatchIter match=matches.begin();
+        while (match!=matches.end()) {
+            if (match->id==feat->getID()) {
+                found=true;
+                break;
+            }
+            ++match;
+        }
+        if (found==false) {
+            fprintf(stderr,"Cannot find match.\n");
+            exit(EXIT_FAILURE);
+        }
         jacobianH(mu.X, qbw, *feat, Hb, Hi);
-        //cout << "Hi: " << Hi << endl;
-        //cout << "Hb: " << Hb << endl;
-        
-        //cout << "bp: " << feat->get_body_position() << endl;
         if( feat->initial.isRef )
         {           
             meas.features.push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
@@ -383,7 +389,6 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const vector<projec
         {
             meas.features.push_back(Vfeat( match->source, feat->initial.pib ));
             hmu.features.push_back(Vfeat( feat->get_body_position(), feat->pib0Hat(old_pos, qbw) ));
-
         }
         H.row(0).col(2).setTo(-1);
         // For each feature
@@ -451,7 +456,7 @@ initR ( cv::Mat& R, double R0, const std::vector<int>& refFlag )
     vector<double> vecR;
     vecR.push_back(0.15*R0);
 
-    for (int i = 0; i < refFlag.size(); i++)
+    for (int i=0; i<refFlag.size(); i++)
     {
         // current view measurement noise covariance
         vecR.push_back(0.01 / 770 * R0);
