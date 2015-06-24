@@ -113,7 +113,7 @@ int main( int argc, char **argv )
 
     /* Initialize */
     const double Q0=25; 
-    const double R0=3;
+    const double R0=25;
     States mu, mu_prev;
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
