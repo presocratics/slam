@@ -112,7 +112,7 @@ int main( int argc, char **argv )
     }
 
     /* Initialize */
-    const double Q0=25; 
+    const double Q0=5; 
     const double R0=25;
     States mu, mu_prev;
     Sensors sense;
@@ -121,7 +121,7 @@ int main( int argc, char **argv )
     cv::Mat P=cv::Mat::eye(9,9,CV_64F);
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
-    resizeP(P,40);
+    //resizeP(P,40);
 
     /* Set initial conditions */
     cv::Vec3d old_pos;
@@ -179,14 +179,12 @@ int main( int argc, char **argv )
             // TODO clake clone only Restore quat
             sense.quat.set_value(Quaternion(q));
             nf=mu.getNumFeatures();
-            //resizeP(P,nf);
         }
-        nf=40;
-        dt=0.02;
+        nf=mu.getNumFeatures();
         
         jacobianMotionModel(mu, sense, F, dt);
-        f=mu.dynamics(sense);
-        mu+=f*dt;
+        f=mu.dynamics(sense,dt);
+        mu+=f;
 
         if (u & UPDATE_IMG)
         {
@@ -199,8 +197,6 @@ int main( int argc, char **argv )
                    sense.quat.get_value(), meas, hmu, H, mu);
             // TODO clake clone only Restore quat
             sense.quat.set_value(Quaternion(q));
-            
-            //resizeP(P,nf);
         }
 
         initG(G, nf, dt);
@@ -230,36 +226,23 @@ int main( int argc, char **argv )
             kmh=States(kx);
             mu+=kmh;
         }
-
-        ++iter;
-        printf("%0.9f,%0.9f,%0.9f\n", mu.X[1],mu.X[0],mu.X[2]);
-        for (Fiter it=mu.features.begin();
-                it!=mu.features.end(); ++it) {
-            cv::Vec3d pos=it->get_body_position();
-            printf("%0.9f,%0.9f,%0.9f\n", pos[1],pos[0],pos[2]);
+        printf("%0.9f,%0.9f\n", mu.X[1],mu.X[0]);
+        /*
+        for (Fiter fi=mu.features.begin();
+            fi!=mu.features.end(); ++fi) {
+            int id=fi->getID();
+            cv::Vec3d pos=fi->get_world_position(mu.X,sense.quat.get_value());
+            printf("%d,%0.9f,%0.9f,%0.9f\n", id, pos[1], pos[0], pos[2]);
         }
         printf("\n");
+        */
+
+
+        ++iter;
     } 
     return 0;
 }
 
-/*
- * ===  FUNCTION  ======================================================================
- *         Name:  blockAssign
- *  Description:  Writes a submatrix to dst at the starting point tl
- * =====================================================================================
- */
-    void
-blockAssign ( cv::Mat dst, cv::Mat block, cv::Point tl )
-{
-    cv::Rect roi;
-    cv::Mat sub_dst;
-
-    roi = cv::Rect(tl, block.size());
-    sub_dst = dst(roi);
-    block.copyTo(sub_dst);
-    return;
-}        /* -----  end of function blockAssign  ----- */
 
 void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, double dt )
 {
@@ -283,9 +266,12 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
             0, 0, 0,
             2 * qbw.coord[0]*qbw.coord[2] - 2 * qbw.coord[1]*qbw.coord[3], 2 * qbw.coord[0]*qbw.coord[3] + 2 * qbw.coord[1]*qbw.coord[2], -pow(qbw.coord[0] , 2)
             - pow(qbw.coord[1] , 2) + pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
-            0, 0, 0, 0, w[2], -w[1], // TODO: These all go to zero when using CORRIMU Span data
-            0, 0, 0, -w[2], 0, w[0],
-            0, 0, 0, w[1], -w[0], 0);
+            0, 0, 0, 0, 0,0, 
+            0, 0, 0, 0,0,0,
+            0, 0, 0, 0,0,0);
+            //0, 0, 0, 0, w[2], -w[1], // TODO: These all go to zero when using CORRIMU Span data
+            //0, 0, 0, -w[2], 0, w[0],
+            //0, 0, 0, w[1], -w[0], 0);
     blockAssign(Fb,Fb1,Point(0,0));
     Mat Fi = Mat::zeros(nf*3, nf*3, CV_64F);
     Mat Fib = Mat::zeros(nf*3, 6, CV_64F);
@@ -376,16 +362,25 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const vector<projec
     Mat Hb;
     Mat Hi;
 
-    cMatchIter match=matches.begin();
     cFiter feat=mu.features.begin();
     int index = 1;
-    for (int i=0; feat!=mu.features.end(); ++i,  ++feat, ++match)
+    for (int i=0; feat!=mu.features.end(); ++i, ++feat)
     {
+        // find corresponding match
+        bool found=false;
+        cMatchIter match=matches.begin();
+        while (match!=matches.end()) {
+            if (match->id==feat->getID()) {
+                found=true;
+                break;
+            }
+            ++match;
+        }
+        if (found==false) {
+            fprintf(stderr,"Cannot find match.\n");
+            exit(EXIT_FAILURE);
+        }
         jacobianH(mu.X, qbw, *feat, Hb, Hi);
-        //cout << "Hi: " << Hi << endl;
-        //cout << "Hb: " << Hb << endl;
-        
-        //cout << "bp: " << feat->get_body_position() << endl;
         if( feat->initial.isRef )
         {           
             meas.features.push_back(Vfeat( match->source, feat->initial.pib, match->reflection ));
@@ -396,7 +391,6 @@ void measurementModel( const cv::Vec3d& old_pos, double alt, const vector<projec
         {
             meas.features.push_back(Vfeat( match->source, feat->initial.pib ));
             hmu.features.push_back(Vfeat( feat->get_body_position(), feat->pib0Hat(old_pos, qbw) ));
-
         }
         H.row(0).col(2).setTo(-1);
         // For each feature
@@ -464,7 +458,7 @@ initR ( cv::Mat& R, double R0, const std::vector<int>& refFlag )
     vector<double> vecR;
     vecR.push_back(0.15*R0);
 
-    for (int i = 0; i < refFlag.size(); i++)
+    for (int i=0; i<refFlag.size(); i++)
     {
         // current view measurement noise covariance
         vecR.push_back(0.01 / 770 * R0);

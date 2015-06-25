@@ -1,5 +1,5 @@
 SRC = feature.cpp featureIO.cpp imagesensor.cpp ourerr.cpp \
-		Quaternion.cpp Sensors.cpp view.cpp states.cpp
+		Quaternion.cpp Sensors.cpp view.cpp states.cpp arc.cpp
 OBJ = $(SRC:.cpp=.o)
 OUT = libARC.a
 IDIR = ../../include

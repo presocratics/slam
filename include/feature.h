@@ -82,9 +82,13 @@ class Feature{
          *--------------------------------------------------------------------------------------
          */
         inline cv::Vec3d
-        get_world_position (  ) const
+        get_world_position ( cv::Vec3d X, Quaternion q ) const
         {
-            return position.world;
+            cv::Matx33d rb2w=q.rotation();
+            cv::Vec3d xib=xibHat();
+            cv::Vec3d xbw;
+            gemm(rb2w,xib,1,X,1,xbw);
+            return xbw;
         }        /* -----  end of method Feature::get_world_position  ----- */
 
         /*
