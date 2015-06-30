@@ -46,6 +46,18 @@ Sensors::update ( )
             sscanf(vals, "%lf", &val3[0]);
             alt.set_value(time, val3[0]);
         }
+        else if (!strcmp(type, "POS"))
+        {
+            updated|=UPDATE_POS;
+            sscanf(vals, "%lf,%lf,%lf", &val3[0], &val3[1], &val3[2]);
+            pos.set_value(time, val3);
+        }
+        else if (!strcmp(type, "VEL"))
+        {
+            updated|=UPDATE_VEL;
+            sscanf(vals, "%lf,%lf,%lf", &val3[0], &val3[1], &val3[2]);
+            vel.set_value(time, val3);
+        }
         else if (!strcmp(type, "INIT"))
         {
             updated|=UPDATE_INIT;

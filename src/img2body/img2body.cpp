@@ -31,7 +31,8 @@
 const cv::Point2d center( 767.521362, 591.428406 ); // Center pixel?
 const cv::Point2d focal(  801.362183, 801.362183 ); // focal length
 // Camera orientation w.r.t. IMU
-Quaternion qbc(cv::Vec4d(0,0,0,1) );
+//Quaternion qbc(cv::Vec4d(0,0,0,1) );
+Quaternion qbc(cv::Vec4d(-0.707106781186547,-0.000000000000000,0.000000000000000,0.707106781186548));
 cv::Matx33d Rb2c = qbc.rotation();
 cv::Matx33d Rc2b = Rb2c.t();
 
@@ -118,7 +119,7 @@ Reads image frame coordinates from STDIN in format:\n\
         image2body( reflection, rbody );
         
         if(reflection == cv::Point2d(0,0))
-            printf("%d,%.17lf,%.17lf\n",ID,sbody.x, sbody.y);
+            printf("%d,%.17lf,%.17lf,0,0\n",ID,sbody.x, sbody.y);
         else
             printf("%d,%.17lf,%.17lf,%.17lf,%.17lf\n",ID,sbody.x, sbody.y ,rbody.x, rbody.y);
     }

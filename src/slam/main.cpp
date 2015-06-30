@@ -112,8 +112,8 @@ int main( int argc, char **argv )
     }
 
     /* Initialize */
-    const double Q0=5; 
-    const double R0=25;
+    const double Q0=256; 
+    const double R0=32;
     States mu, mu_prev;
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
@@ -169,39 +169,42 @@ int main( int argc, char **argv )
             imgsense.update();
             meascount++;
             // Read in new features
-            // TODO clake clone only Rotate quat by 180
-            // TODO: Remove this, just in place to match matlab
-            cv::Vec4d q=sense.quat.get_value().coord;
-            sense.quat.set_value(Quaternion(cv::Vec4d(-q[1],q[0],-q[3],q[2])));
-
             mu.update_features(imgsense, sense, P);
             
-            // TODO clake clone only Restore quat
-            sense.quat.set_value(Quaternion(q));
             nf=mu.getNumFeatures();
         }
+        // TODO Lake of Woods only
+        sense.alt.set_value(-1.34);
         nf=mu.getNumFeatures();
         
+        if (u & UPDATE_POS) {
+            cv::Vec3d pos=sense.pos.get_value();
+            mu.X[0]=pos[1];
+            mu.X[1]=pos[0];
+            mu.X[2]=pos[2];
+        }
+        if (u & UPDATE_VEL ) {
+            Matx33d Rb2w, Rw2b; 
+            Rb2w = sense.quat.get_value().rotation();
+            Rw2b = Rb2w.t();
+            gemm(Rw2b,sense.vel.get_value(),1,Mat(),0,mu.V);
+        }
         jacobianMotionModel(mu, sense, F, dt);
         f=mu.dynamics(sense,dt);
         mu+=f;
+        if (u & UPDATE_VEL) {
+        }
 
         if (u & UPDATE_IMG)
         {
-            // TODO clake clone only Rotate quat by 180
-            // TODO: Remove this, just in place to match matlab
-            cv::Vec4d q=sense.quat.get_value().coord;
-            sense.quat.set_value(Quaternion(cv::Vec4d(-q[1],q[0],-q[3],q[2])));
-
             measurementModel(old_pos, sense.alt.get_value(), imgsense.matches,
                    sense.quat.get_value(), meas, hmu, H, mu);
-            // TODO clake clone only Restore quat
-            sense.quat.set_value(Quaternion(q));
         }
 
         initG(G, nf, dt);
         initQ(Q, nf, Q0, dt);
         calcP(P,F,G,Q);
+        printf("%0.5f,%0.5f\n",mu.X[1],mu.X[0]);
 
         if (u & UPDATE_IMG ) 
         {
@@ -224,19 +227,10 @@ int main( int argc, char **argv )
             hmu.toMat(hmuMat);
             kx=K*eeMat;
             kmh=States(kx);
-            mu+=kmh;
+            cv::Vec3d del(mu.V-kmh.V);
+            double d=fabs(del[0])+fabs(del[1])+fabs(del[2]);
+            if (d<4) mu+=kmh;
         }
-        printf("%0.9f,%0.9f\n", mu.X[1],mu.X[0]);
-        /*
-        for (Fiter fi=mu.features.begin();
-            fi!=mu.features.end(); ++fi) {
-            int id=fi->getID();
-            cv::Vec3d pos=fi->get_world_position(mu.X,sense.quat.get_value());
-            printf("%d,%0.9f,%0.9f,%0.9f\n", id, pos[1], pos[0], pos[2]);
-        }
-        printf("\n");
-        */
-
 
         ++iter;
     } 
@@ -252,7 +246,6 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
     cv::Vec3d w;
 
     qbw = sense.quat.get_value();
-    //w=200*sense.ang.get_value();
     w=sense.ang.get_value();
     nf=mu.getNumFeatures();
 
@@ -570,6 +563,7 @@ updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H )
     Mat kh = K*H;
     Mat ikh;
     ikh = (Mat::eye(kh.size(), CV_64F) - kh)*P;
+    P=ikh;
     P = (ikh.t() + ikh) / 2;
     return;
 }   

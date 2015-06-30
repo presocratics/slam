@@ -6,12 +6,16 @@
 #include "Sensor.hpp"
 #include "Quaternion.hpp"
 #define EPS 0.005 // Maximum delta to consider part of the same timestep.
-#define UPDATE_ACC 0x1
-#define UPDATE_ANG 0x2
-#define UPDATE_QUAT 0x4
-#define UPDATE_IMG 0x8
-#define UPDATE_ALT 0x10
-#define UPDATE_INIT 0x20
+#define UPDATE_ACC 1
+#define UPDATE_ANG 1<<1
+#define UPDATE_QUAT 1<<2
+#define UPDATE_IMG 1<<3
+#define UPDATE_ALT 1<<4
+#define UPDATE_INIT 1<<5
+#define UPDATE_POS 1<<6            /*  */
+#define UPDATE_VEL 1<<7
+
+
 /*
  * =====================================================================================
  *        Class:  Sensors
@@ -28,6 +32,7 @@ class Sensors
 
         /* ====================  MUTATORS      ======================================= */
         int update();
+        double get_time() { return time;} ;
 
         /* ====================  OPERATORS     ======================================= */
 
@@ -38,6 +43,8 @@ class Sensors
         Sensor<double> alt;
         Sensor<int> img;
         Sensor<cv::Vec3d> init;
+        Sensor<cv::Vec3d> vel;
+        Sensor<cv::Vec3d> pos;
 
     protected:
         /* ====================  METHODS       ======================================= */
