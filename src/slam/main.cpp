@@ -42,8 +42,6 @@
 
 //#include "ourerr.hpp"
 #define PINIT 1e-4            /*  */
-#define THRESH 2e-10           /*  */
-#define MAXLINE 1024
 using std::cout; 
 using std::cerr; 
 using std::endl;
@@ -203,7 +201,13 @@ int main( int argc, char **argv )
 
         initG(G, nf, dt);
         initQ(Q, nf, Q0, dt);
+        Mat maskF(F!=F);
+        Mat maskP(P!=P);
+        //cout << "beforeF: " << countNonZero(maskF) << endl;
+        //cout << "beforeP: " << countNonZero(maskP) << endl;
         calcP(P,F,G,Q);
+        maskP=Mat(P!=P);
+        //cout << "afterP: " << countNonZero(maskP) << endl;
         printf("%0.5f,%0.5f\n",mu.X[1],mu.X[0]);
 
         if (u & UPDATE_IMG ) 
@@ -227,9 +231,7 @@ int main( int argc, char **argv )
             hmu.toMat(hmuMat);
             kx=K*eeMat;
             kmh=States(kx);
-            cv::Vec3d del(mu.V-kmh.V);
-            double d=fabs(del[0])+fabs(del[1])+fabs(del[2]);
-            if (d<4) mu+=kmh;
+            mu+=kmh;
         }
 
         ++iter;
@@ -297,18 +299,6 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
                     -pib3*w[2],
                     pib3*w[1],
                     2*pib3*mu.V[0]-pib1*w[2]+pib2*w[1]);
-
-        /*
-                    (pib * Matx31d( mu.V[2], w[0], -2*w[1]))(0,0),
-                    w[2] + pib1*w[0],
-                    pib1*mu.V[0] - mu.V[1],
-                    -w[2] - pib2*w[1], 
-                    pib3*mu.V[2] - pib1*w[1] + 2 * pib2*w[0],
-                    pib2*mu.V[2] - mu.V[1],
-                    -pib3*w[1],
-                    pib3*w[0],
-                    2 * pib3*mu.V[2] - pib1*w[1] + pib2*w[0]);
-                    */
 
         /* new Fib 11/10/14 */
         Fib_ith = (Mat_<double>(3, 6) <<
@@ -525,6 +515,21 @@ resizeP ( cv::Mat& P, int nf )
     void
 calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
 {
+    Mat FP, PF, FPF, GQG;
+    FP=F*P;
+    PF=P*F.t();
+    Mat maskFP=(FP!=FP);
+    Mat maskPF=(PF!=PF);
+
+    FPF=F*P*F.t();
+    GQG=G*Q*G.t();
+    Mat maskF(FPF!=FPF);
+    Mat maskG(GQG!=GQG);
+    //cout << "FP: " << countNonZero(maskFP) << endl;
+    //cout << "PF: " << countNonZero(maskPF) << endl;
+    //cout << "FPF: " << countNonZero(maskF) << endl;
+    //cout << "GQG: " << countNonZero(maskG) << endl;
+
     P = F*P*F.t() + G*Q*G.t();
     return;
 }        /* -----  end of function calcP  ----- */
@@ -536,7 +541,7 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
  * =====================================================================================
  */
     void
-calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R )
+calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R)
 {
     cv::Mat tmp=H*P;
     tmp *= H.t();

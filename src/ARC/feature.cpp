@@ -53,11 +53,6 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
     {
         double idepth;
         cv::Vec3d pibr;
-
-        //add( atan2( match.source.y, 1) * 180 / M_PI,
-        //    sense.quaternion.euler()*180/M_PI, pibr );
-        //idepth = -sense.altitude / sin(pibr[1] / 180 * M_PI) * 2;
-        //idepth = fmin( idepth, DINIT );
         idepth = DINIT;
         set_body_position( match.source, 1/idepth );
     }
@@ -70,20 +65,6 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
     setID( match.id );
     set_initial_anchor(anchor);
 
-    /* Rotating 180 for quadrotor data */
-    /*
-                cv::Vec3d curr_euler = sense.quat.get_value().euler();
-                cv::Vec3d rot180(0,0,3.14159);
-                Quaternion q_rot180;
-                euler2quaternion2(0,0,3.14159, q_rot180);
-                cv::Mat rot_matx_180 = (cv::Mat)q_rot180.rotation();
-                cv::Mat new_euler = rot_matx_180 * (cv::Mat)curr_euler;
-                new_euler.at<double>(2,0) += 3.14159;
-                Quaternion new_quat;
-                euler2quaternion2(new_euler.at<double>(0,0), new_euler.at<double>(1,0), new_euler.at<double>(2,0), new_quat);
-
-    set_initial_quaternion(new_quat);
-                */
     set_initial_quaternion(sense.quat.get_value());
     set_initial_pib(match.source);
     set_noMatch(0);
