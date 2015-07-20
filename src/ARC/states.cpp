@@ -239,8 +239,7 @@ States::dynamics ( const Sensors& s, double dt )
     
     // Generalized matrix multiplication
     gemm( Rb2w, V, 1, Mat(), 0, predicted_state.X );
-    //gemm( -A, V, 1, s.acc.get_value(), 1, predicted_state.V );
-    predicted_state.V=s.acc.get_value();
+    gemm( -A, V, 1, s.acc.get_value(), 1, predicted_state.V );
     //gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
     //gemm( Rw2b, gw, 1, predicted_state.V, 1, predicted_state.V);
 
