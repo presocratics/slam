@@ -219,7 +219,7 @@ int main( int argc, char **argv )
         calcP(P,F,G,Q);
         maskP=Mat(P!=P);
         //cout << "afterP: " << countNonZero(maskP) << endl;
-        printf("%0.5f,%0.5f\n",mu.X[0],mu.X[1]);
+        //printf("%0.5f,%0.5f\n",mu.X[0],mu.X[1]);
         //cout << sense.get_time() << endl;
 
         if (u & UPDATE_IMG ) 
@@ -243,6 +243,19 @@ int main( int argc, char **argv )
             calcK(K,H,P,R);
             updateP(P,K,H);
             subtract(meas,hmu,estimateError);
+            cv::Point2d mean(0,0);
+            int k=0;
+            for (auto const& it:estimateError.features) {
+                cv::Point2d m=it.current;
+                m.x*=m.x;
+                m.y*=m.y;
+                double alpha=(double)k/(k+1);
+                double beta=(double)1/(k+1);
+                mean.x=mean.x*alpha+m.x*beta;
+                mean.y=mean.y*alpha+m.y*beta;
+                ++k;
+            }
+            printf("%0.9g,%0.9g\n",mean.x,mean.y);
 
             estimateError.toMat(eeMat);
             Mat hmuMat;
