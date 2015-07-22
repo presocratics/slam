@@ -14,6 +14,7 @@
 #define UPDATE_INIT 1<<5
 #define UPDATE_POS 1<<6            /*  */
 #define UPDATE_VEL 1<<7
+#define UPDATE_VELB 1<<8
 
 
 /*
@@ -43,7 +44,7 @@ class Sensors
         Sensor<double> alt;
         Sensor<int> img;
         Sensor<cv::Vec3d> init;
-        Sensor<cv::Vec3d> vel;
+        Sensor<cv::Vec3d> vel,velb;
         Sensor<cv::Vec3d> pos;
 
     protected:

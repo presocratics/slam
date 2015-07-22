@@ -58,6 +58,12 @@ Sensors::update ( )
             sscanf(vals, "%lf,%lf,%lf", &val3[0], &val3[1], &val3[2]);
             vel.set_value(time, val3);
         }
+        else if (!strcmp(type, "VELB"))
+        {
+            updated|=UPDATE_VELB;
+            sscanf(vals, "%lf,%lf,%lf", &val3[0], &val3[1], &val3[2]);
+            velb.set_value(time, val3);
+        }
         else if (!strcmp(type, "INIT"))
         {
             updated|=UPDATE_INIT;
