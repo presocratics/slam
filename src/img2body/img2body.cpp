@@ -32,9 +32,11 @@ const cv::Point2d center( 767.521362, 591.428406 ); // Center pixel?
 const cv::Point2d focal(  801.362183, 801.362183 ); // focal length
 // Camera orientation w.r.t. IMU
 //Quaternion qbc(cv::Vec4d(0,0,0,1) );
-Quaternion qbc(cv::Vec4d(-0.707106781186547,-0.000000000000000,0.000000000000000,0.707106781186548));
-cv::Matx33d Rb2c = qbc.rotation();
-cv::Matx33d Rc2b = Rb2c.t();
+//Quaternion qbc(cv::Vec4d(-0.707106781186547,-0.000000000000000,0.000000000000000,0.707106781186548));
+cv::Matx33d Rc2b(0,0,1,1,0,0,0,1,0);
+cv::Matx33d Rb2c = Rc2b.t();
+//cv::Matx33d Rb2c = qbc.rotation();
+//cv::Matx33d Rc2b = Rb2c.t();
 
 void image2body ( const cv::Point2d source, cv::Point2d& y );
 /* 
