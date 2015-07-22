@@ -110,7 +110,7 @@ int main( int argc, char **argv )
     }
 
     /* Initialize */
-    const double Q0=256; 
+    const double Q0=32; 
     const double R0=32;
     States mu, mu_prev;
     Sensors sense;
@@ -119,7 +119,6 @@ int main( int argc, char **argv )
     cv::Mat P=cv::Mat::eye(9,9,CV_64F);
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
     blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
-    //resizeP(P,40);
 
     /* Set initial conditions */
     cv::Vec3d old_pos;
@@ -127,11 +126,14 @@ int main( int argc, char **argv )
 
     mu.setb(cv::Vec3d(0,0,0));
     u=sense.update();
-    if (u & UPDATE_INIT) {
-        cv::Vec3d pos=sense.init.get_value();
-        mu.X[0]=pos[1];
-        mu.X[1]=pos[0];
-        mu.X[2]=pos[2];
+    if (u & UPDATE_POS) {
+        cv::Vec3d pos=sense.pos.get_value();
+        mu.X[0]=pos[0];
+        mu.X[1]=pos[1];
+        mu.X[2]=-pos[2];
+    }
+    if ( u & UPDATE_VELB) {
+        mu.V=sense.velb.get_value();
     }
     if (!(u & UPDATE_IMG)) {
         fprintf(stderr, "No image measurement at first time step.\n");
@@ -187,6 +189,15 @@ int main( int argc, char **argv )
             Rw2b = Rb2w.t();
             gemm(Rw2b,sense.vel.get_value(),1,Mat(),0,mu.V);
         }
+        if (u & UPDATE_VELB ){
+            mu.V=sense.velb.get_value();
+        }
+        if (u & UPDATE_ACC) {
+            //cv::Vec3d a=sense.acc.get_value();
+            //sense.acc.set_value(cv::Vec3d(a[0],a[1],a[2]));
+            //cout << sense.acc.get_value() << endl;
+            //cout << mu.V << endl;
+        }
         jacobianMotionModel(mu, sense, F, dt);
         f=mu.dynamics(sense,dt);
         mu+=f;
@@ -208,12 +219,19 @@ int main( int argc, char **argv )
         calcP(P,F,G,Q);
         maskP=Mat(P!=P);
         //cout << "afterP: " << countNonZero(maskP) << endl;
-        printf("%0.5f,%0.5f\n",mu.X[1],mu.X[0]);
+        printf("%0.5f,%0.5f\n",mu.X[0],mu.X[1]);
+        //cout << sense.get_time() << endl;
 
         if (u & UPDATE_IMG ) 
         {
             std::vector<int> rf;
             for (size_t i=0; i<meas.features.size(); ++i) {
+                /*
+                cout << meas.features[i].initial << endl;
+                cout << hmu.features[i].initial << endl;
+                cout << meas.features[i].current << endl;
+                cout << hmu.features[i].current << endl;
+                */
                 if (meas.features[i].reflection==NONREF) {
                     rf.push_back(0);
                 } else {
@@ -230,6 +248,11 @@ int main( int argc, char **argv )
             Mat hmuMat;
             hmu.toMat(hmuMat);
             kx=K*eeMat;
+            Mat kxv=kx(cv::Rect(0,0,1,3));
+            Mat Rv=(Mat)sense.quat.get_value().rotation();
+            //cout << kxv << endl;
+            //cout << Rv*(Mat)mu.V << endl;
+            //cout << mu.V << endl;
             kmh=States(kx);
             mu+=kmh;
         }
