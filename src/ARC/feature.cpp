@@ -53,7 +53,8 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
     {
         double idepth;
         cv::Vec3d pibr;
-        idepth = DINIT;
+        //idepth = DINIT;
+        idepth = 200.;
         set_body_position( match.source, 1/idepth );
     }
     else
@@ -103,7 +104,7 @@ Feature::rb2b ( const Quaternion& qbw ) const
     std::cout << "rb2b0: " << initial.quaternion.rotation().t() << std::endl;
     std::cout << "rb2b_curr: " << qbw.rotation() << std::endl;
      */ 
-    return initial.quaternion.rotation().t() * qbw.rotation();
+    return initial.quaternion.rotation().t() * qbw.rotation().t();
 }        /* -----  end of method Feature::rb2b  ----- */
 
 
