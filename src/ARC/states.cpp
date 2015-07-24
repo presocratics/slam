@@ -80,6 +80,8 @@ void States::add( const States& a)
         cv::Vec3d lhs,rhs,res;
         lhs=this->features[i].get_body_position();
         rhs=a.features[i].get_body_position();
+        //cout << "L: " << lhs << endl;
+        //cout << "R: " << rhs << endl;
         res=lhs+rhs;
         this->features[i].set_body_position( res);
     }
@@ -134,7 +136,8 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv:
                 *fi = Feature( X, sense, *match);
                 P.rowRange(6+3*i,6+3*i+3).setTo(0);
                 P.colRange(6+3*i,6+3*i+3).setTo(0);
-                P(Rect(6+3*i,6+3*i,3,3))=.00001*Mat::eye(3,3,CV_64F);
+                P(Rect(6+3*i,6+3*i,3,3))=1e-3*Mat::eye(3,3,CV_64F);
+                P.at<double>(6+3*i+2,6+3*i+2)=25;
                 found=true;
                 break;
             }
@@ -163,6 +166,7 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv:
             biasrow.setTo(0);
             biascol.setTo(0);
             blockAssign(biasdiag,2*cv::Mat::eye(3,3,CV_64F),cv::Point(0,0));
+            biasdiag(cv::Rect(2,2,1,1)).setTo(25);
             P=bigP;
         }
     }

@@ -41,7 +41,7 @@
 #include <fstream>
 
 //#include "ourerr.hpp"
-#define PINIT 1e-4            /*  */
+#define PINIT 1e-5            /*  */
 using std::cout; 
 using std::cerr; 
 using std::endl;
@@ -110,8 +110,6 @@ int main( int argc, char **argv )
     }
 
     /* Initialize */
-    const double Q0=32; 
-    const double R0=32;
     States mu, mu_prev;
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
@@ -130,7 +128,7 @@ int main( int argc, char **argv )
         cv::Vec3d pos=sense.pos.get_value();
         mu.X[0]=pos[0];
         mu.X[1]=pos[1];
-        mu.X[2]=-pos[2];
+        mu.X[2]=pos[2];
     }
     if ( u & UPDATE_VELB) {
         mu.V=sense.velb.get_value();
@@ -147,6 +145,7 @@ int main( int argc, char **argv )
     int iter=0;
     int meascount=0;
     int nf;
+    Mat plot=Mat::zeros(400,400,CV_8UC1);
     while (u!=-1) {
         double dt;
         cv::Mat G, Q, R, K, H, F;
@@ -179,8 +178,8 @@ int main( int argc, char **argv )
         
         if (u & UPDATE_POS) {
             cv::Vec3d pos=sense.pos.get_value();
-            mu.X[0]=pos[1];
-            mu.X[1]=pos[0];
+            mu.X[0]=pos[0];
+            mu.X[1]=pos[1];
             mu.X[2]=pos[2];
         }
         if (u & UPDATE_VEL ) {
@@ -194,7 +193,7 @@ int main( int argc, char **argv )
         }
         if (u & UPDATE_ACC) {
             //cv::Vec3d a=sense.acc.get_value();
-            //sense.acc.set_value(cv::Vec3d(a[0],a[1],a[2]));
+            //sense.acc.set_value(cv::Vec3d(a[1],a[0],a[2]));
             //cout << sense.acc.get_value() << endl;
             //cout << mu.V << endl;
         }
@@ -204,14 +203,14 @@ int main( int argc, char **argv )
         if (u & UPDATE_VEL) {
         }
 
-        if (u & UPDATE_IMG)
+        if (u & UPDATE_IMG && mu.features.size()>0)
         {
-            measurementModel(old_pos, sense.alt.get_value(), imgsense.matches,
+            measurementModel(mu.X, sense.alt.get_value(), imgsense.matches,
                    sense.quat.get_value(), meas, hmu, H, mu);
         }
 
         initG(G, nf, dt);
-        initQ(Q, nf, Q0, dt);
+        initQ(Q, nf, dt);
         Mat maskF(F!=F);
         Mat maskP(P!=P);
         //cout << "beforeF: " << countNonZero(maskF) << endl;
@@ -220,9 +219,9 @@ int main( int argc, char **argv )
         maskP=Mat(P!=P);
         //cout << "afterP: " << countNonZero(maskP) << endl;
         //printf("%0.5f,%0.5f\n",mu.X[0],mu.X[1]);
-        //cout << sense.get_time() << endl;
+        cout << sense.get_time() << endl;
 
-        if (u & UPDATE_IMG ) 
+        if (u & UPDATE_IMG && mu.features.size()>0 ) 
         {
             std::vector<int> rf;
             for (size_t i=0; i<meas.features.size(); ++i) {
@@ -238,7 +237,7 @@ int main( int argc, char **argv )
                     rf.push_back(1);
                 }
             }
-            initR(R, R0, rf);
+            initR(R, rf);
             
             calcK(K,H,P,R);
             updateP(P,K,H);
@@ -246,16 +245,18 @@ int main( int argc, char **argv )
             cv::Point2d mean(0,0);
             int k=0;
             for (auto const& it:estimateError.features) {
-                cv::Point2d m=it.current;
+                cv::Point2d m=it.reflection;
                 m.x*=m.x;
                 m.y*=m.y;
                 double alpha=(double)k/(k+1);
                 double beta=(double)1/(k+1);
                 mean.x=mean.x*alpha+m.x*beta;
                 mean.y=mean.y*alpha+m.y*beta;
+                //cout << it.reflection << endl;
                 ++k;
             }
-            printf("%0.9g,%0.9g\n",mean.x,mean.y);
+            //cout << endl;
+            //printf("%0.9g,%0.9g\n",mean.x,mean.y);
 
             estimateError.toMat(eeMat);
             Mat hmuMat;
@@ -267,8 +268,66 @@ int main( int argc, char **argv )
             //cout << Rv*(Mat)mu.V << endl;
             //cout << mu.V << endl;
             kmh=States(kx);
+            cv::Vec3d tx=kmh.X;
+            cv::Vec3d tv=kmh.V;
+            //kmh.X[0]=0;//tx[0];
+            //kmh.X[1]=0;//tx[1];
+            //kmh.X[2]=-tx[2];
+            //kmh.X[2]=0;
+            kmh.V[0]=tv[0];
+            kmh.V[1]=tv[1];
+            //kmh.V[2]=-tv[2];
+            //kmh.V[2]=0;
+            //cout << "bef: " << mu.features[0].get_body_position() << endl;;
             mu+=kmh;
+            //cout << "aft: " << mu.features[0].get_body_position() << endl;;
         }
+        printf("%0.9f,%0.9f\n",mu.X[0],mu.X[1]);
+        //cout << "mux: " << mu.X << endl;
+        //cout << "kmhx: " << kmh.X << endl;
+        cout << "muv: " << mu.V << endl;
+        cout << "kmhv: " << kmh.V << endl;
+
+        if (mu.features.size()>0) {
+            cout << "numfeat: " << mu.features.size() << endl;
+            for (size_t i=0; i<1; ++i) {
+                cout << "hmu: " << hmu.features[i].current << endl;
+                //cout << "meas: " << meas.features[i].current << endl;
+                //cout << "pib: " << mu.features[i].get_body_position() << endl;
+                cout << "kmhpib: " << kmh.features[i].get_body_position() << endl;
+                cout << "piw: " << mu.features[i].get_world_position(mu.X,sense.quat.get_value()) << endl;
+            }
+        }
+        cout << "meas alt: " << meas.altitude <<endl;
+        cout << "hmu alt: " << hmu.altitude <<endl;
+        //cout << "eeMat: " << eeMat << endl;
+        /*
+        for (auto const& it:meas.features) {
+            cout << "meas: " << it.current << endl;
+        }
+        for (auto const& it:mu.features) {
+            cv::Vec3d piw=it.get_world_position(mu.X,sense.quat.get_value());
+            cv::Vec3d pib=it.get_body_position();
+            //printf("%0.9f,%0.9f,%0.9f\n",piw[0],piw[1],piw[2]);
+            cout << "pib: " << pib << endl;
+            cout << "piw: " << piw << endl;
+        }
+        for (auto const& it:kmh.features) {
+            cv::Vec3d pib=it.get_body_position();
+            cout << "kmhpib: " << pib << endl;
+        }
+        */
+        /*
+        for (auto const& it:f.features) {
+            cv::Vec3d pib=it.get_body_position();
+            cout << "fpib: " << pib << endl;
+        }
+        */
+        cout << endl;
+        cv::Point center(200,200);
+        circle(plot,center+cv::Point(mu.X[0],mu.X[1]),1,255);
+        imshow("foo",plot);
+        waitKey(1);
 
         ++iter;
     } 
@@ -297,12 +356,12 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
             0, 0, 0,
             2 * qbw.coord[0]*qbw.coord[2] - 2 * qbw.coord[1]*qbw.coord[3], 2 * qbw.coord[0]*qbw.coord[3] + 2 * qbw.coord[1]*qbw.coord[2], -pow(qbw.coord[0] , 2)
             - pow(qbw.coord[1] , 2) + pow(qbw.coord[2] , 2) + pow(qbw.coord[3] , 2),
-            0, 0, 0, 0, 0,0, 
-            0, 0, 0, 0,0,0,
-            0, 0, 0, 0,0,0);
-            //0, 0, 0, 0, w[2], -w[1], // TODO: These all go to zero when using CORRIMU Span data
-            //0, 0, 0, -w[2], 0, w[0],
-            //0, 0, 0, w[1], -w[0], 0);
+            0, 0, 0, 0, w[2], -w[1], // TODO: These all go to zero when using CORRIMU Span data
+            0, 0, 0, -w[2], 0, w[0],
+            0, 0, 0, w[1], -w[0], 0);
+            //0, 0, 0, 0, 0,0, 
+            //0, 0, 0, 0,0,0,
+            //0, 0, 0, 0,0,0);
     blockAssign(Fb,Fb1,Point(0,0));
     Mat Fi = Mat::zeros(nf*3, nf*3, CV_64F);
     Mat Fib = Mat::zeros(nf*3, 6, CV_64F);
@@ -374,10 +433,10 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
 void measurementModel( const cv::Vec3d& old_pos, double alt, const vector<projection>& matches,
         const Quaternion& qbw, View& meas, View& hmu, Mat& H, const States& mu )
 {
-    meas.altitude = alt;                            // altitude
+    meas.altitude = -alt;                            // altitude
     hmu.altitude = -mu.X[2];
     H=cv::Mat::zeros(1+6*mu.rf+4*mu.nrf,mu.getRows(),CV_64F);
-    H.row(0).col(2).setTo(-1);
+    H.at<double>(0,2)=-1;
     Mat Hb;
     Mat Hi;
 
@@ -453,15 +512,19 @@ initG ( cv::Mat& G, int nf, double dt )
  * =====================================================================================
  */
     void
-initQ ( cv::Mat& Q, int nf, double Q0, double dt )
+initQ ( cv::Mat& Q, int nf, double dt )
 {
-    Q0*=dt*dt;
-    Q = Q0*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
-    Q.at<double>(0,0) *= 0.1*Q0;
-    Q.at<double>(1,1) *= 0.1*Q0;
-    Q.at<double>(2,2) *= 0.1*Q0;
+    Mat G;
+    G=Mat::zeros(6,1,CV_64F);
+    G(cv::Rect(0,0,1,3)).setTo(dt*dt/2);
+    G(cv::Rect(0,3,1,3)).setTo(dt);
 
-    blockAssign(Q, QBIAS*dt*dt*cv::Mat::eye(3,3, CV_64F), cv::Point(6+3*nf,6+3*nf) );
+    Mat GGt=G*G.t();
+
+    Q = 1e-20*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
+    blockAssign(Q,1e-5*GGt,cv::Point(0,0));
+
+    blockAssign(Q, 1e-3*cv::Mat::eye(3,3, CV_64F), cv::Point(6+3*nf,6+3*nf) );
     return;
 }        /* -----  end of function initq  ----- */
 
@@ -472,26 +535,26 @@ initQ ( cv::Mat& Q, int nf, double Q0, double dt )
  * =====================================================================================
  */
     void
-initR ( cv::Mat& R, double R0, const std::vector<int>& refFlag )
+initR ( cv::Mat& R, const std::vector<int>& refFlag )
 {
     vector<double> vecR;
-    vecR.push_back(0.15*R0);
+    vecR.push_back(1e-15);
 
     for (int i=0; i<refFlag.size(); i++)
     {
         // current view measurement noise covariance
-        vecR.push_back(0.01 / 770 * R0);
-        vecR.push_back(0.01 / 770 * R0);
+        vecR.push_back(1e-8);
+        vecR.push_back(1e-8);
 
         // initial view measurement noise covariance
-        vecR.push_back(10. / 770 * R0);
-        vecR.push_back(10. / 770 * R0);
+        vecR.push_back(1e-6);
+        vecR.push_back(1e-6);
 
         if(refFlag[i])
         {
             // reflection measurment noise covariance
-            vecR.push_back(1. / 770 * R0);
-            vecR.push_back(1. / 770 * R0);      
+            vecR.push_back(1e-8);
+            vecR.push_back(1e-8);      
         }
     }
     // Possibly unnecessary intermediate step ensure data is copied out of
@@ -500,47 +563,6 @@ initR ( cv::Mat& R, double R0, const std::vector<int>& refFlag )
     R = Mat::diag(row);
     return;
 }        /* -----  end of function initR  ----- */
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  resizeP
- *  Description:  
- * =====================================================================================
- */
-    void
-resizeP ( cv::Mat& P, int nf )
-{
-    int nf_old;
-    // Determine previous nf
-    nf_old=(P.rows-9)/3;
-    if( nf<nf_old ) // Select a smaller ROI
-    {
-        P=P( cv::Rect(0,0, 9+3*nf, 9+3*nf) );
-    }
-    else if( nf>nf_old ) // Increase size and initialize new features.
-    {
-        cv::Mat bigP;
-        bigP = cv::Mat::zeros(9+3*nf, 9+3*nf, CV_64F);
-        blockAssign(bigP, P, cv::Point(0,0));
-        for( int i=9+3*nf_old; i<9+3*nf; i+=3 )
-        {
-            bigP.at<double>( i, i ) = P0;
-            bigP.at<double>( i+1, i+1 ) = P0;
-            bigP.at<double>( i+2, i+2 ) = P0;
-        }
-        P=bigP;
-    }
-    // TODO this is for bias at end only and clake only since it depends on 40
-    // features
-    P.row(6).col(6)=2;
-    P.row(7).col(7)=2;
-    P.row(8).col(8)=2;
-
-    P.row(9+3*nf-1).col(9+3*nf-1)=1e-4;
-    P.row(9+3*nf-2).col(9+3*nf-2)=1e-4;
-    P.row(9+3*nf-3).col(9+3*nf-3)=1e-4;
-    return;
-}        /* -----  end of function resizeP  ----- */
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -566,7 +588,8 @@ calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
     //cout << "FPF: " << countNonZero(maskF) << endl;
     //cout << "GQG: " << countNonZero(maskG) << endl;
 
-    P = F*P*F.t() + G*Q*G.t();
+    P = F*P*F.t() + Q;
+    //P = F*P*F.t() + G*Q*G.t();
     return;
 }        /* -----  end of function calcP  ----- */
 
