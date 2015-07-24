@@ -77,10 +77,11 @@ void States::add( const States& a)
     this->V += a.V;
     for (size_t i = 0; i<features.size(); i++ )
     {
-        this->features[i].set_body_position( this->features[i].get_body_position() +
-                a.features[i].get_body_position() );
-        //this->features[i].set_world_position( this->features[i].get_world_position() +
-         //       a.features[i].get_world_position() );
+        cv::Vec3d lhs,rhs,res;
+        lhs=this->features[i].get_body_position();
+        rhs=a.features[i].get_body_position();
+        res=lhs+rhs;
+        this->features[i].set_body_position( res);
     }
     this->b += a.b;
 }
@@ -133,7 +134,7 @@ States::update_features ( const ImageSensor& imgsense, const Sensors& sense, cv:
                 *fi = Feature( X, sense, *match);
                 P.rowRange(6+3*i,6+3*i+3).setTo(0);
                 P.colRange(6+3*i,6+3*i+3).setTo(0);
-                P(Rect(6+3*i,6+3*i,3,3))=2*Mat::eye(3,3,CV_64F);
+                P(Rect(6+3*i,6+3*i,3,3))=.00001*Mat::eye(3,3,CV_64F);
                 found=true;
                 break;
             }
@@ -238,7 +239,7 @@ States::dynamics ( const Sensors& s, double dt )
             -w[1], w[0], 0 );
     
     // Generalized matrix multiplication
-    gemm( Rb2w, V, 1, Mat(), 0, predicted_state.X );
+    gemm( Rw2b, V, 1, Mat(), 0, predicted_state.X );
     gemm( -A, V, 1, s.acc.get_value(), 1, predicted_state.V );
     //gemm( Rw2b, gw, -1, predicted_state.V, 1, predicted_state.V);
     //gemm( Rw2b, gw, 1, predicted_state.V, 1, predicted_state.V);
@@ -249,11 +250,19 @@ States::dynamics ( const Sensors& s, double dt )
         Feature fi;
         cv::Vec3d bp;
         bp = pib->get_body_position();
-        fi.set_body_position( cv::Vec3d( 
-            (-V[1] + bp[0]*V[0])*bp[2] + bp[1]*w[0] - (1 + bp[0]*bp[0])*w[2] + bp[0]*bp[1]*w[1],
-            (-V[2] + bp[1]*V[0])*bp[2] - bp[0]*w[0] + (1 + bp[1]*bp[1])*w[1] - bp[0]*bp[1]*w[2],
-            (-w[2] * bp[0]+w[1] *bp[1])* bp[2]+V[0] *      bp[2]*bp[2])
-        );
+
+        Mat L = (Mat_<double>(3,6) << -bp[2],0,bp[2]*bp[0],bp[0]*bp[1],-(1+bp[0]*bp[0]),bp[1],
+                  0,-bp[2],bp[1]*bp[2],1+bp[1]*bp[1],-bp[0]*bp[1],-bp[0],
+                  0,0,bp[2]*bp[2],bp[2]*bp[1],-bp[2]*bp[0],0);
+        Mat vc = (Mat_<double>(6,1) << V[1],V[2],V[0],w[1],w[2],w[0]);
+        Mat xdot=L*vc;
+        //xdot(Rect(0,0,1,2))*=xdot.at<double>(2,0);
+        cv::Vec3d del;
+        del[0]=xdot.at<double>(0,0);
+        del[1]=xdot.at<double>(1,0);
+        del[2]=xdot.at<double>(2,0);
+        fi.set_body_position(del);
+
         predicted_state.addFeature(fi);
     }
     predicted_state.V-=b;
