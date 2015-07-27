@@ -104,7 +104,7 @@ Feature::rb2b ( const Quaternion& qbw ) const
     std::cout << "rb2b0: " << initial.quaternion.rotation().t() << std::endl;
     std::cout << "rb2b_curr: " << qbw.rotation() << std::endl;
      */ 
-    return initial.quaternion.rotation().t() * qbw.rotation().t();
+    return initial.quaternion.rotation().t() * qbw.rotation();
 }        /* -----  end of method Feature::rb2b  ----- */
 
 

@@ -219,7 +219,7 @@ int main( int argc, char **argv )
         maskP=Mat(P!=P);
         //cout << "afterP: " << countNonZero(maskP) << endl;
         //printf("%0.5f,%0.5f\n",mu.X[0],mu.X[1]);
-        cout << sense.get_time() << endl;
+        cout << sense.get_time() << mu.X << mu.V << endl;
 
         if (u & UPDATE_IMG && mu.features.size()>0 ) 
         {
@@ -244,6 +244,7 @@ int main( int argc, char **argv )
             subtract(meas,hmu,estimateError);
             cv::Point2d mean(0,0);
             int k=0;
+            /*
             for (auto const& it:estimateError.features) {
                 cv::Point2d m=it.reflection;
                 m.x*=m.x;
@@ -255,6 +256,7 @@ int main( int argc, char **argv )
                 //cout << it.reflection << endl;
                 ++k;
             }
+            */
             //cout << endl;
             //printf("%0.9g,%0.9g\n",mean.x,mean.y);
 
@@ -274,32 +276,41 @@ int main( int argc, char **argv )
             //kmh.X[1]=0;//tx[1];
             //kmh.X[2]=-tx[2];
             //kmh.X[2]=0;
-            kmh.V[0]=tv[0];
-            kmh.V[1]=tv[1];
+            //kmh.V[0]=tv[0];
+            //kmh.V[1]=tv[1];
             //kmh.V[2]=-tv[2];
             //kmh.V[2]=0;
             //cout << "bef: " << mu.features[0].get_body_position() << endl;;
-            mu+=kmh;
-            //cout << "aft: " << mu.features[0].get_body_position() << endl;;
-        }
-        printf("%0.9f,%0.9f\n",mu.X[0],mu.X[1]);
-        //cout << "mux: " << mu.X << endl;
-        //cout << "kmhx: " << kmh.X << endl;
-        cout << "muv: " << mu.V << endl;
-        cout << "kmhv: " << kmh.V << endl;
-
+        //printf("%0.9f,%0.9f\n",mu.X[0],mu.X[1]);
+        //cout << mu.X << endl;
+        /*
         if (mu.features.size()>0) {
             cout << "numfeat: " << mu.features.size() << endl;
             for (size_t i=0; i<1; ++i) {
-                cout << "hmu: " << hmu.features[i].current << endl;
+                cout << "id: " << mu.features[i].getID() << endl;
+                //cout << "r: " << mu.features[i].initial.quaternion.euler() << endl;
+                //cout << "hmu: " << hmu.features[i].current << endl;
                 //cout << "meas: " << meas.features[i].current << endl;
                 //cout << "pib: " << mu.features[i].get_body_position() << endl;
-                cout << "kmhpib: " << kmh.features[i].get_body_position() << endl;
+                //cout << "kmhpib: " << kmh.features[i].get_body_position() << endl;
                 cout << "piw: " << mu.features[i].get_world_position(mu.X,sense.quat.get_value()) << endl;
             }
+        } else {
+            cout << "P: " << endl << P << endl;
         }
-        cout << "meas alt: " << meas.altitude <<endl;
-        cout << "hmu alt: " << hmu.altitude <<endl;
+        */
+            mu+=kmh;
+            //cout << "aft: " << mu.features[0].get_body_position() << endl;;
+        }
+        //cout << "mux: " << mu.X << endl;
+        //cout << "kmhx: " << kmh.X << endl;
+        //cout << "muv: " << mu.V << endl;
+        //cout << "kmhv: " << kmh.V << endl;
+
+        
+        //cout << "quat: " << sense.quat.get_value().euler() << endl;
+        //cout << "meas alt: " << meas.altitude <<endl;
+        //cout << "hmu alt: " << hmu.altitude <<endl;
         //cout << "eeMat: " << eeMat << endl;
         /*
         for (auto const& it:meas.features) {
@@ -323,11 +334,15 @@ int main( int argc, char **argv )
             cout << "fpib: " << pib << endl;
         }
         */
+        P=.5*P+.5*P.t();
+        P+=1e-18*Mat::eye(P.rows,P.cols,CV_64F);
         cout << endl;
         cv::Point center(200,200);
         circle(plot,center+cv::Point(mu.X[0],mu.X[1]),1,255);
-        imshow("foo",plot);
-        waitKey(1);
+        if (iter%5000==0) {
+            imshow("foo",plot);
+            waitKey(0);
+        }
 
         ++iter;
     } 
@@ -514,17 +529,33 @@ initG ( cv::Mat& G, int nf, double dt )
     void
 initQ ( cv::Mat& Q, int nf, double dt )
 {
-    Mat G;
-    G=Mat::zeros(6,1,CV_64F);
-    G(cv::Rect(0,0,1,3)).setTo(dt*dt/2);
-    G(cv::Rect(0,3,1,3)).setTo(dt);
+    /*
+    Mat G=(Mat_<double>(6,3) <<
+            dt*dt/2,0,0,
+            0,dt*dt/2,0,
+            0,0,dt*dt/2,
+            dt,0,0,
+            0,dt,0,
+            0,0,dt);
+    Matx33d acccov(1e-6,0,0,
+                   0,1e-9,0,
+                   0,0,1e-9);
+                   */
+    Mat G=(Mat_<double>(6,1) <<
+            dt*dt/2,
+            dt*dt/2,
+            dt*dt/2,
+            dt,
+            dt,
+            dt);
+    double acccov=1e-12;
 
-    Mat GGt=G*G.t();
+    Mat GGt=G*acccov*G.t();
 
-    Q = 1e-20*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
-    blockAssign(Q,1e-5*GGt,cv::Point(0,0));
+    Q = 1e-10*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
+    blockAssign(Q,GGt,cv::Point(0,0));
 
-    blockAssign(Q, 1e-3*cv::Mat::eye(3,3, CV_64F), cv::Point(6+3*nf,6+3*nf) );
+    blockAssign(Q, 1e-6*cv::Mat::eye(3,3, CV_64F), cv::Point(6+3*nf,6+3*nf) );
     return;
 }        /* -----  end of function initq  ----- */
 
@@ -538,23 +569,23 @@ initQ ( cv::Mat& Q, int nf, double dt )
 initR ( cv::Mat& R, const std::vector<int>& refFlag )
 {
     vector<double> vecR;
-    vecR.push_back(1e-15);
+    vecR.push_back(1e-6);
 
     for (int i=0; i<refFlag.size(); i++)
     {
         // current view measurement noise covariance
-        vecR.push_back(1e-8);
-        vecR.push_back(1e-8);
+        vecR.push_back(1e-4);
+        vecR.push_back(1e-4);
 
         // initial view measurement noise covariance
-        vecR.push_back(1e-6);
-        vecR.push_back(1e-6);
+        vecR.push_back(1e-4);
+        vecR.push_back(1e-4);
 
         if(refFlag[i])
         {
             // reflection measurment noise covariance
-            vecR.push_back(1e-8);
-            vecR.push_back(1e-8);      
+            vecR.push_back(1e-4);
+            vecR.push_back(1e-4);      
         }
     }
     // Possibly unnecessary intermediate step ensure data is copied out of
