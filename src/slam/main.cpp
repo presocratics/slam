@@ -215,7 +215,7 @@ int main( int argc, char **argv )
         }
 
         initG(G, nf, dt);
-        initQ(Q, nf, dt,sense.quat.get_value());
+        initQ(Q, nf, dt,sense.quat.get_value(),mu.V);
         Mat maskF(F!=F);
         Mat maskP(P!=P);
         //cout << "beforeF: " << countNonZero(maskF) << endl;
@@ -537,18 +537,26 @@ initG ( cv::Mat& G, int nf, double dt )
  * =====================================================================================
  */
     void
-initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw )
+initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw, const cv::Vec3d& vel )
 {
     /*
     Mat G=Mat::zeros(6,3,CV_64F);
     Mat GX=0.5*dt*dt*Mat::eye(3,3,CV_64F)*Mat(qbw.rotation().t());
     Mat GY=dt*Mat::eye(3,3,CV_64F);
     blockAssign(G,GX,cv::Point(0,0));
+    double wcov=1e-2;
+    Matx33d GYw(0, -dt*wcov, dt*wcov,
+                dt*wcov,0,-dt*wcov,
+                -dt*wcov,dt*wcov,0);
+    Mat GY2;
+    Matx31d velm(vel[0],vel[1],vel[2]);
+    GY2=Mat(GYw)*Mat(velm)*Mat(velm).t()*Mat(GYw).t();
+    GY+=GY2;
     blockAssign(G,GY,cv::Point(0,3));
 
     Matx33d acccov(0.67982804,-0.00742284,-0.09873831,
                 -0.00742284,  1.79447417, -0.17217395,
-                -0.09873831, -0.17217395,  1.19799235);
+                -0.09873831, -0.17217395,  0.19799235);
                    */
     Mat G=(Mat_<double>(6,1) <<
             dt*dt/2,
@@ -557,7 +565,7 @@ initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw )
             dt,
             dt,
             dt);
-    double acccov=1.8;
+    double acccov=1.80;
 
     Mat GGt=G*acccov*G.t();
 
@@ -578,17 +586,17 @@ initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw )
 initR ( cv::Mat& R, const std::vector<int>& refFlag )
 {
     vector<double> vecR;
-    vecR.push_back(1e-6);
+    vecR.push_back(1e-3);
 
     for (int i=0; i<refFlag.size(); i++)
     {
         // current view measurement noise covariance
-        vecR.push_back(5e-1);
-        vecR.push_back(5e-1);
+        vecR.push_back(5e-5);
+        vecR.push_back(5e-5);
 
         // initial view measurement noise covariance
-        vecR.push_back(1e-3);
-        vecR.push_back(1e-3);
+        vecR.push_back(5e-5);
+        vecR.push_back(5e-5);
 
         if(refFlag[i])
         {
