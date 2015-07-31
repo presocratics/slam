@@ -41,7 +41,6 @@
 #include <fstream>
 
 //#include "ourerr.hpp"
-#define PINIT 1e-5            /*  */
 using std::cout; 
 using std::cerr; 
 using std::endl;
@@ -114,9 +113,9 @@ int main( int argc, char **argv )
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
 
-    cv::Mat P=cv::Mat::eye(9,9,CV_64F);
-    blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
-    blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
+    cv::Mat P=1e-3*cv::Mat::eye(9,9,CV_64F);
+    //blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
+    blockAssign(P, 1e-6*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
 
     /* Set initial conditions */
     cv::Vec3d old_pos;
@@ -132,6 +131,12 @@ int main( int argc, char **argv )
     }
     if ( u & UPDATE_VELB) {
         mu.V=sense.velb.get_value();
+    }
+    if (u & UPDATE_VEL ) {
+        Matx33d Rb2w, Rw2b; 
+        Rb2w = sense.quat.get_value().rotation();
+        Rw2b = Rb2w.t();
+        gemm(Rw2b,sense.vel.get_value(),1,Mat(),0,mu.V);
     }
     if (!(u & UPDATE_IMG)) {
         fprintf(stderr, "No image measurement at first time step.\n");
@@ -210,7 +215,7 @@ int main( int argc, char **argv )
         }
 
         initG(G, nf, dt);
-        initQ(Q, nf, dt);
+        initQ(Q, nf, dt,sense.quat.get_value());
         Mat maskF(F!=F);
         Mat maskP(P!=P);
         //cout << "beforeF: " << countNonZero(maskF) << endl;
@@ -218,8 +223,8 @@ int main( int argc, char **argv )
         calcP(P,F,G,Q);
         maskP=Mat(P!=P);
         //cout << "afterP: " << countNonZero(maskP) << endl;
-        //printf("%0.5f,%0.5f\n",mu.X[0],mu.X[1]);
-        cout << sense.get_time() << mu.X << mu.V << endl;
+        printf("%0.5f,%0.5f\n",mu.X[0],mu.X[1]);
+        //cout << sense.get_time() << mu.X << mu.V << endl;
 
         if (u & UPDATE_IMG && mu.features.size()>0 ) 
         {
@@ -336,13 +341,15 @@ int main( int argc, char **argv )
         */
         P=.5*P+.5*P.t();
         P+=1e-18*Mat::eye(P.rows,P.cols,CV_64F);
-        cout << endl;
+        //cout << endl;
+        /*
         cv::Point center(200,200);
         circle(plot,center+cv::Point(mu.X[0],mu.X[1]),1,255);
         if (iter%5000==0) {
             imshow("foo",plot);
             waitKey(0);
         }
+        */
 
         ++iter;
     } 
@@ -377,6 +384,9 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
             //0, 0, 0, 0, 0,0, 
             //0, 0, 0, 0,0,0,
             //0, 0, 0, 0,0,0);
+            //0, 0, 0, 0, w[2], -w[1], // TODO: These all go to zero when using CORRIMU Span data
+            //0, 0, 0, -w[2], 0, w[0],
+            //0, 0, 0, w[1], -w[0], 0);
     blockAssign(Fb,Fb1,Point(0,0));
     Mat Fi = Mat::zeros(nf*3, nf*3, CV_64F);
     Mat Fib = Mat::zeros(nf*3, 6, CV_64F);
@@ -527,19 +537,18 @@ initG ( cv::Mat& G, int nf, double dt )
  * =====================================================================================
  */
     void
-initQ ( cv::Mat& Q, int nf, double dt )
+initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw )
 {
     /*
-    Mat G=(Mat_<double>(6,3) <<
-            dt*dt/2,0,0,
-            0,dt*dt/2,0,
-            0,0,dt*dt/2,
-            dt,0,0,
-            0,dt,0,
-            0,0,dt);
-    Matx33d acccov(1e-6,0,0,
-                   0,1e-9,0,
-                   0,0,1e-9);
+    Mat G=Mat::zeros(6,3,CV_64F);
+    Mat GX=0.5*dt*dt*Mat::eye(3,3,CV_64F)*Mat(qbw.rotation().t());
+    Mat GY=dt*Mat::eye(3,3,CV_64F);
+    blockAssign(G,GX,cv::Point(0,0));
+    blockAssign(G,GY,cv::Point(0,3));
+
+    Matx33d acccov(0.67982804,-0.00742284,-0.09873831,
+                -0.00742284,  1.79447417, -0.17217395,
+                -0.09873831, -0.17217395,  1.19799235);
                    */
     Mat G=(Mat_<double>(6,1) <<
             dt*dt/2,
@@ -548,14 +557,14 @@ initQ ( cv::Mat& Q, int nf, double dt )
             dt,
             dt,
             dt);
-    double acccov=1e-12;
+    double acccov=1.8;
 
     Mat GGt=G*acccov*G.t();
 
-    Q = 1e-10*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
+    Q = 1e-5*Mat::eye(9+3*nf, 9+3*nf, CV_64F);
     blockAssign(Q,GGt,cv::Point(0,0));
 
-    blockAssign(Q, 1e-6*cv::Mat::eye(3,3, CV_64F), cv::Point(6+3*nf,6+3*nf) );
+    blockAssign(Q, 1e-9*cv::Mat::eye(3,3, CV_64F), cv::Point(6+3*nf,6+3*nf) );
     return;
 }        /* -----  end of function initq  ----- */
 
@@ -574,18 +583,18 @@ initR ( cv::Mat& R, const std::vector<int>& refFlag )
     for (int i=0; i<refFlag.size(); i++)
     {
         // current view measurement noise covariance
-        vecR.push_back(1e-4);
-        vecR.push_back(1e-4);
+        vecR.push_back(5e-1);
+        vecR.push_back(5e-1);
 
         // initial view measurement noise covariance
-        vecR.push_back(1e-4);
-        vecR.push_back(1e-4);
+        vecR.push_back(1e-3);
+        vecR.push_back(1e-3);
 
         if(refFlag[i])
         {
             // reflection measurment noise covariance
-            vecR.push_back(1e-4);
-            vecR.push_back(1e-4);      
+            vecR.push_back(1e-2);
+            vecR.push_back(1e-2);      
         }
     }
     // Possibly unnecessary intermediate step ensure data is copied out of

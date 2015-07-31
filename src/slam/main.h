@@ -28,7 +28,7 @@
 
 void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, double dt );
 void initG ( cv::Mat& G, int nf, double dt );
-void initQ ( cv::Mat& Q, int nf, double dt );
+void initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw );
 void initR ( cv::Mat& R, const std::vector<int>& refFlag );
 void resizeP ( cv::Mat& P, int nf );
 void calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q );
