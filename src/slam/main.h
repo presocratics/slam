@@ -22,14 +22,10 @@
 #include "Sensor.hpp"
 #include "arc.hpp"
 
-#define QBIAS 1e-5            /*  */
-#define P0 2            /*  */
-#define DMIN 0.3            /*  */
-
 void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, double dt );
 void initG ( cv::Mat& G, int nf, double dt );
-void initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw, const cv::Vec3d& vel );
-void initR ( cv::Mat& R, const std::vector<int>& refFlag );
+void initQ ( cv::Mat& Q, int nf, double dt, double Q0);
+void initR ( cv::Mat& R, const std::vector<int>& refFlag, double R0 );
 void resizeP ( cv::Mat& P, int nf );
 void calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q );
 void calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R);

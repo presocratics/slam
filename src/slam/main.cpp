@@ -102,14 +102,20 @@ help ( const char *str)
 
 int main( int argc, char **argv )
 {
+    double Q0,R0,P0=1e-5;
     /* Handle input */
     if (argc<2 || !strcmp(argv[1],"-h")) {
         help(argv[0]);
         exit(EXIT_FAILURE);
     }
+    if (argc>2) {
+        Q0=atof(argv[2]);
+        R0=atof(argv[3]);
+        P0=atof(argv[4]);
+    }
 
     /* Initialize */
-    States mu, mu_prev;
+    States mu(P0);
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
 
@@ -215,7 +221,7 @@ int main( int argc, char **argv )
         }
 
         initG(G, nf, dt);
-        initQ(Q, nf, dt,sense.quat.get_value(),mu.V);
+        initQ(Q, nf, dt,Q0);
         Mat maskF(F!=F);
         Mat maskP(P!=P);
         //cout << "beforeF: " << countNonZero(maskF) << endl;
@@ -223,7 +229,7 @@ int main( int argc, char **argv )
         calcP(P,F,G,Q);
         maskP=Mat(P!=P);
         //cout << "afterP: " << countNonZero(maskP) << endl;
-        printf("%0.5f,%0.5f\n",mu.X[0],mu.X[1]);
+        printf("%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f\n",mu.X[0],mu.X[1],mu.X[2],mu.V[0],mu.V[1],mu.V[2]);
         //cout << sense.get_time() << mu.X << mu.V << endl;
 
         if (u & UPDATE_IMG && mu.features.size()>0 ) 
@@ -242,8 +248,10 @@ int main( int argc, char **argv )
                     rf.push_back(1);
                 }
             }
-            initR(R, rf);
+            initR(R, rf, R0);
             
+            P=.5*P+.5*P.t();
+            P+=1e-18*Mat::eye(P.rows,P.cols,CV_64F);
             calcK(K,H,P,R);
             updateP(P,K,H);
             subtract(meas,hmu,estimateError);
@@ -339,8 +347,8 @@ int main( int argc, char **argv )
             cout << "fpib: " << pib << endl;
         }
         */
-        P=.5*P+.5*P.t();
-        P+=1e-18*Mat::eye(P.rows,P.cols,CV_64F);
+        //P=.5*P+.5*P.t();
+        //P+=1e-18*Mat::eye(P.rows,P.cols,CV_64F);
         //cout << endl;
         /*
         cv::Point center(200,200);
@@ -537,7 +545,7 @@ initG ( cv::Mat& G, int nf, double dt )
  * =====================================================================================
  */
     void
-initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw, const cv::Vec3d& vel )
+initQ ( cv::Mat& Q, int nf, double dt, double Q0)
 {
     /*
     Mat G=Mat::zeros(6,3,CV_64F);
@@ -565,7 +573,7 @@ initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw, const cv::Vec3d& v
             dt,
             dt,
             dt);
-    double acccov=1.80;
+    double acccov=Q0;
 
     Mat GGt=G*acccov*G.t();
 
@@ -583,26 +591,26 @@ initQ ( cv::Mat& Q, int nf, double dt, const Quaternion& qbw, const cv::Vec3d& v
  * =====================================================================================
  */
     void
-initR ( cv::Mat& R, const std::vector<int>& refFlag )
+initR ( cv::Mat& R, const std::vector<int>& refFlag, double R0 )
 {
     vector<double> vecR;
-    vecR.push_back(1e-3);
+    vecR.push_back(5);
 
     for (int i=0; i<refFlag.size(); i++)
     {
         // current view measurement noise covariance
-        vecR.push_back(5e-5);
-        vecR.push_back(5e-5);
+        vecR.push_back(R0);
+        vecR.push_back(R0);
 
         // initial view measurement noise covariance
-        vecR.push_back(5e-5);
-        vecR.push_back(5e-5);
+        vecR.push_back(R0);
+        vecR.push_back(R0);
 
         if(refFlag[i])
         {
             // reflection measurment noise covariance
-            vecR.push_back(1e-2);
-            vecR.push_back(1e-2);      
+            vecR.push_back(R0);
+            vecR.push_back(R0);
         }
     }
     // Possibly unnecessary intermediate step ensure data is copied out of
@@ -658,7 +666,8 @@ calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R)
 
     K=K.t();
     tmp=tmp.t();
-    solve(tmp, K, K);
+    if (!solve(tmp, K, K,DECOMP_CHOLESKY))
+        cerr << "HPHt+R is singular." << endl;
     K=K.t();
     return;
 }        /* -----  end of function calcK  ----- */

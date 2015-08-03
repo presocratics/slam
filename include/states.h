@@ -22,12 +22,14 @@ class States{
 
     public:
         // constructor
+        States(double pinit) : X(), V(), b(),P0(pinit) {};
         States() : X(), V(), b() {};
         States( const cv::Mat& kx);
 
         Vec3d X;
         Vec3d V;
         Vec3d b;
+        double P0;
         active features;
         int rf;
         int nrf;
