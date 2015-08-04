@@ -54,7 +54,7 @@ Feature::initialize ( const cv::Vec3d& anchor, const Sensors& sense,
         double idepth;
         cv::Vec3d pibr;
         //idepth = DINIT;
-        idepth = 200.;
+        idepth = 25.;
         set_body_position( match.source, 1/idepth );
     }
     else
