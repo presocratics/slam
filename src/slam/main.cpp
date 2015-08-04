@@ -223,8 +223,10 @@ int main( int argc, char **argv )
         calcP(P,F,G,Q);
         maskP=Mat(P!=P);
         //cout << "afterP: " << countNonZero(maskP) << endl;
-        printf("%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f\n",mu.X[0],mu.X[1],mu.X[2],mu.V[0],mu.V[1],mu.V[2]);
-        //cout << sense.get_time() << mu.X << mu.V << endl;
+        printf("%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f\n",sense.get_time(),
+                mu.X[0],mu.X[1],mu.X[2],
+                mu.V[0],mu.V[1],mu.V[2],
+                mu.b[0],mu.b[1],mu.b[2]);
 
         if (u & UPDATE_IMG && mu.features.size()>0 ) 
         {
