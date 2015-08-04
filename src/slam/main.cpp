@@ -222,6 +222,12 @@ int main( int argc, char **argv )
                 mu.X[0],mu.X[1],mu.X[2],
                 mu.V[0],mu.V[1],mu.V[2],
                 mu.b[0],mu.b[1],mu.b[2]);
+        for (std::vector<Feature>::iterator it=mu.features.begin();
+                it!=mu.features.end(); ++it) {
+            cv::Vec3d piw=it->get_world_position(mu.X,sense.quat.get_value());
+            printf("%d,%0.5f,%0.5f,%0.5f\n",it->getID(),piw[0],piw[1],piw[2]);
+        }
+        printf("\n");
 
         if (u & UPDATE_IMG && mu.features.size()>0 ) 
         {
