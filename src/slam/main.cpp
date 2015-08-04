@@ -202,12 +202,6 @@ int main( int argc, char **argv )
         if (u & UPDATE_VELB ){
             mu.V=sense.velb.get_value();
         }
-        if (u & UPDATE_ACC) {
-            //cv::Vec3d a=sense.acc.get_value();
-            //sense.acc.set_value(cv::Vec3d(a[1],a[0],a[2]));
-            //cout << sense.acc.get_value() << endl;
-            //cout << mu.V << endl;
-        }
         jacobianMotionModel(mu, sense, F, dt);
         f=mu.dynamics(sense,dt);
         mu+=f;
