@@ -27,7 +27,7 @@ void initG ( cv::Mat& G, int nf, double dt );
 void initQ ( cv::Mat& Q, int nf, double dt, double Q0);
 void initR ( cv::Mat& R, const std::vector<int>& refFlag, double R0 );
 void resizeP ( cv::Mat& P, int nf );
-void calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q );
+void calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& Q );
 void calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R);
 void measurementModel( const cv::Vec3d& old_pos, double alt, const vector<projection>& matches,
         const Quaternion& qbw, View& meas, View& hmu, Mat& H, const States& mu );

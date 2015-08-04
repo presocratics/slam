@@ -120,7 +120,6 @@ int main( int argc, char **argv )
     ImageSensor imgsense( argv[1], false );
 
     cv::Mat P=1e-3*cv::Mat::eye(9,9,CV_64F);
-    //blockAssign(P, PINIT*cv::Mat::eye(3,3,CV_64F), cv::Point(0,0));
     blockAssign(P, 1e-6*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
 
     /* Set initial conditions */
@@ -214,15 +213,11 @@ int main( int argc, char **argv )
                    sense.quat.get_value(), meas, hmu, H, mu);
         }
 
-        initG(G, nf, dt);
         initQ(Q, nf, dt,Q0);
         Mat maskF(F!=F);
         Mat maskP(P!=P);
-        //cout << "beforeF: " << countNonZero(maskF) << endl;
-        //cout << "beforeP: " << countNonZero(maskP) << endl;
-        calcP(P,F,G,Q);
+        calcP(P,F,Q);
         maskP=Mat(P!=P);
-        //cout << "afterP: " << countNonZero(maskP) << endl;
         printf("%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f\n",sense.get_time(),
                 mu.X[0],mu.X[1],mu.X[2],
                 mu.V[0],mu.V[1],mu.V[2],
@@ -232,12 +227,6 @@ int main( int argc, char **argv )
         {
             std::vector<int> rf;
             for (size_t i=0; i<meas.features.size(); ++i) {
-                /*
-                cout << meas.features[i].initial << endl;
-                cout << hmu.features[i].initial << endl;
-                cout << meas.features[i].current << endl;
-                cout << hmu.features[i].current << endl;
-                */
                 if (meas.features[i].reflection==NONREF) {
                     rf.push_back(0);
                 } else {
@@ -253,21 +242,6 @@ int main( int argc, char **argv )
             subtract(meas,hmu,estimateError);
             cv::Point2d mean(0,0);
             int k=0;
-            /*
-            for (auto const& it:estimateError.features) {
-                cv::Point2d m=it.reflection;
-                m.x*=m.x;
-                m.y*=m.y;
-                double alpha=(double)k/(k+1);
-                double beta=(double)1/(k+1);
-                mean.x=mean.x*alpha+m.x*beta;
-                mean.y=mean.y*alpha+m.y*beta;
-                //cout << it.reflection << endl;
-                ++k;
-            }
-            */
-            //cout << endl;
-            //printf("%0.9g,%0.9g\n",mean.x,mean.y);
 
             estimateError.toMat(eeMat);
             Mat hmuMat;
@@ -275,85 +249,11 @@ int main( int argc, char **argv )
             kx=K*eeMat;
             Mat kxv=kx(cv::Rect(0,0,1,3));
             Mat Rv=(Mat)sense.quat.get_value().rotation();
-            //cout << kxv << endl;
-            //cout << Rv*(Mat)mu.V << endl;
-            //cout << mu.V << endl;
             kmh=States(kx);
             cv::Vec3d tx=kmh.X;
             cv::Vec3d tv=kmh.V;
-            //kmh.X[0]=0;//tx[0];
-            //kmh.X[1]=0;//tx[1];
-            //kmh.X[2]=-tx[2];
-            //kmh.X[2]=0;
-            //kmh.V[0]=tv[0];
-            //kmh.V[1]=tv[1];
-            //kmh.V[2]=-tv[2];
-            //kmh.V[2]=0;
-            //cout << "bef: " << mu.features[0].get_body_position() << endl;;
-        //printf("%0.9f,%0.9f\n",mu.X[0],mu.X[1]);
-        //cout << mu.X << endl;
-        /*
-        if (mu.features.size()>0) {
-            cout << "numfeat: " << mu.features.size() << endl;
-            for (size_t i=0; i<1; ++i) {
-                cout << "id: " << mu.features[i].getID() << endl;
-                //cout << "r: " << mu.features[i].initial.quaternion.euler() << endl;
-                //cout << "hmu: " << hmu.features[i].current << endl;
-                //cout << "meas: " << meas.features[i].current << endl;
-                //cout << "pib: " << mu.features[i].get_body_position() << endl;
-                //cout << "kmhpib: " << kmh.features[i].get_body_position() << endl;
-                cout << "piw: " << mu.features[i].get_world_position(mu.X,sense.quat.get_value()) << endl;
-            }
-        } else {
-            cout << "P: " << endl << P << endl;
-        }
-        */
             mu+=kmh;
-            //cout << "aft: " << mu.features[0].get_body_position() << endl;;
         }
-        //cout << "mux: " << mu.X << endl;
-        //cout << "kmhx: " << kmh.X << endl;
-        //cout << "muv: " << mu.V << endl;
-        //cout << "kmhv: " << kmh.V << endl;
-
-        
-        //cout << "quat: " << sense.quat.get_value().euler() << endl;
-        //cout << "meas alt: " << meas.altitude <<endl;
-        //cout << "hmu alt: " << hmu.altitude <<endl;
-        //cout << "eeMat: " << eeMat << endl;
-        /*
-        for (auto const& it:meas.features) {
-            cout << "meas: " << it.current << endl;
-        }
-        for (auto const& it:mu.features) {
-            cv::Vec3d piw=it.get_world_position(mu.X,sense.quat.get_value());
-            cv::Vec3d pib=it.get_body_position();
-            //printf("%0.9f,%0.9f,%0.9f\n",piw[0],piw[1],piw[2]);
-            cout << "pib: " << pib << endl;
-            cout << "piw: " << piw << endl;
-        }
-        for (auto const& it:kmh.features) {
-            cv::Vec3d pib=it.get_body_position();
-            cout << "kmhpib: " << pib << endl;
-        }
-        */
-        /*
-        for (auto const& it:f.features) {
-            cv::Vec3d pib=it.get_body_position();
-            cout << "fpib: " << pib << endl;
-        }
-        */
-        //P=.5*P+.5*P.t();
-        //P+=1e-18*Mat::eye(P.rows,P.cols,CV_64F);
-        //cout << endl;
-        /*
-        cv::Point center(200,200);
-        circle(plot,center+cv::Point(mu.X[0],mu.X[1]),1,255);
-        if (iter%5000==0) {
-            imshow("foo",plot);
-            waitKey(0);
-        }
-        */
 
         ++iter;
     } 
@@ -385,12 +285,6 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
             0, 0, 0, 0, w[2], -w[1], // TODO: These all go to zero when using CORRIMU Span data
             0, 0, 0, -w[2], 0, w[0],
             0, 0, 0, w[1], -w[0], 0);
-            //0, 0, 0, 0, 0,0, 
-            //0, 0, 0, 0,0,0,
-            //0, 0, 0, 0,0,0);
-            //0, 0, 0, 0, w[2], -w[1], // TODO: These all go to zero when using CORRIMU Span data
-            //0, 0, 0, -w[2], 0, w[0],
-            //0, 0, 0, w[1], -w[0], 0);
     blockAssign(Fb,Fb1,Point(0,0));
     Mat Fi = Mat::zeros(nf*3, nf*3, CV_64F);
     Mat Fib = Mat::zeros(nf*3, 6, CV_64F);
@@ -433,12 +327,6 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
 
         blockAssign(Fib, Fib_ith, Point(0, 3*i));
 
-        //Fi_ith_1 = Mat::zeros(3, 3 * (i), CV_64F);
-        //Fi_ith_2 = FiTemp;
-        //Fi_ith_3 = Mat::zeros(3, 3 * (nf-i-1), CV_64F);
-        //blockAssign(Fi_ith, Fi_ith_1, Point(0,0));
-        //blockAssign(Fi_ith, Fi_ith_2, Point(Fi_ith_1.cols,0));
-        //blockAssign(Fi_ith, Fi_ith_3, Point(Fi_ith_1.cols+FiTemp.cols,0));
         blockAssign(Fi, FiTemp, Point(3*i,3*i));
     }  
     Mat temp1 = Mat::eye(mu.getRows(), mu.getRows(), CV_64F);
@@ -448,7 +336,6 @@ void jacobianMotionModel( const States& mu, const Sensors& sense, Mat& F_out, do
     blockAssign(F_out, Fi,Point(Fib.cols,Fb.rows));
     F_out = dt*F_out + temp1;
 
-    //blockAssign(F_out, cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
     F_out.at<double>(3, 6+3*nf) = -1*dt; // use 6,7,8 for bias up front
     F_out.at<double>(4, 7+3*nf) = -1*dt;
     F_out.at<double>(5, 8+3*nf) = -1*dt;
@@ -543,25 +430,6 @@ initG ( cv::Mat& G, int nf, double dt )
     void
 initQ ( cv::Mat& Q, int nf, double dt, double Q0)
 {
-    /*
-    Mat G=Mat::zeros(6,3,CV_64F);
-    Mat GX=0.5*dt*dt*Mat::eye(3,3,CV_64F)*Mat(qbw.rotation().t());
-    Mat GY=dt*Mat::eye(3,3,CV_64F);
-    blockAssign(G,GX,cv::Point(0,0));
-    double wcov=1e-2;
-    Matx33d GYw(0, -dt*wcov, dt*wcov,
-                dt*wcov,0,-dt*wcov,
-                -dt*wcov,dt*wcov,0);
-    Mat GY2;
-    Matx31d velm(vel[0],vel[1],vel[2]);
-    GY2=Mat(GYw)*Mat(velm)*Mat(velm).t()*Mat(GYw).t();
-    GY+=GY2;
-    blockAssign(G,GY,cv::Point(0,3));
-
-    Matx33d acccov(0.67982804,-0.00742284,-0.09873831,
-                -0.00742284,  1.79447417, -0.17217395,
-                -0.09873831, -0.17217395,  0.19799235);
-                   */
     Mat G=(Mat_<double>(6,1) <<
             dt*dt/2,
             dt*dt/2,
@@ -623,25 +491,9 @@ initR ( cv::Mat& R, const std::vector<int>& refFlag, double R0 )
  * =====================================================================================
  */
     void
-calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& G, const cv::Mat& Q )
+calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& Q )
 {
-    Mat FP, PF, FPF, GQG;
-    FP=F*P;
-    PF=P*F.t();
-    Mat maskFP=(FP!=FP);
-    Mat maskPF=(PF!=PF);
-
-    FPF=F*P*F.t();
-    GQG=G*Q*G.t();
-    Mat maskF(FPF!=FPF);
-    Mat maskG(GQG!=GQG);
-    //cout << "FP: " << countNonZero(maskFP) << endl;
-    //cout << "PF: " << countNonZero(maskPF) << endl;
-    //cout << "FPF: " << countNonZero(maskF) << endl;
-    //cout << "GQG: " << countNonZero(maskG) << endl;
-
     P = F*P*F.t() + Q;
-    //P = F*P*F.t() + G*Q*G.t();
     return;
 }        /* -----  end of function calcP  ----- */
 
