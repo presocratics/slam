@@ -143,12 +143,16 @@ int main( int argc, char **argv )
         Rw2b = Rb2w.t();
         gemm(Rw2b,sense.vel.get_value(),1,Mat(),0,mu.V);
     }
+    if (u & UPDATE_IMG) {
+        imgsense.update();
+        mu.update_features(imgsense, sense,P);
+    }
+        /*
     if (!(u & UPDATE_IMG)) {
         fprintf(stderr, "No image measurement at first time step.\n");
         exit(EXIT_FAILURE);
     }
-    imgsense.update();
-    mu.update_features(imgsense, sense,P);
+    */
     old_pos=mu.X;
 
     /* Enter main loop */
@@ -209,7 +213,9 @@ int main( int argc, char **argv )
 
         if (u & UPDATE_IMG && mu.features.size()>0)
         {
-            measurementModel(mu.X, sense.alt.get_value(), imgsense.matches,
+            //measurementModel(mu.X, sense.alt.get_value(), imgsense.matches,
+             //      sense.quat.get_value(), meas, hmu, H, mu);
+            measurementModel(mu.X, mu.X[2], imgsense.matches,
                    sense.quat.get_value(), meas, hmu, H, mu);
         }
 
@@ -520,7 +526,7 @@ calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R)
 
     K=K.t();
     tmp=tmp.t();
-    if (!solve(tmp, K, K,DECOMP_CHOLESKY))
+    if (!solve(tmp, K, K,DECOMP_LU))
         cerr << "HPHt+R is singular." << endl;
     K=K.t();
     return;
