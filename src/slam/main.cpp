@@ -119,8 +119,8 @@ int main( int argc, char **argv )
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
 
-    cv::Mat P=1e-3*cv::Mat::eye(9,9,CV_64F);
-    blockAssign(P, 1e-6*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
+    cv::Mat P=0.0*cv::Mat::eye(9,9,CV_64F);
+    blockAssign(P, 0.0*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
 
     /* Set initial conditions */
     cv::Vec3d old_pos;
@@ -128,6 +128,8 @@ int main( int argc, char **argv )
 
     mu.setb(cv::Vec3d(0,0,0));
     u=sense.update();
+    // Lake of woods only
+    sense.quat.set_value(Quaternion(0.063204844172997,-0.089958148397108,0.586447690853621,0.802490987552188));
     if (u & UPDATE_POS) {
         cv::Vec3d pos=sense.pos.get_value();
         mu.X[0]=pos[0];
@@ -159,8 +161,9 @@ int main( int argc, char **argv )
     int iter=0;
     int meascount=0;
     int nf;
-    Mat plot=Mat::zeros(400,400,CV_8UC1);
+    Mat plot=Mat::zeros(1800,1800,CV_8UC1);
     while (u!=-1) {
+        unsigned nans;
         double dt;
         cv::Mat G, Q, R, K, H, F;
         Mat kx, eeMat;
@@ -213,17 +216,11 @@ int main( int argc, char **argv )
 
         if (u & UPDATE_IMG && mu.features.size()>0)
         {
-            //measurementModel(mu.X, sense.alt.get_value(), imgsense.matches,
-             //      sense.quat.get_value(), meas, hmu, H, mu);
-            measurementModel(mu.X, mu.X[2], imgsense.matches,
+            measurementModel(mu.X, sense.alt.get_value(), imgsense.matches,
                    sense.quat.get_value(), meas, hmu, H, mu);
         }
 
         initQ(Q, nf, dt,Q0);
-        Mat maskF(F!=F);
-        Mat maskP(P!=P);
-        calcP(P,F,Q);
-        maskP=Mat(P!=P);
         printf("%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f,%0.5f\n",sense.get_time(),
                 mu.X[0],mu.X[1],mu.X[2],
                 mu.V[0],mu.V[1],mu.V[2],
@@ -235,6 +232,19 @@ int main( int argc, char **argv )
         }
         printf("\n");
 
+        Mat maskP(P!=P);
+        calcP(P,F,Q);
+
+        /* Sanity check P */
+        maskP=Mat(P!=P);
+        nans=countNonZero(maskP);
+        if (nans>0) {
+            fprintf(stderr,"%d NaNs in P. Clearing features and P.\n", nans);
+            mu.features.clear();
+            P=1e-3*cv::Mat::eye(9,9,CV_64F);
+            blockAssign(P, 1e-6*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
+            continue;
+        }
         if (u & UPDATE_IMG && mu.features.size()>0 ) 
         {
             std::vector<int> rf;
@@ -250,7 +260,7 @@ int main( int argc, char **argv )
             P=.5*P+.5*P.t();
             P+=1e-18*Mat::eye(P.rows,P.cols,CV_64F);
             calcK(K,H,P,R);
-            updateP(P,K,H);
+            updateP(P,K,H,R);
             subtract(meas,hmu,estimateError);
             cv::Point2d mean(0,0);
             int k=0;
@@ -265,10 +275,13 @@ int main( int argc, char **argv )
             cv::Vec3d tx=kmh.X;
             cv::Vec3d tv=kmh.V;
             mu+=kmh;
+            circle(plot,cv::Point(40,100)+cv::Point((int)mu.X[1],-(int)mu.X[0]),1,cv::Scalar(255,0,0));
+            imshow("foo",plot);
+            waitKey(1);
         }
-
         ++iter;
     } 
+    waitKey(0);
     return 0;
 }
 
@@ -470,7 +483,7 @@ initQ ( cv::Mat& Q, int nf, double dt, double Q0)
 initR ( cv::Mat& R, const std::vector<int>& refFlag, double R0 )
 {
     vector<double> vecR;
-    vecR.push_back(5);
+    vecR.push_back(1);
 
     for (int i=0; i<refFlag.size(); i++)
     {
@@ -539,13 +552,12 @@ calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R)
  * =====================================================================================
  */
     void
-updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H )
+updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H, const cv::Mat& R)
 {
     Mat kh = K*H;
     Mat ikh;
-    ikh = (Mat::eye(kh.size(), CV_64F) - kh)*P;
-    P=ikh;
-    P = (ikh.t() + ikh) / 2;
+    ikh = (Mat::eye(kh.size(), CV_64F) - kh);
+    P=ikh*P*ikh.t()+K*R*K.t(); // Joseph Form
     return;
 }   
 

@@ -31,7 +31,7 @@ void calcP ( cv::Mat& P, const cv::Mat& F, const cv::Mat& Q );
 void calcK ( cv::Mat& K, const cv::Mat& H, const cv::Mat& P, const cv::Mat& R);
 void measurementModel( const cv::Vec3d& old_pos, double alt, const vector<projection>& matches,
         const Quaternion& qbw, View& meas, View& hmu, Mat& H, const States& mu );
-void updateP ( cv::Mat& P, const cv::Mat& K, const cv::Mat& H );
+void updateP (cv::Mat& P, const cv::Mat& K, const cv::Mat& H, const cv::Mat& R);
 void jacobianH( const cv::Vec3d& X, const Quaternion& qbw, const Feature& feat, Mat& Hb, Mat& Hi );
 void hexToVec ( const char *fn, vector<double>& out );
 
