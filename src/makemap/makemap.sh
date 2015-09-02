@@ -8,8 +8,8 @@ tmpfile=$(date +%s%N)
 slam $1 $2 $3 $4>$tmpfile
 
 grep "^[0-9]*\.[0-9]*," $tmpfile | \
-    awk -F, 'BEGIN {printf("No,Time,UTM-Zone,UTM-Ch,UTM-East,UTM-North\n")} \
-    {printf("%d,%s,16,T,%s,%s\n",NR,strftime("%T",$1),$3,$2)}' > ${tmpfile}2
+    awk -F, 'BEGIN {printf("No,Date,Time,UTM-Zone,UTM-Ch,UTM-East,UTM-North\n")} \
+    {printf("%d,%s,%s,16,T,%s,%s\n",NR,strftime("%Y/%m/%d",$1),strftime("%T",$1),$3,$2)}' > ${tmpfile}2
 gpsbabel -iunicsv,grid=utm -f ${tmpfile}2 -x position,distance=6m,time=10 -x transform,trk=wpt,del \
  -x track,pack,sdistance=0.1k -okml,points=0 -F ${tmpfile}3
 
