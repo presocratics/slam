@@ -119,7 +119,7 @@ int main( int argc, char **argv )
     Sensors sense;
     ImageSensor imgsense( argv[1], false );
 
-    cv::Mat P=0.0*cv::Mat::eye(9,9,CV_64F);
+    cv::Mat P=1e-3*cv::Mat::eye(9,9,CV_64F);
     blockAssign(P, 0.0*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
 
     /* Set initial conditions */
@@ -127,6 +127,23 @@ int main( int argc, char **argv )
     int u;
 
     mu.setb(cv::Vec3d(0,0,0));
+
+    // Wait for user to press 'z' before starting.
+    Mat start=Mat::zeros(400,400,CV_8UC1);
+    putText(start,"Press 'z' to begin",cv::Point(125,200),FONT_HERSHEY_PLAIN,1,255);
+    namedWindow("Start",WINDOW_NORMAL);
+    char key;
+    do {
+        imshow("Start",start);
+        key=waitKey(1);
+        u=sense.update();
+        if (u & UPDATE_IMG) {
+            imgsense.update();
+        }
+    } while (key!='z');
+    destroyWindow("Start");
+
+    // Start
     u=sense.update();
     // Lake of woods only
     sense.quat.set_value(Quaternion(0.063204844172997,-0.089958148397108,0.586447690853621,0.802490987552188));
@@ -149,18 +166,13 @@ int main( int argc, char **argv )
         imgsense.update();
         mu.update_features(imgsense, sense,P);
     }
-        /*
-    if (!(u & UPDATE_IMG)) {
-        fprintf(stderr, "No image measurement at first time step.\n");
-        exit(EXIT_FAILURE);
-    }
-    */
     old_pos=mu.X;
 
     /* Enter main loop */
     int iter=0;
     int meascount=0;
     int nf;
+    namedWindow("Map",WINDOW_NORMAL);
     Mat plot=Mat::zeros(1800,1800,CV_8UC1);
     while (u!=-1) {
         unsigned nans;
@@ -170,6 +182,21 @@ int main( int argc, char **argv )
         States f, kmh;
         View meas, hmu, estimateError;
         
+        if (key=='r') {
+            fprintf(stderr,"Soft reset desired. Clearing features and P.\n");
+            mu.features.clear();
+            P=1e-3*cv::Mat::eye(9,9,CV_64F);
+            blockAssign(P, 0.0*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
+        }
+        else if (key=='R') {
+            fprintf(stderr,"Hard reset desired. Clearing features and resetting state.\n");
+            plot=Mat::zeros(1800,1800,CV_8UC1);
+            mu.features.clear();
+            mu.X=cv::Vec3d(0,0,0);
+            mu.V=cv::Vec3d(0,0,0);
+            P=1e-3*cv::Mat::eye(9,9,CV_64F);
+            blockAssign(P, 0.0*cv::Mat::eye(3,3,CV_64F), cv::Point(6,6));
+        }
         u=sense.update();
         if (u & UPDATE_ACC) dt=sense.acc.get_dt();
         else if (u & UPDATE_ANG) dt=sense.ang.get_dt();
@@ -276,12 +303,13 @@ int main( int argc, char **argv )
             cv::Vec3d tv=kmh.V;
             mu+=kmh;
             circle(plot,cv::Point(40,100)+cv::Point((int)mu.X[1],-(int)mu.X[0]),1,cv::Scalar(255,0,0));
-            imshow("foo",plot);
-            waitKey(1);
+            imshow("Map",plot);
+            key=waitKey(1);
         }
         ++iter;
     } 
     waitKey(0);
+    destroyAllWindows();
     return 0;
 }
 
