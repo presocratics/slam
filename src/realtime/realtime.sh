@@ -19,6 +19,8 @@ tail -n+$line $sen | \
     grep CORRIMU | \
     awk -F, '{printf("%s,ANG,%0.9f,%0.9f,%0.9f\n",$4,200*$6,200*$5,-200*$7)}' > ang.ff &
 
+#paste -d, <(grep INSPVA $sen|cut -d, -f4) \
+#    <(grep
 sort -t, -n -m  \
     <( tail -n+$line $sen | \
         grep CORRIMU | \
@@ -42,20 +44,20 @@ sort -t, -n -m  \
     sed 's/,/,QUAT,/' > quat.ff &
 
 #TODO: Incorporate this
-# rectify <(grep MARK2 2015-05-06T17\:28-0500.gps |cut -d, -f7|rmglitch|tail -n
-# +2|cut -d, -f1) <(grep "^1" 2015-05-06T17\:28-0500.pics |cut -d,
-# -f2|proccam|cut -d' ' -f1)
-tail -n+$line $sen | \
-    grep MARK2 | \
-    cut -d, -f7 | \
-    rmglitch | \
-   cut -d, -f1 | \
-    sed 's/$/,IMG/' > img.ff &
+rectify <(grep MARK2 2015-05-06T17\:28-0500.gps |cut -d, -f7|rmglitch|tail -n \
+ +2|cut -d, -f1) <(grep "^1" 2015-05-06T17\:28-0500.pics |cut -d, \
+ -f2|proccam|cut -d' ' -f1) | sed 's/$/,IMG/' > img.ff &
+#tail -n+$line $sen | \
+#    grep MARK2 | \
+#    cut -d, -f7 | \
+#    rmglitch | \
+#   cut -d, -f1 | \
+#    sed 's/$/,IMG/' > img.ff &
 
 sort -t, -n -m ang.ff acc.ff quat.ff img.ff | \
     slam <(find $2 -name "*-0.png"|sort| \
         ~/ARC/trackingPoints/bin/trackingPoints -f -m 12 100 | \
-        sed -n '/--/,+40 p'|sed 's/--.*//'|sed -n '2,$ p'|img2body) 1e-4 1e-3 1e-5
+        sed -n '/--/,+10 p'|sed 's/--.*//'|sed -n '2,$ p'|img2body) 1e-4 1e-3 1e-5
 
 
 
