@@ -28,8 +28,6 @@
 #define MAXLINE 512 
 
 // Camera calibration parameters
-const cv::Point2d center( 767.521362, 591.428406 ); // Center pixel?
-const cv::Point2d focal(  801.362183, 801.362183 ); // focal length
 // Camera orientation w.r.t. IMU
 //Quaternion qbc(cv::Vec4d(0,0,0,1) );
 //Quaternion qbc(cv::Vec4d(-0.707106781186547,-0.000000000000000,0.000000000000000,0.707106781186548));
@@ -54,6 +52,10 @@ image2body ( const cv::Point2d source, cv::Point2d& y )
     cv::Matx31d Yib;
 
     // Center coordinates, adjust for focal length, and normalize z-coordinate
+cv::Point2d center( 767.521362, 591.428406 ); // Center pixel?
+cv::Point2d focal(  801.362183, 801.362183 ); // focal length
+center=center*0.4;
+focal=focal*0.4;
     p=source-center;
     p.x/=focal.x;
     p.y/=focal.y;
