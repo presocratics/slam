@@ -141,12 +141,13 @@ int main( int argc, char **argv )
             imgsense.update();
         }
     } while (key!='z');
+    do {
+        u=sense.update();
+    } while (!u & UPDATE_QUAT);
     destroyWindow("Start");
 
     // Start
-    u=sense.update();
     // Lake of woods only
-    sense.quat.set_value(Quaternion(0.063204844172997,-0.089958148397108,0.586447690853621,0.802490987552188));
     if (u & UPDATE_POS) {
         cv::Vec3d pos=sense.pos.get_value();
         mu.X[0]=pos[0];
