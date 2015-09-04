@@ -26,17 +26,12 @@ def getF(w,dt):
 
 def main():
     s=sensors.Sensors()
-    # Lake of Woods
-    #q=np.matrix("0.113025525501405;-0.027170273663088;0.989665509251709;-0.083959434322537")
-    # Lake of Woods Parking Lot
-    #q=np.matrix("0.063204844172997;-0.089958148397108;0.586447690853621;0.802490987552188")
-    q=np.matrix("0;0;0;1.")
-    #q=np.matrix("0;0;0;1")
-    # Busey Woods - Anita
-    #q=np.matrix("-0.008286804801522;0.008266145114152;0.230306633392473;-0.973047714311358")
     s.update()
-    P=1e-1*np.eye(4)
-    R=1e-8*np.eye(4)
+    while s.newq!=1: # Initialize quaternion
+        s.update()
+    q=np.matrix(s.quat).T
+    P=1e-3*np.eye(4)
+    R=1e-7*np.eye(4)
     Q=1e-4*np.eye(4)
     noMeas=True
     while s.update():
